@@ -2,6 +2,7 @@ import http from "node:http";
 import { createLandingForUser } from "../src/lib/landings/create-landing";
 import { extractSubdomain } from "../src/lib/tenancy/subdomain";
 import {
+  admin,
   ROOT_DOMAIN,
   createTestUser,
   deleteTestUser,
@@ -77,7 +78,31 @@ async function main() {
     );
   });
 
-  await test("una landing visible se sirve públicamente sin login", async () => {
+  await test("una landing 'draft' no se sirve públicamente (todavía no pagó)", async () => {
+    const email = `test-draft-private-${suffix}@example.com`;
+    const userId = await createTestUser(email);
+    try {
+      const client = await signInAs(email);
+      const slug = `contador-draft-private-${suffix}`;
+      const result = await createLandingForUser(client, userId, {
+        professionId,
+        templateId,
+        formData: VALID_FORM_DATA,
+        desiredSlug: slug,
+      });
+      assert(
+        result.ok,
+        `no se pudo crear la landing de prueba: ${JSON.stringify(result)}`
+      );
+
+      const res = await requestWithHost(`${slug}.${ROOT_DOMAIN}`);
+      assert(res.status === 404, `se esperaba 404, se obtuvo ${res.status}`);
+    } finally {
+      await deleteTestUser(userId);
+    }
+  });
+
+  await test("una landing 'active' se sirve públicamente sin login", async () => {
     const email = `test-public-${suffix}@example.com`;
     const userId = await createTestUser(email);
     try {
@@ -93,6 +118,15 @@ async function main() {
         result.ok,
         `no se pudo crear la landing de prueba: ${JSON.stringify(result)}`
       );
+      if (!result.ok) return;
+
+      // Activation is normally driven by the Mercado Pago webhook
+      // (service_role); simulate that here with the same admin client.
+      const { error: activateError } = await admin
+        .from("landings")
+        .update({ status: "active" })
+        .eq("id", result.landing.id);
+      assert(!activateError, `no se pudo activar la landing: ${activateError?.message}`);
 
       const res = await requestWithHost(`${slug}.${ROOT_DOMAIN}`);
 

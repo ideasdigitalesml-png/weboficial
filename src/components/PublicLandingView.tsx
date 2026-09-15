@@ -2,10 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { SectionConfigItem } from "@/lib/landings/update-landing";
 
-// TEMPORARY: 'draft' is publicly visible only until Milestone 4 ships real
-// payment-driven activation. See the warning in
-// supabase/migrations/0004_public_landing_read.sql.
-const PUBLICLY_VISIBLE_STATUSES = new Set(["active", "draft"]);
+const PUBLICLY_VISIBLE_STATUSES = new Set(["active"]);
 
 interface LandingFormData {
   name?: string;

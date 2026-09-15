@@ -5,6 +5,7 @@
 import { createLandingForUser } from "../src/lib/landings/create-landing";
 import { isValidSlugFormat } from "../src/lib/landings/slug";
 import {
+  admin,
   createTestUser,
   deleteTestUser,
   signInAs,
@@ -36,6 +37,14 @@ async function main() {
       });
       assert(created.ok, `no se pudo crear la landing: ${JSON.stringify(created)}`);
       if (!created.ok) return;
+
+      // Activation is normally driven by the Mercado Pago webhook
+      // (service_role); simulate that here with the same admin client.
+      const { error: activateError } = await admin
+        .from("landings")
+        .update({ status: "active" })
+        .eq("id", created.landing.id);
+      assert(!activateError, `no se pudo activar la landing: ${activateError?.message}`);
 
       const res = await fetch(`${BASE_URL}/${slug}`);
       assert(res.status === 200, `se esperaba 200, se obtuvo ${res.status}`);
