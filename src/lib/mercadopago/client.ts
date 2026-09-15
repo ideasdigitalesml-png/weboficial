@@ -41,6 +41,16 @@ export interface MercadoPagoClient {
   getAuthorizedPayment(id: string): Promise<AuthorizedPaymentDetails>;
 }
 
+// Mercado Pago's subscriptions checkout page 500s when init_point carries
+// `activation=true` (MP bug reported in mercadopago/sdk-nodejs#480, active
+// since 2026-09-02). Stripping the param before redirecting is the
+// confirmed workaround.
+function stripActivationParam(url: string): string {
+  const parsed = new URL(url);
+  parsed.searchParams.delete("activation");
+  return parsed.toString();
+}
+
 function accessToken(): string {
   const token = process.env.MP_ACCESS_TOKEN;
   if (!token) throw new Error("MP_ACCESS_TOKEN is not set");
@@ -87,17 +97,12 @@ export const mercadoPagoClient: MercadoPagoClient = {
       status: string;
     };
 
-    // TEMPORARY DEBUG: remove once the checkout redirect issue is resolved.
-    console.log("[mercadopago] createPreapproval raw response:", JSON.stringify(data, null, 2));
-
-    // A preapproval created with test credentials only exists in Mercado
-    // Pago's sandbox database. `init_point` points at the production
-    // checkout, which 404s ("esta página no existe") because it looks the
-    // id up in the wrong database -- `sandbox_init_point` is the one that
-    // actually resolves for test preapprovals.
+    // The Preapproval API doesn't actually return sandbox_init_point (that
+    // field only exists on Preference/Checkout Pro objects), so this always
+    // falls through to init_point.
     const initPoint = data.sandbox_init_point ?? data.init_point;
 
-    return { id: String(data.id), initPoint, status: data.status };
+    return { id: String(data.id), initPoint: stripActivationParam(initPoint), status: data.status };
   },
 
   async getPreapproval(id) {
