@@ -7,7 +7,6 @@ const RESERVED_SLUGS = new Set([
   ...RESERVED_TOP_LEVEL_ROUTES,
   "www",
   "app",
-  "admin",
   "mail",
   "ftp",
   "staging",

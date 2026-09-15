@@ -11,7 +11,8 @@
     "test:milestone3": "tsx scripts/test-milestone3.ts",
     "test:milestone4": "tsx scripts/test-milestone4.ts",
     "test:milestone6": "tsx scripts/test-milestone6.ts",
-    "test:path-routing": "tsx scripts/test-path-routing.ts"
+    "test:path-routing": "tsx scripts/test-path-routing.ts",
+    "test:milestone7": "tsx scripts/test-milestone7.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

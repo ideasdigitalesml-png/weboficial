@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ROOT_DOMAIN } from "@/lib/root-domain";
 import type { FormSchema } from "@/lib/forms/validate-form-data";
@@ -34,32 +35,47 @@ export default async function DashboardPage() {
     redirect("/onboarding");
   }
 
-  const [{ data: profession }, { data: stockImages }, { data: subscription }] =
-    await Promise.all([
-      supabase
-        .from("professions")
-        .select("form_schema")
-        .eq("id", landing.profession_id)
-        .maybeSingle(),
-      supabase
-        .from("stock_images")
-        .select("id, category, image_url")
-        .eq("category", "perfil"),
-      supabase
-        .from("subscriptions")
-        .select("status, created_at")
-        .eq("landing_id", landing.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-    ]);
+  const [
+    { data: profession },
+    { data: stockImages },
+    { data: subscription },
+    { data: profile },
+  ] = await Promise.all([
+    supabase
+      .from("professions")
+      .select("form_schema")
+      .eq("id", landing.profession_id)
+      .maybeSingle(),
+    supabase
+      .from("stock_images")
+      .select("id, category, image_url")
+      .eq("category", "perfil"),
+    supabase
+      .from("subscriptions")
+      .select("status, created_at")
+      .eq("landing_id", landing.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
+  ]);
 
   const publicUrl = `https://${landing.slug}.${ROOT_DOMAIN}`;
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-10 px-6 py-12">
       <section className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold">Tu landing</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">Tu landing</h1>
+          {profile?.role === "admin" && (
+            <Link
+              href="/admin"
+              className="text-sm text-blue-600 underline dark:text-blue-400"
+            >
+              Panel de administración
+            </Link>
+          )}
+        </div>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
           <dt className="text-zinc-500">Subdominio</dt>
           <dd>
