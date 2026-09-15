@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test:milestone2": "tsx scripts/test-milestone2.ts",
     "test:milestone3": "tsx scripts/test-milestone3.ts",
-    "test:milestone4": "tsx scripts/test-milestone4.ts"
+    "test:milestone4": "tsx scripts/test-milestone4.ts",
+    "test:milestone6": "tsx scripts/test-milestone6.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

@@ -3,6 +3,12 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { mercadoPagoClient } from "@/lib/mercadopago/client";
+import {
+  updateLandingFormData,
+  updateLandingSectionsConfig,
+  type UpdateFormDataResult,
+  type UpdateSectionsConfigResult,
+} from "@/lib/landings/update-landing";
 
 export async function createSubscriptionAction(): Promise<{
   ok: false;
@@ -87,4 +93,38 @@ export async function createSubscriptionAction(): Promise<{
   }
 
   redirect(preapproval.initPoint);
+}
+
+export async function updateLandingFormDataAction(
+  landingId: string,
+  formData: Record<string, unknown>
+): Promise<UpdateFormDataResult | { ok: false; reason: "not_authenticated" }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false, reason: "not_authenticated" };
+  }
+
+  return updateLandingFormData(supabase, user.id, landingId, formData);
+}
+
+export async function updateLandingSectionsConfigAction(
+  landingId: string,
+  sectionsConfig: unknown
+): Promise<
+  UpdateSectionsConfigResult | { ok: false; reason: "not_authenticated" }
+> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false, reason: "not_authenticated" };
+  }
+
+  return updateLandingSectionsConfig(supabase, user.id, landingId, sectionsConfig);
 }
