@@ -1,7 +1,12 @@
+import { RESERVED_TOP_LEVEL_ROUTES } from "../tenancy/reserved-routes";
+
+// Real internal routes (RESERVED_TOP_LEVEL_ROUTES) plus infra-sounding,
+// brand, and likely-future-route words, blocked defensively even though
+// nothing serves them today.
 const RESERVED_SLUGS = new Set([
+  ...RESERVED_TOP_LEVEL_ROUTES,
   "www",
   "app",
-  "api",
   "admin",
   "mail",
   "ftp",
@@ -16,17 +21,13 @@ const RESERVED_SLUGS = new Set([
   "support",
   "status",
   "docs",
-  "dashboard",
   "panel",
   "root",
   "mercadopago",
   "mp",
-  "auth",
-  "login",
   "signup",
   "supabase",
   "plataforma",
-  "onboarding",
 ]);
 
 const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$/;
