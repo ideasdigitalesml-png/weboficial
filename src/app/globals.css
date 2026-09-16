@@ -8,8 +8,19 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-space-grotesk), "Space Grotesk", sans-serif;
+
+  /* Brand tokens (weboficial). See the 60-30-10 rule in the landing
+     components: navy is reserved for type/wordmark/footer, sky is
+     reserved for CTAs and small accents -- never a large background. */
+  --color-navy: #0f1f3d;
+  --color-sky: #0284c7;
+  --color-sky-dark: #0369a1;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f8fafc;
+  --color-text-body: #334155;
+  --color-border-subtle: #e2e8f0;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +33,5 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
