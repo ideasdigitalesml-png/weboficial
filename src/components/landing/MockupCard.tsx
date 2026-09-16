@@ -14,10 +14,10 @@ export function MockupCard() {
       </div>
       <div className="flex flex-col gap-4 p-6">
         <div className="flex items-center gap-3">
-          <span className="h-12 w-12 shrink-0 rounded-full bg-navy/10" />
+          <span className="h-12 w-12 shrink-0 rounded-full bg-sky/15 ring-2 ring-sky/50" />
           <div className="flex flex-1 flex-col gap-2">
             <span className="h-3 w-2/5 rounded-full bg-navy/80" />
-            <span className="h-2.5 w-1/3 rounded-full bg-navy/20" />
+            <span className="h-2.5 w-1/3 rounded-full bg-sky/60" />
           </div>
         </div>
         <div className="flex flex-col gap-2 pt-2">

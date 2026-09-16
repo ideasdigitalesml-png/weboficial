@@ -25,8 +25,8 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section className="bg-surface-muted px-6 py-16 sm:py-24">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-12">
+    <section className="bg-surface-muted px-6 py-12 sm:py-16">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-10">
         <h2 className="text-center text-3xl font-bold text-navy sm:text-4xl">
           Cómo funciona
         </h2>
