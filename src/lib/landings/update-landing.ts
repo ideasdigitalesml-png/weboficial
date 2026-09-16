@@ -1,5 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { validateFormData, type FormSchema } from "../forms/validate-form-data";
+import {
+  validateFormData,
+  type FormSchema,
+  type FormFieldValue,
+} from "../forms/validate-form-data";
 
 export interface SectionConfigItem {
   id: string;
@@ -8,7 +12,7 @@ export interface SectionConfigItem {
 }
 
 export type UpdateFormDataResult =
-  | { ok: true; formData: Record<string, string> }
+  | { ok: true; formData: Record<string, FormFieldValue> }
   | { ok: false; reason: "not_found" }
   | { ok: false; reason: "invalid_form_data"; errors: Record<string, string> };
 

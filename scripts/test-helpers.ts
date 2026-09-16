@@ -82,11 +82,13 @@ export async function getSeedIds(): Promise<{
 
 export const VALID_FORM_DATA = {
   name: "Juan Pérez",
-  professional_title: "Contador Público",
+  matricula: "12345",
+  jurisdiccion: "CPCE Buenos Aires",
   description: "Más de 10 años de experiencia asesorando pymes.",
-  phone: "+54 9 11 5555-5555",
+  phone: "+5491155555555",
   email: "juan@example.com",
   profile_image: "https://i.pravatar.cc/300?img=11",
+  servicios: ["monotributo", "iva"],
 };
 
 export function assert(cond: unknown, message: string): asserts cond {

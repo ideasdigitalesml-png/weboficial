@@ -27,7 +27,7 @@ export default async function OnboardingPage() {
       supabase.from("professions").select("id, name, slug, form_schema"),
       supabase
         .from("templates")
-        .select("id, profession_id, name, slug, preview_image_url"),
+        .select("id, profession_id, name, slug, preview_image_url, config"),
       supabase
         .from("stock_images")
         .select("id, category, image_url")

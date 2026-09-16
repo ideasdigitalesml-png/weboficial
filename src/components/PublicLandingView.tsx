@@ -1,61 +1,30 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { SectionConfigItem } from "@/lib/landings/update-landing";
+import {
+  ContadorLandingTemplate,
+  type ContadorFormData,
+} from "@/components/templates/contador/ContadorLandingTemplate";
 
 const PUBLICLY_VISIBLE_STATUSES = new Set(["active"]);
-
-interface LandingFormData {
-  name?: string;
-  professional_title?: string;
-  description?: string;
-  phone?: string;
-  email?: string;
-  profile_image?: string;
-}
-
-// Content per section id. The template (and therefore this set of section
-// ids) is fixed forever once a landing is created -- sections_config can
-// only reorder/hide these, never add or rename one. "services" has no
-// dedicated form_data field in the MVP, so it renders nothing either way.
-const SECTIONS: Record<
-  string,
-  (data: LandingFormData) => React.ReactNode
-> = {
-  hero: (data) => (
-    <div className="flex flex-col items-center gap-4 text-center sm:items-start sm:text-left">
-      {data.profile_image && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={data.profile_image}
-          alt={data.name ?? ""}
-          className="h-32 w-32 rounded-full object-cover"
-        />
-      )}
-      <h1 className="text-2xl font-semibold">{data.name}</h1>
-      <p className="text-zinc-500">{data.professional_title}</p>
-    </div>
-  ),
-  about: (data) => (data.description ? <p>{data.description}</p> : null),
-  services: () => null,
-  contact: (data) => (
-    <div className="flex flex-col gap-1 text-sm">
-      {data.phone && <p>WhatsApp: {data.phone}</p>}
-      {data.email && <p>Email: {data.email}</p>}
-    </div>
-  ),
-};
 
 // Shared by both public-landing routes: the subdomain one (site/[slug],
 // reached via the proxy rewrite in proxy.ts) and the temporary path-based
 // one (/[slug], used while the project doesn't have Vercel Pro's wildcard
 // subdomain support yet). Both resolve a landing the same way and must stay
 // in sync, so the fetch + render logic lives here once.
+//
+// Rendering itself is delegated to a per-profession template component
+// (only "contadores" exists today) so the exact same markup/palette is used
+// here and in the onboarding wizard's live preview.
 export async function PublicLandingView({ slug }: { slug: string }) {
   const supabase = await createClient();
 
   const { data: landing } = await supabase
     .from("landings")
-    .select("form_data, sections_config, status")
+    .select(
+      "form_data, sections_config, status, professions(slug), templates(config)"
+    )
     .eq("internal_subdomain", slug)
     .maybeSingle();
 
@@ -63,16 +32,36 @@ export async function PublicLandingView({ slug }: { slug: string }) {
     notFound();
   }
 
-  const formData = landing.form_data as LandingFormData;
-  const sections = (landing.sections_config as SectionConfigItem[])
-    .filter((s) => s.visible && SECTIONS[s.id])
-    .sort((a, b) => a.order - b.order);
+  // The Supabase client here has no generated Database types, so its
+  // inference for embedded to-one relations (professions/templates, joined
+  // via landings.profession_id/template_id) is unreliable about whether it
+  // comes back as an object or a single-element array -- normalize both.
+  function one<T>(rel: T | T[] | null): T | null {
+    return Array.isArray(rel) ? (rel[0] ?? null) : rel;
+  }
 
-  return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-12">
-      {sections.map((section) => (
-        <div key={section.id}>{SECTIONS[section.id](formData)}</div>
-      ))}
-    </div>
+  const professionSlug = one(
+    landing.professions as { slug: string } | { slug: string }[] | null
+  )?.slug;
+  const templateConfig = one(
+    landing.templates as
+      | { config?: { primaryColor?: string } }
+      | { config?: { primaryColor?: string } }[]
+      | null
   );
+  const sectionsConfig = landing.sections_config as SectionConfigItem[];
+
+  if (professionSlug === "contadores") {
+    return (
+      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
+        <ContadorLandingTemplate
+          formData={landing.form_data as ContadorFormData}
+          sectionsConfig={sectionsConfig}
+          accentColor={templateConfig?.config?.primaryColor}
+        />
+      </div>
+    );
+  }
+
+  notFound();
 }

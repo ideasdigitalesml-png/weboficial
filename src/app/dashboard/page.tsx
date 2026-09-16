@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ROOT_DOMAIN } from "@/lib/root-domain";
-import type { FormSchema } from "@/lib/forms/validate-form-data";
+import type { FormSchema, FormFieldValue } from "@/lib/forms/validate-form-data";
 import type { SectionConfigItem } from "@/lib/landings/update-landing";
 import { SubscribeButton } from "./SubscribeButton";
 import { EditLandingForm } from "./EditLandingForm";
@@ -121,7 +121,7 @@ export default async function DashboardPage() {
         <EditLandingForm
           landingId={landing.id}
           formSchema={profession.form_schema as FormSchema}
-          initialValues={landing.form_data as Record<string, string>}
+          initialValues={landing.form_data as Record<string, FormFieldValue>}
           stockImages={stockImages ?? []}
         />
       )}

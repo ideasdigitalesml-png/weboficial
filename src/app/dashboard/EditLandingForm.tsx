@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { FormSchema } from "@/lib/forms/validate-form-data";
+import type { FormSchema, FormFieldValue } from "@/lib/forms/validate-form-data";
 import { FieldInput, type StockImage } from "@/components/forms/FieldInput";
 import { updateLandingFormDataAction } from "./actions";
 
@@ -14,17 +14,19 @@ export function EditLandingForm({
 }: {
   landingId: string;
   formSchema: FormSchema;
-  initialValues: Record<string, string>;
+  initialValues: Record<string, FormFieldValue>;
   stockImages: StockImage[];
 }) {
   const router = useRouter();
-  const [values, setValues] = useState<Record<string, string>>(initialValues);
+  const [values, setValues] = useState<Record<string, FormFieldValue>>(
+    initialValues
+  );
   const [imageMode, setImageMode] = useState<"stock" | "manual">("stock");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  function updateValue(key: string, value: string) {
+  function updateValue(key: string, value: FormFieldValue) {
     setValues((v) => ({ ...v, [key]: value }));
   }
 
