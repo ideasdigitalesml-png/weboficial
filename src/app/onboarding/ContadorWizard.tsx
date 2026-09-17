@@ -12,6 +12,7 @@ import {
   ContadorLandingTemplate,
   type ContadorFormData,
 } from "@/components/templates/contador/ContadorLandingTemplate";
+import { ContadorModernoTemplate } from "@/components/templates/contador/ContadorModernoTemplate";
 import { checkSlugAvailabilityAction, createLandingAction } from "./actions";
 import {
   PRIMARY_BUTTON,
@@ -19,6 +20,12 @@ import {
   TOGGLE_ACTIVE,
   TOGGLE_INACTIVE,
 } from "./styles";
+import { createSubscriptionAction } from "@/app/dashboard/actions";
+import { saveDraftPage, loadDraftPage, clearDraftPage } from "./draft-storage";
+import { AuthModal } from "./AuthModal";
+
+const PUBLISHING_PATH = "/onboarding/publishing";
+const DRAFT_SAVE_DEBOUNCE_MS = 300;
 
 type ContadorStep = "datos" | "contacto" | "servicios" | "quienes" | "revision";
 
@@ -71,25 +78,62 @@ export function ContadorWizard({
   profession,
   template,
   stockImages,
+  isAuthenticated,
   onBack,
 }: {
   profession: { id: string; form_schema: FormSchema };
-  template: { id: string; config?: { primaryColor?: string } | null };
+  template: {
+    id: string;
+    config?: {
+      primaryColor?: string;
+      secondaryColor?: string;
+      layout?: string;
+    } | null;
+  };
   stockImages: StockImage[];
+  isAuthenticated: boolean;
   onBack: () => void;
 }) {
   const router = useRouter();
   const [step, setStep] = useState<ContadorStep>("datos");
-  const [values, setValues] = useState<Record<string, FormFieldValue>>({});
+
+  // Restores a draft left over from before this visitor signed in (e.g.
+  // they clicked "Publicar", went through Google, and the create/subscribe
+  // step failed -- /onboarding/publishing sends them back here with the
+  // draft still in sessionStorage). Lazy initializers so this only ever
+  // runs once, on mount, as actual initial state -- not as a post-mount
+  // effect that would have to call setState itself. Only restores if it's
+  // a draft for this same profession/template; anything else is ignored.
+  const [values, setValues] = useState<Record<string, FormFieldValue>>(() => {
+    const draft = loadDraftPage();
+    if (draft?.professionId === profession.id && draft.templateId === template.id) {
+      return draft.formData;
+    }
+    return {};
+  });
   const [imageMode, setImageMode] = useState<"stock" | "manual">("stock");
-  const [quienesMode, setQuienesMode] = useState<"suggested" | "custom">(
-    "suggested"
-  );
-  const [slugInput, setSlugInput] = useState("");
+  const [quienesMode, setQuienesMode] = useState<"suggested" | "custom">(() => {
+    const draft = loadDraftPage();
+    const restoredDescription =
+      draft?.professionId === profession.id &&
+      draft.templateId === template.id &&
+      typeof draft.formData.description === "string"
+        ? draft.formData.description
+        : "";
+    return restoredDescription ? "custom" : "suggested";
+  });
+  const [slugInput, setSlugInput] = useState(() => {
+    const draft = loadDraftPage();
+    if (draft?.professionId === profession.id && draft.templateId === template.id) {
+      return draft.desiredSlug;
+    }
+    return "";
+  });
   const [slugStatus, setSlugStatus] = useState<SlugStatus | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const fieldByKey = useMemo(() => {
@@ -111,6 +155,22 @@ export function ContadorWizard({
       : "";
   const description =
     quienesMode === "suggested" ? suggestedDescription : asString(values.description);
+
+  // Persists on every change, debounced, so an anonymous visitor's draft
+  // survives the same-tab round trip through Google OAuth (see
+  // draft-storage.ts) -- not to survive a closed tab, which correctly
+  // still loses it (sessionStorage).
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      saveDraftPage({
+        professionId: profession.id,
+        templateId: template.id,
+        formData: { ...values, description },
+        desiredSlug: slugInput,
+      });
+    }, DRAFT_SAVE_DEBOUNCE_MS);
+    return () => clearTimeout(handle);
+  }, [profession.id, template.id, values, description, slugInput]);
 
   useEffect(() => {
     if (step !== "revision" || slugInput.trim().length === 0) return;
@@ -174,6 +234,21 @@ export function ContadorWizard({
   }
 
   function handleSubmit() {
+    // Flush immediately rather than waiting for the 300ms debounce -- the
+    // draft must be current in sessionStorage the instant we might hand
+    // off to Google OAuth.
+    saveDraftPage({
+      professionId: profession.id,
+      templateId: template.id,
+      formData: { ...values, description },
+      desiredSlug: slugInput,
+    });
+
+    if (!isAuthenticated) {
+      setAuthModalOpen(true);
+      return;
+    }
+
     setSubmitError(null);
     setFormErrors({});
     startTransition(async () => {
@@ -185,7 +260,12 @@ export function ContadorWizard({
       });
 
       if (result.ok) {
-        router.push("/dashboard");
+        clearDraftPage();
+        // Straight to Mercado Pago, no dashboard detour -- createSubscriptionAction
+        // redirects on every success path, so reaching the line after this
+        // means it failed.
+        const subscribeResult = await createSubscriptionAction();
+        setSubmitError(subscribeResult.message);
         return;
       }
 
@@ -228,7 +308,9 @@ export function ContadorWizard({
     servicios: asStringArray(values.servicios),
     description: description || undefined,
   };
-  const accentColor = template.config?.primaryColor;
+  const isModerno = template.config?.layout === "modern";
+  const colorPrimary = template.config?.primaryColor;
+  const colorAccent = template.config?.secondaryColor;
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-12">
@@ -252,7 +334,10 @@ export function ContadorWizard({
           submitError={submitError}
           isPending={isPending}
           previewFormData={previewFormData}
-          accentColor={accentColor}
+          isModerno={isModerno}
+          colorPrimary={colorPrimary}
+          colorAccent={colorAccent}
+          subdomain={slugInput}
           onBack={goBack}
           onSubmit={handleSubmit}
           canSubmit={canContinue()}
@@ -423,10 +508,12 @@ export function ContadorWizard({
 
           <div className="hidden lg:block">
             <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto rounded-2xl border border-border-subtle shadow-sm">
-              <ContadorLandingTemplate
+              <TemplatePreview
+                isModerno={isModerno}
                 formData={previewFormData}
-                sectionsConfig={DEFAULT_SECTIONS_CONFIG}
-                accentColor={accentColor}
+                colorPrimary={colorPrimary}
+                colorAccent={colorAccent}
+                subdomain={slugInput}
               />
             </div>
           </div>
@@ -454,13 +541,22 @@ export function ContadorWizard({
             </button>
           </div>
           <div className="flex-1 overflow-y-auto">
-            <ContadorLandingTemplate
+            <TemplatePreview
+              isModerno={isModerno}
               formData={previewFormData}
-              sectionsConfig={DEFAULT_SECTIONS_CONFIG}
-              accentColor={accentColor}
+              colorPrimary={colorPrimary}
+              colorAccent={colorAccent}
+              subdomain={slugInput}
             />
           </div>
         </div>
+      )}
+
+      {authModalOpen && (
+        <AuthModal
+          nextPath={PUBLISHING_PATH}
+          onClose={() => setAuthModalOpen(false)}
+        />
       )}
     </div>
   );
@@ -473,7 +569,10 @@ function RevisionStep({
   submitError,
   isPending,
   previewFormData,
-  accentColor,
+  isModerno,
+  colorPrimary,
+  colorAccent,
+  subdomain,
   onBack,
   onSubmit,
   canSubmit,
@@ -484,7 +583,10 @@ function RevisionStep({
   submitError: string | null;
   isPending: boolean;
   previewFormData: ContadorFormData;
-  accentColor?: string;
+  isModerno: boolean;
+  colorPrimary?: string;
+  colorAccent?: string;
+  subdomain: string;
   onBack: () => void;
   onSubmit: () => void;
   canSubmit: boolean;
@@ -510,10 +612,12 @@ function RevisionStep({
           Así se va a ver tu página
         </h2>
         <div className="overflow-hidden rounded-2xl border border-border-subtle shadow-sm">
-          <ContadorLandingTemplate
+          <TemplatePreview
+            isModerno={isModerno}
             formData={previewFormData}
-            sectionsConfig={DEFAULT_SECTIONS_CONFIG}
-            accentColor={accentColor}
+            colorPrimary={colorPrimary}
+            colorAccent={colorAccent}
+            subdomain={subdomain}
           />
         </div>
       </div>
@@ -533,6 +637,43 @@ function RevisionStep({
         </button>
       </div>
     </div>
+  );
+}
+
+// Same dispatch rule as PublicLandingView.tsx: templates whose config marks
+// layout "modern" get the new design, everything else keeps the original
+// (Clásico) one. Kept as one place so the three preview spots above
+// (desktop sticky, mobile modal, revision step) can't drift out of sync.
+function TemplatePreview({
+  isModerno,
+  formData,
+  colorPrimary,
+  colorAccent,
+  subdomain,
+}: {
+  isModerno: boolean;
+  formData: ContadorFormData;
+  colorPrimary?: string;
+  colorAccent?: string;
+  subdomain: string;
+}) {
+  if (isModerno) {
+    return (
+      <ContadorModernoTemplate
+        formData={formData}
+        sectionsConfig={DEFAULT_SECTIONS_CONFIG}
+        subdomain={subdomain || undefined}
+        colorPrimary={colorPrimary}
+        colorAccent={colorAccent}
+      />
+    );
+  }
+  return (
+    <ContadorLandingTemplate
+      formData={formData}
+      sectionsConfig={DEFAULT_SECTIONS_CONFIG}
+      accentColor={colorPrimary}
+    />
   );
 }
 

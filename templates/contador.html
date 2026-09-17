@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{nombre_completo}} — {{titulo_profesional}}</title>
+<meta name="description" content="{{titulo_profesional}} en {{ciudad}}. {{bio}}">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  /* ============ Tokens ============
+     --c-primary / --c-accent / --c-accent-lt son reemplazables por el
+     backend ({{color_primary}} / {{color_accent}}). Defaults sugeridos:
+     navy #0B2545 y verde #1A6B4A. El resto de la paleta es fija. */
+  :root{
+    --c-primary: {{color_primary}};
+    --c-accent: {{color_accent}};
+    --c-accent-lt: #E8F3EE;
+    --c-bg: #FFFFFF;
+    --c-bg2: #F6F8FA;
+    --c-text: #10151C;
+    --c-muted: #5B6472;
+    --c-border: #E3E8ED;
+
+    --font-display: "Instrument Serif", serif;
+    --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    --shadow-sm: 0 1px 2px rgba(16,21,28,.06);
+    --shadow-md: 0 8px 24px rgba(16,21,28,.08);
+    --shadow-lg: 0 24px 60px rgba(16,21,28,.14);
+    --radius: 18px;
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    overflow-x:hidden;
+    background:var(--c-bg);
+    color:var(--c-text);
+    font-family:var(--font-body);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  img{ max-width:100%; display:block; }
+  a{ color:inherit; text-decoration:none; }
+  ul{ margin:0; padding:0; list-style:none; }
+  h1,h2,h3{ margin:0; font-family:var(--font-display); font-weight:400; letter-spacing:-.01em; }
+  p{ margin:0; }
+  section{ min-width:0; }
+  .container{
+    width:100%;
+    max-width:1160px;
+    margin-inline:auto;
+    padding-inline:24px;
+  }
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:.8rem;
+    font-weight:600;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--c-accent);
+  }
+  .eyebrow::before{
+    content:"";
+    width:8px; height:8px;
+    border-radius:50%;
+    background:var(--c-accent);
+    flex-shrink:0;
+  }
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:14px 26px;
+    border-radius:999px;
+    font-weight:600;
+    font-size:.95rem;
+    font-family:var(--font-body);
+    border:1px solid transparent;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease, background-color .15s ease;
+    white-space:nowrap;
+  }
+  .btn:active{ transform:scale(.97); }
+  .btn-primary{
+    background:var(--c-accent);
+    color:#fff;
+    box-shadow:var(--shadow-sm);
+  }
+  .btn-primary:hover{ box-shadow:var(--shadow-md); }
+  .btn-outline{
+    background:transparent;
+    border-color:var(--c-border);
+    color:var(--c-text);
+  }
+  .btn-outline:hover{ border-color:var(--c-primary); }
+  .btn-white{
+    background:#fff;
+    color:var(--c-primary);
+  }
+  .btn-white:hover{ box-shadow:var(--shadow-md); }
+
+  .avatar-fallback{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:100%; height:100%;
+    background:linear-gradient(135deg,var(--c-accent),var(--c-primary));
+    color:#fff;
+    font-family:var(--font-display);
+    font-weight:400;
+  }
+
+  /* ============ Nav ============ */
+  .nav{
+    position:sticky; top:0; z-index:50;
+    background:rgba(255,255,255,.72);
+    backdrop-filter:blur(14px) saturate(160%);
+    -webkit-backdrop-filter:blur(14px) saturate(160%);
+    border-bottom:1px solid var(--c-border);
+  }
+  .nav-inner{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding-block:14px;
+  }
+  .nav-logo{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+    font-size:1.05rem;
+    min-width:0;
+  }
+  .nav-logo-badge{
+    width:34px; height:34px;
+    border-radius:10px;
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .nav-logo-badge .avatar-fallback{ font-size:.85rem; border-radius:10px; }
+  .nav-logo span{
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .nav-links{
+    display:flex;
+    align-items:center;
+    gap:28px;
+    font-size:.92rem;
+    font-weight:500;
+    color:var(--c-muted);
+  }
+  .nav-links a:hover{ color:var(--c-text); }
+  .nav-cta{ flex-shrink:0; }
+  .nav-cta .btn{ padding:11px 20px; font-size:.88rem; }
+
+  @media (max-width:860px){
+    .nav-links{ display:none; }
+  }
+
+  /* ============ Hero ============ */
+  .hero{ padding-block:64px 80px; background:var(--c-bg); }
+  .hero-grid{
+    display:grid;
+    grid-template-columns:1.1fr .9fr;
+    gap:56px;
+    align-items:center;
+  }
+  .hero-copy h1{
+    font-size:clamp(2.2rem,4.4vw,3.4rem);
+    line-height:1.08;
+    margin-block:18px 20px;
+    color:var(--c-primary);
+  }
+  .hero-copy .lead{
+    color:var(--c-muted);
+    font-size:1.08rem;
+    max-width:46ch;
+    margin-bottom:32px;
+  }
+  .hero-actions{ display:flex; flex-wrap:wrap; gap:14px; }
+
+  .hero-visual{ position:relative; }
+  .photo-card{
+    position:relative;
+    aspect-ratio:4/5;
+    width:100%;
+    border-radius:var(--radius);
+    overflow:hidden;
+    box-shadow:var(--shadow-lg);
+    background:var(--c-bg2);
+    border:1px solid var(--c-border);
+  }
+  .photo-card img{ width:100%; height:100%; object-fit:cover; }
+  .photo-card .avatar-fallback{ font-size:5rem; }
+
+  .hero-badge{
+    position:absolute;
+    top:20px; left:20px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:rgba(255,255,255,.92);
+    backdrop-filter:blur(6px);
+    color:var(--c-primary);
+    font-size:.82rem;
+    font-weight:700;
+    padding:9px 16px;
+    border-radius:999px;
+    box-shadow:var(--shadow-sm);
+  }
+  .hero-badge::before{
+    content:"✓";
+    display:inline-flex;
+    align-items:center; justify-content:center;
+    width:16px; height:16px;
+    border-radius:50%;
+    background:var(--c-accent);
+    color:#fff;
+    font-size:.65rem;
+  }
+
+  .hero-stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin-top:20px;
+    padding:18px;
+    background:var(--c-bg2);
+    border:1px solid var(--c-border);
+    border-radius:16px;
+  }
+  .hero-stat{ text-align:center; min-width:0; }
+  .hero-stat strong{
+    display:block;
+    font-family:var(--font-display);
+    font-size:1.6rem;
+    color:var(--c-primary);
+  }
+  .hero-stat span{
+    display:block;
+    font-size:.74rem;
+    color:var(--c-muted);
+    margin-top:2px;
+    overflow-wrap:break-word;
+  }
+
+  @media (max-width:900px){
+    .hero-grid{ grid-template-columns:1fr; gap:40px; }
+    .hero-visual{ max-width:420px; margin-inline:auto; width:100%; }
+  }
+
+  /* ============ Trust bar ============ */
+  .trust{
+    background:var(--c-bg2);
+    border-block:1px solid var(--c-border);
+    padding-block:22px;
+  }
+  .trust-inner{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:14px;
+  }
+  .trust-label{
+    font-size:.82rem;
+    font-weight:600;
+    color:var(--c-muted);
+    flex-shrink:0;
+  }
+  .trust-items{ display:flex; flex-wrap:wrap; gap:10px; min-width:0; }
+  .trust-item{
+    font-size:.82rem;
+    font-weight:600;
+    color:var(--c-primary);
+    background:#fff;
+    border:1px solid var(--c-border);
+    padding:7px 14px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+
+  /* ============ Sections shared ============ */
+  .section{ padding-block:88px; }
+  .section-head{
+    max-width:640px;
+    margin-bottom:48px;
+  }
+  .section-head h2{
+    font-size:clamp(1.8rem,3.4vw,2.5rem);
+    margin-top:14px;
+    color:var(--c-primary);
+  }
+  .section-head p{
+    color:var(--c-muted);
+    margin-top:14px;
+    font-size:1.02rem;
+  }
+  .section-alt{ background:var(--c-bg2); }
+
+  /* ============ Servicios ============ */
+  .services-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:24px;
+  }
+  .service-card{
+    background:#fff;
+    border:1px solid var(--c-border);
+    border-radius:var(--radius);
+    padding:30px 26px;
+    min-width:0;
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .service-card:hover{ transform:translateY(-4px); box-shadow:var(--shadow-md); }
+  .service-icon{
+    width:52px; height:52px;
+    border-radius:14px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--c-accent-lt);
+    font-size:1.5rem;
+    margin-bottom:18px;
+  }
+  .service-card h3{
+    font-family:var(--font-body);
+    font-weight:700;
+    font-size:1.08rem;
+    color:var(--c-text);
+    margin-bottom:8px;
+  }
+  .service-card p{ color:var(--c-muted); font-size:.94rem; }
+
+  @media (max-width:920px){
+    .services-grid{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:600px){
+    .services-grid{ grid-template-columns:1fr; }
+  }
+
+  /* ============ Proceso ============ */
+  .process{
+    background:var(--c-primary);
+    color:#fff;
+    padding-block:88px;
+  }
+  .process .section-head h2{ color:#fff; }
+  .process .section-head p{ color:rgba(255,255,255,.68); }
+  .process .eyebrow{ color:var(--c-accent-lt); }
+  .process .eyebrow::before{ background:var(--c-accent-lt); }
+  .process-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:24px;
+  }
+  .process-step{
+    min-width:0;
+    padding:26px 22px;
+    border-radius:16px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.12);
+  }
+  .process-step .num{
+    font-family:var(--font-display);
+    font-size:2.2rem;
+    color:var(--c-accent-lt);
+    display:block;
+    margin-bottom:10px;
+  }
+  .process-step h3{
+    font-family:var(--font-body);
+    font-weight:700;
+    font-size:1rem;
+    margin-bottom:8px;
+  }
+  .process-step p{
+    color:rgba(255,255,255,.68);
+    font-size:.9rem;
+  }
+
+  @media (max-width:920px){
+    .process-grid{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:560px){
+    .process-grid{ grid-template-columns:1fr; }
+  }
+
+  /* ============ Testimonios ============ */
+  .testimonials-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:24px;
+  }
+  .testimonial-card{
+    background:#fff;
+    border:1px solid var(--c-border);
+    border-radius:var(--radius);
+    padding:28px;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+  }
+  .testimonial-stars{ color:var(--c-accent); font-size:.9rem; letter-spacing:2px; }
+  .testimonial-text{
+    color:var(--c-text);
+    font-size:.98rem;
+    line-height:1.6;
+    overflow-wrap:break-word;
+  }
+  .testimonial-who{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-top:auto;
+  }
+  .testimonial-avatar{
+    width:42px; height:42px;
+    border-radius:50%;
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .testimonial-avatar .avatar-fallback{ font-size:.85rem; border-radius:50%; }
+  .testimonial-who strong{ display:block; font-size:.92rem; }
+  .testimonial-who span{ display:block; font-size:.82rem; color:var(--c-muted); }
+
+  @media (max-width:920px){
+    .testimonials-grid{ grid-template-columns:1fr; }
+  }
+
+  /* ============ Perfil ============ */
+  .profile-grid{
+    display:grid;
+    grid-template-columns:.8fr 1.2fr;
+    gap:56px;
+    align-items:start;
+  }
+  .profile-photo{
+    aspect-ratio:1/1;
+    width:100%;
+    border-radius:var(--radius);
+    overflow:hidden;
+    border:1px solid var(--c-border);
+    box-shadow:var(--shadow-md);
+  }
+  .profile-photo img{ width:100%; height:100%; object-fit:cover; }
+  .profile-photo .avatar-fallback{ font-size:4rem; }
+
+  .profile-name{ font-size:1.7rem; color:var(--c-primary); margin-bottom:6px; }
+  .profile-title{ color:var(--c-muted); font-weight:500; margin-bottom:4px; }
+  .profile-matricula{
+    display:inline-block;
+    font-size:.8rem;
+    font-weight:600;
+    color:var(--c-accent);
+    background:var(--c-accent-lt);
+    padding:6px 12px;
+    border-radius:999px;
+    margin-bottom:22px;
+  }
+  .profile-bio{
+    color:var(--c-text);
+    font-size:1.02rem;
+    line-height:1.7;
+    margin-bottom:28px;
+    max-width:60ch;
+    overflow-wrap:break-word;
+  }
+  .credentials{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:14px;
+  }
+  .credential-item{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    font-size:.92rem;
+    color:var(--c-text);
+    min-width:0;
+  }
+  .credential-item .tick{
+    flex-shrink:0;
+    width:20px; height:20px;
+    border-radius:50%;
+    background:var(--c-accent-lt);
+    color:var(--c-accent);
+    display:flex; align-items:center; justify-content:center;
+    font-size:.68rem;
+    font-weight:700;
+    margin-top:1px;
+  }
+
+  @media (max-width:860px){
+    .profile-grid{ grid-template-columns:1fr; }
+    .profile-photo{ max-width:320px; margin-inline:auto; }
+    .credentials{ grid-template-columns:1fr; }
+  }
+
+  /* ============ CTA banner ============ */
+  .cta-banner{
+    background:linear-gradient(120deg,var(--c-primary),var(--c-accent));
+    color:#fff;
+    border-radius:28px;
+    padding:56px 40px;
+    text-align:center;
+    margin-inline:24px;
+  }
+  .cta-banner h2{
+    color:#fff;
+    font-size:clamp(1.8rem,3.6vw,2.6rem);
+    margin-bottom:16px;
+  }
+  .cta-banner p{
+    color:rgba(255,255,255,.82);
+    font-size:1.02rem;
+    max-width:52ch;
+    margin-inline:auto;
+    margin-bottom:32px;
+  }
+  .cta-actions{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:14px;
+    margin-bottom:28px;
+  }
+  .cta-contact{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:24px;
+    font-size:.9rem;
+    color:rgba(255,255,255,.85);
+  }
+  .cta-contact a:hover{ color:#fff; }
+
+  @media (max-width:600px){
+    .cta-banner{ padding:44px 24px; margin-inline:16px; }
+  }
+
+  /* ============ Footer ============ */
+  .footer{
+    background:#0B0F14;
+    color:rgba(255,255,255,.62);
+    padding-block:48px 32px;
+    margin-top:96px;
+  }
+  .footer-top{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:space-between;
+    align-items:center;
+    gap:20px;
+    padding-bottom:28px;
+    border-bottom:1px solid rgba(255,255,255,.1);
+    margin-bottom:24px;
+  }
+  .footer-brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    color:#fff;
+    font-weight:700;
+    font-size:1.05rem;
+    min-width:0;
+  }
+  .footer-brand .nav-logo-badge{ width:38px; height:38px; }
+  .footer-domain{
+    font-size:.86rem;
+    color:rgba(255,255,255,.5);
+    overflow-wrap:break-word;
+  }
+  .footer-bottom{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:space-between;
+    gap:12px;
+    font-size:.8rem;
+    color:rgba(255,255,255,.45);
+  }
+
+  /* ============ WhatsApp flotante ============ */
+  .whatsapp-float{
+    position:fixed;
+    right:20px; bottom:20px;
+    z-index:60;
+    width:58px; height:58px;
+    border-radius:50%;
+    background:var(--c-accent);
+    color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:var(--shadow-lg);
+    font-size:1.6rem;
+    transition:transform .18s ease;
+  }
+  .whatsapp-float:hover{ transform:scale(1.07); }
+
+  @media (max-width:480px){
+    .whatsapp-float{ width:52px; height:52px; right:16px; bottom:16px; font-size:1.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Nav ============ -->
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="nav-logo" href="#top">
+      <span class="nav-logo-badge" data-avatar data-name="{{nombre_completo}}" data-photo="{{foto_url}}"></span>
+      <span>{{nombre_completo}}</span>
+    </a>
+    <nav class="nav-links" aria-label="Navegación principal">
+      <a href="#servicios">Servicios</a>
+      <a href="#proceso">Proceso</a>
+      <a href="#testimonios">Testimonios</a>
+      <a href="#perfil">Perfil</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn btn-primary" href="https://wa.me/{{whatsapp}}" target="_blank" rel="noopener">Agendar consulta</a>
+    </div>
+  </div>
+</header>
+
+<!-- ============ Hero ============ -->
+<section class="hero" id="top">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <span class="eyebrow">{{titulo_profesional}} · {{ciudad}}</span>
+      <h1>Contabilidad clara, sin vueltas.</h1>
+      <p class="lead">Asesoramiento impositivo y contable personalizado, pensado para que entiendas cada decisión antes de tomarla.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="https://wa.me/{{whatsapp}}" target="_blank" rel="noopener">Escribime por WhatsApp</a>
+        <a class="btn btn-outline" href="#servicios">Ver servicios</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="photo-card">
+        <span class="hero-badge">Consulta sin costo</span>
+        <span data-avatar data-name="{{nombre_completo}}" data-photo="{{foto_url}}" style="width:100%;height:100%;display:block;"></span>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <strong>{{stat_clientes}}</strong>
+          <span>Clientes atendidos</span>
+        </div>
+        <div class="hero-stat">
+          <strong>{{stat_anos}}</strong>
+          <span>Años de experiencia</span>
+        </div>
+        <div class="hero-stat">
+          <strong>{{stat_respuesta}}</strong>
+          <span>Tiempo de respuesta</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Trust bar ============ -->
+<div class="trust">
+  <div class="container trust-inner">
+    <span class="trust-label">Especialista en:</span>
+    <div class="trust-items" data-trust-list="{{especialidades}}"></div>
+  </div>
+</div>
+
+<!-- ============ Servicios ============ -->
+<section class="section" id="servicios">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Servicios</span>
+      <h2>En qué puedo ayudarte</h2>
+      <p>Servicios pensados para cada etapa de tu actividad, desde el alta hasta el cierre de balance.</p>
+    </div>
+    <div class="services-grid">
+      <article class="service-card">
+        <span class="service-icon">{{servicio_1_icono}}</span>
+        <h3>{{servicio_1_titulo}}</h3>
+        <p>{{servicio_1_desc}}</p>
+      </article>
+      <article class="service-card">
+        <span class="service-icon">{{servicio_2_icono}}</span>
+        <h3>{{servicio_2_titulo}}</h3>
+        <p>{{servicio_2_desc}}</p>
+      </article>
+      <article class="service-card">
+        <span class="service-icon">{{servicio_3_icono}}</span>
+        <h3>{{servicio_3_titulo}}</h3>
+        <p>{{servicio_3_desc}}</p>
+      </article>
+      <article class="service-card">
+        <span class="service-icon">{{servicio_4_icono}}</span>
+        <h3>{{servicio_4_titulo}}</h3>
+        <p>{{servicio_4_desc}}</p>
+      </article>
+      <article class="service-card">
+        <span class="service-icon">{{servicio_5_icono}}</span>
+        <h3>{{servicio_5_titulo}}</h3>
+        <p>{{servicio_5_desc}}</p>
+      </article>
+      <article class="service-card">
+        <span class="service-icon">{{servicio_6_icono}}</span>
+        <h3>{{servicio_6_titulo}}</h3>
+        <p>{{servicio_6_desc}}</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Proceso ============ -->
+<section class="process" id="proceso">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Proceso</span>
+      <h2>Cómo trabajamos juntos</h2>
+      <p>Un circuito simple, pensado para que siempre sepas en qué etapa está tu gestión.</p>
+    </div>
+    <div class="process-grid">
+      <div class="process-step">
+        <span class="num">01</span>
+        <h3>Contacto inicial</h3>
+        <p>Me escribís por WhatsApp y coordinamos una consulta sin costo.</p>
+      </div>
+      <div class="process-step">
+        <span class="num">02</span>
+        <h3>Diagnóstico</h3>
+        <p>Revisamos tu situación impositiva y contable actual.</p>
+      </div>
+      <div class="process-step">
+        <span class="num">03</span>
+        <h3>Propuesta</h3>
+        <p>Te presento un plan de trabajo claro, con plazos y costos definidos.</p>
+      </div>
+      <div class="process-step">
+        <span class="num">04</span>
+        <h3>Seguimiento</h3>
+        <p>Acompañamiento continuo, con recordatorios de cada vencimiento.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Testimonios ============ -->
+<section class="section" id="testimonios">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Testimonios</span>
+      <h2>Lo que dicen mis clientes</h2>
+    </div>
+    <div class="testimonials-grid">
+      <article class="testimonial-card">
+        <span class="testimonial-stars">★★★★★</span>
+        <p class="testimonial-text">"{{testimonio_1_texto}}"</p>
+        <div class="testimonial-who">
+          <span class="testimonial-avatar" data-avatar data-name="{{testimonio_1_nombre}}"></span>
+          <span>
+            <strong>{{testimonio_1_nombre}}</strong>
+            <span>{{testimonio_1_rubro}}</span>
+          </span>
+        </div>
+      </article>
+      <article class="testimonial-card">
+        <span class="testimonial-stars">★★★★★</span>
+        <p class="testimonial-text">"{{testimonio_2_texto}}"</p>
+        <div class="testimonial-who">
+          <span class="testimonial-avatar" data-avatar data-name="{{testimonio_2_nombre}}"></span>
+          <span>
+            <strong>{{testimonio_2_nombre}}</strong>
+            <span>{{testimonio_2_rubro}}</span>
+          </span>
+        </div>
+      </article>
+      <article class="testimonial-card">
+        <span class="testimonial-stars">★★★★★</span>
+        <p class="testimonial-text">"{{testimonio_3_texto}}"</p>
+        <div class="testimonial-who">
+          <span class="testimonial-avatar" data-avatar data-name="{{testimonio_3_nombre}}"></span>
+          <span>
+            <strong>{{testimonio_3_nombre}}</strong>
+            <span>{{testimonio_3_rubro}}</span>
+          </span>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Perfil ============ -->
+<section class="section section-alt" id="perfil">
+  <div class="container profile-grid">
+    <div class="profile-photo" data-avatar data-name="{{nombre_completo}}" data-photo="{{foto_url}}"></div>
+    <div>
+      <h2 class="profile-name">{{nombre_completo}}</h2>
+      <p class="profile-title">{{titulo_profesional}} · {{ciudad}}</p>
+      <span class="profile-matricula">Matrícula N° {{matricula}}</span>
+      <p class="profile-bio">{{bio}}</p>
+      <div class="credentials">
+        <div class="credential-item"><span class="tick">✓</span><span>{{credencial_1}}</span></div>
+        <div class="credential-item"><span class="tick">✓</span><span>{{credencial_2}}</span></div>
+        <div class="credential-item"><span class="tick">✓</span><span>{{credencial_3}}</span></div>
+        <div class="credential-item"><span class="tick">✓</span><span>{{credencial_4}}</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA banner ============ -->
+<section class="section" id="contacto" style="padding-block:0 88px;">
+  <div class="cta-banner">
+    <h2>¿Listo para ordenar tus cuentas?</h2>
+    <p>Escribime y coordinamos una primera consulta sin costo para ver cómo puedo ayudarte.</p>
+    <div class="cta-actions">
+      <a class="btn btn-white" href="https://wa.me/{{whatsapp}}" target="_blank" rel="noopener">Escribime por WhatsApp</a>
+    </div>
+    <div class="cta-contact">
+      <a href="mailto:{{email}}">{{email}}</a>
+      <a href="https://wa.me/{{whatsapp}}" target="_blank" rel="noopener">{{whatsapp}}</a>
+      <span>Matrícula N° {{matricula}}</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Footer ============ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <span class="nav-logo-badge" data-avatar data-name="{{nombre_completo}}" data-photo="{{foto_url}}"></span>
+        <span>{{nombre_completo}}</span>
+      </div>
+      <span class="footer-domain">{{subdomain}}.weboficial.com.ar</span>
+    </div>
+    <div class="footer-bottom">
+      <span>{{titulo_profesional}} · Matrícula N° {{matricula}}</span>
+      <span data-year-copyright data-name="{{nombre_completo}}"></span>
+    </div>
+  </div>
+</footer>
+
+<!-- ============ WhatsApp flotante ============ -->
+<a class="whatsapp-float" href="https://wa.me/{{whatsapp}}" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">💬</a>
+
+<script>
+  // ---- Iniciales a partir del nombre completo ----
+  function getInitials(fullName) {
+    if (!fullName) return "";
+    return fullName
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map(function (w) { return w.charAt(0).toUpperCase(); })
+      .join("");
+  }
+
+  // Un valor cuenta como "vacío" tanto si el backend dejó "" (sin foto)
+  // como si el archivo se está previsualizando sin procesar y todavía
+  // tiene el token literal {{foto_url}}.
+  function isEmptyOrPlaceholder(value, placeholderToken) {
+    if (!value) return true;
+    var trimmed = value.trim();
+    return trimmed === "" || trimmed === placeholderToken;
+  }
+
+  document.querySelectorAll("[data-avatar]").forEach(function (el) {
+    var name = el.getAttribute("data-name") || "";
+    var photo = el.getAttribute("data-photo") || "";
+
+    if (!isEmptyOrPlaceholder(photo, "{{foto_url}}")) {
+      var img = document.createElement("img");
+      img.src = photo;
+      img.alt = name;
+      img.style.width = "100%";
+      img.style.height = "100%";
+      img.style.objectFit = "cover";
+      el.appendChild(img);
+      return;
+    }
+
+    var fallback = document.createElement("span");
+    fallback.className = "avatar-fallback";
+    fallback.textContent = isEmptyOrPlaceholder(name, "{{nombre_completo}}")
+      ? "?"
+      : getInitials(name);
+    el.appendChild(fallback);
+  });
+
+  // ---- Trust bar: separa {{especialidades}} por comas ----
+  document.querySelectorAll("[data-trust-list]").forEach(function (el) {
+    var raw = el.getAttribute("data-trust-list") || "";
+    var items = raw.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+    items.forEach(function (item) {
+      var chip = document.createElement("span");
+      chip.className = "trust-item";
+      chip.textContent = item;
+      el.appendChild(chip);
+    });
+  });
+
+  // ---- Copyright con año dinámico ----
+  document.querySelectorAll("[data-year-copyright]").forEach(function (el) {
+    var name = el.getAttribute("data-name") || "";
+    el.textContent = "© " + new Date().getFullYear() + " " + name;
+  });
+
+  // ---- Fallback de colores solo para previsualización sin procesar ----
+  // Si el backend nunca reemplazó {{color_primary}}/{{color_accent}}, el
+  // valor computado de la custom property sigue siendo ese token literal.
+  // En ese caso (y solo en ese caso) se pisa con los defaults navy/verde
+  // para que el diseño se vea completo al abrir el archivo directamente.
+  (function applyPreviewColorFallback() {
+    var root = document.documentElement;
+    var styles = getComputedStyle(root);
+    var raw = { primary: "{{color_primary}}", accent: "{{color_accent}}" };
+    var defaults = { primary: "#0B2545", accent: "#1A6B4A" };
+
+    if (styles.getPropertyValue("--c-primary").trim() === raw.primary) {
+      root.style.setProperty("--c-primary", defaults.primary);
+    }
+    if (styles.getPropertyValue("--c-accent").trim() === raw.accent) {
+      root.style.setProperty("--c-accent", defaults.accent);
+    }
+  })();
+</script>
+
+</body>
+</html>

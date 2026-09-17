@@ -3,15 +3,59 @@ import { formatListWithAnd } from "@/lib/format-list";
 // Mirrors the "servicios" checkbox-group options in the 0008 migration's
 // form_schema exactly (same value/label pairs) -- this copy is what the
 // wizard UI renders, the DB copy is what the server validates against.
+// `icon` and `description` are presentational only (used by the Moderno
+// template's services grid) and describe the SERVICE category generically
+// -- never anything specific to an individual professional, so they carry
+// no fabricated-data risk.
 export const CONTADOR_SERVICES = [
-  { value: "monotributo", label: "Monotributo" },
-  { value: "iva", label: "IVA" },
-  { value: "ganancias", label: "Impuesto a las Ganancias" },
-  { value: "bienes_personales", label: "Bienes Personales" },
-  { value: "liquidacion_sueldos", label: "Liquidación de sueldos" },
-  { value: "constitucion_sociedades", label: "Constitución de sociedades" },
-  { value: "balances", label: "Balances y estados contables" },
-  { value: "asesoramiento_impositivo", label: "Asesoramiento impositivo general" },
+  {
+    value: "monotributo",
+    label: "Monotributo",
+    icon: "🧾",
+    description: "Inscripción, recategorización y gestión de pagos mensuales.",
+  },
+  {
+    value: "iva",
+    label: "IVA",
+    icon: "📊",
+    description: "Liquidación y presentación de declaraciones juradas de IVA.",
+  },
+  {
+    value: "ganancias",
+    label: "Impuesto a las Ganancias",
+    icon: "💰",
+    description: "Cálculo y presentación anual, con seguimiento de anticipos.",
+  },
+  {
+    value: "bienes_personales",
+    label: "Bienes Personales",
+    icon: "🏠",
+    description: "Declaración jurada anual de bienes personales.",
+  },
+  {
+    value: "liquidacion_sueldos",
+    label: "Liquidación de sueldos",
+    icon: "👥",
+    description: "Liquidación mensual de haberes y cargas sociales.",
+  },
+  {
+    value: "constitucion_sociedades",
+    label: "Constitución de sociedades",
+    icon: "🏢",
+    description: "Alta, estatutos y trámites para empezar tu sociedad.",
+  },
+  {
+    value: "balances",
+    label: "Balances y estados contables",
+    icon: "📈",
+    description: "Confección y presentación de balances anuales.",
+  },
+  {
+    value: "asesoramiento_impositivo",
+    label: "Asesoramiento impositivo general",
+    icon: "💬",
+    description: "Consultas y planificación impositiva a medida.",
+  },
 ] as const;
 
 export function serviceLabels(values: string[]): string[] {
@@ -19,6 +63,22 @@ export function serviceLabels(values: string[]): string[] {
     CONTADOR_SERVICES.map((s) => [s.value, s.label])
   );
   return values.map((v) => byValue.get(v) ?? v);
+}
+
+export interface ServiceEntry {
+  value: string;
+  label: string;
+  icon: string;
+  description: string;
+}
+
+// Full catalog entries (icon + description included) for the selected
+// service values, in catalog order -- used by the Moderno template's
+// services grid, which shows however many services a professional picked
+// rather than a fixed count.
+export function serviceEntries(values: string[]): ServiceEntry[] {
+  const selected = new Set(values);
+  return CONTADOR_SERVICES.filter((s) => selected.has(s.value));
 }
 
 export interface TextTemplateData {

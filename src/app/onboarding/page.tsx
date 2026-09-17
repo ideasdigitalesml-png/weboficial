@@ -8,18 +8,21 @@ export default async function OnboardingPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+  // The wizard itself is public now -- an anonymous visitor fills the form
+  // and sees the live preview before ever signing in (see AuthModal /
+  // publish-draft.ts for what happens when they click "Publicar"). A
+  // signed-in user who already published shouldn't be able to re-run
+  // onboarding though, so that check still applies to them specifically.
+  if (user) {
+    const { data: existingLanding } = await supabase
+      .from("landings")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-  const { data: existingLanding } = await supabase
-    .from("landings")
-    .select("id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (existingLanding) {
-    redirect("/dashboard");
+    if (existingLanding) {
+      redirect("/dashboard");
+    }
   }
 
   const [{ data: professions }, { data: templates }, { data: stockImages }] =
@@ -39,6 +42,7 @@ export default async function OnboardingPage() {
       professions={professions ?? []}
       templates={templates ?? []}
       stockImages={stockImages ?? []}
+      isAuthenticated={Boolean(user)}
     />
   );
 }

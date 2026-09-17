@@ -23,7 +23,11 @@ export interface Template {
   name: string;
   slug: string;
   preview_image_url: string | null;
-  config: { primaryColor?: string } | null;
+  config: {
+    primaryColor?: string;
+    secondaryColor?: string;
+    layout?: string;
+  } | null;
 }
 
 export interface StockImage {
@@ -50,10 +54,12 @@ export function OnboardingWizard({
   professions,
   templates,
   stockImages,
+  isAuthenticated,
 }: {
   professions: Profession[];
   templates: Template[];
   stockImages: StockImage[];
+  isAuthenticated: boolean;
 }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("profession");
@@ -146,6 +152,7 @@ export function OnboardingWizard({
           profession={profession}
           template={selectedTemplate}
           stockImages={stockImages}
+          isAuthenticated={isAuthenticated}
           onBack={() => setStep("template")}
         />
       ) : (

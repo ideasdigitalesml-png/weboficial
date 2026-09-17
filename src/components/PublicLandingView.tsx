@@ -5,8 +5,15 @@ import {
   ContadorLandingTemplate,
   type ContadorFormData,
 } from "@/components/templates/contador/ContadorLandingTemplate";
+import { ContadorModernoTemplate } from "@/components/templates/contador/ContadorModernoTemplate";
 
 const PUBLICLY_VISIBLE_STATUSES = new Set(["active"]);
+
+interface TemplateConfig {
+  primaryColor?: string;
+  secondaryColor?: string;
+  layout?: string;
+}
 
 // Shared by both public-landing routes: the subdomain one (site/[slug],
 // reached via the proxy rewrite in proxy.ts) and the temporary path-based
@@ -14,16 +21,17 @@ const PUBLICLY_VISIBLE_STATUSES = new Set(["active"]);
 // subdomain support yet). Both resolve a landing the same way and must stay
 // in sync, so the fetch + render logic lives here once.
 //
-// Rendering itself is delegated to a per-profession template component
-// (only "contadores" exists today) so the exact same markup/palette is used
-// here and in the onboarding wizard's live preview.
+// Rendering itself is delegated to a per-profession, per-template-layout
+// component (only "contadores" exists today, with "modern" vs. everything
+// else as the two layouts) so the exact same markup/palette is used here
+// and in the onboarding wizard's live preview.
 export async function PublicLandingView({ slug }: { slug: string }) {
   const supabase = await createClient();
 
   const { data: landing } = await supabase
     .from("landings")
     .select(
-      "form_data, sections_config, status, professions(slug), templates(config)"
+      "slug, form_data, sections_config, status, professions(slug), templates(config)"
     )
     .eq("internal_subdomain", slug)
     .maybeSingle();
@@ -43,25 +51,38 @@ export async function PublicLandingView({ slug }: { slug: string }) {
   const professionSlug = one(
     landing.professions as { slug: string } | { slug: string }[] | null
   )?.slug;
-  const templateConfig = one(
+  const templateRow = one(
     landing.templates as
-      | { config?: { primaryColor?: string } }
-      | { config?: { primaryColor?: string } }[]
+      | { config?: TemplateConfig }
+      | { config?: TemplateConfig }[]
       | null
   );
+  const templateConfig = templateRow?.config;
   const sectionsConfig = landing.sections_config as SectionConfigItem[];
 
-  if (professionSlug === "contadores") {
+  if (professionSlug !== "contadores") {
+    notFound();
+  }
+
+  if (templateConfig?.layout === "modern") {
     return (
-      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
-        <ContadorLandingTemplate
-          formData={landing.form_data as ContadorFormData}
-          sectionsConfig={sectionsConfig}
-          accentColor={templateConfig?.config?.primaryColor}
-        />
-      </div>
+      <ContadorModernoTemplate
+        formData={landing.form_data as ContadorFormData}
+        sectionsConfig={sectionsConfig}
+        subdomain={landing.slug}
+        colorPrimary={templateConfig.primaryColor}
+        colorAccent={templateConfig.secondaryColor}
+      />
     );
   }
 
-  notFound();
+  return (
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
+      <ContadorLandingTemplate
+        formData={landing.form_data as ContadorFormData}
+        sectionsConfig={sectionsConfig}
+        accentColor={templateConfig?.primaryColor}
+      />
+    </div>
+  );
 }
