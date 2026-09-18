@@ -15,6 +15,7 @@
     "test:milestone7": "tsx scripts/test-milestone7.ts",
     "test:contador-wizard": "tsx scripts/test-contador-wizard.ts",
     "test:contador-moderno": "tsx scripts/test-contador-moderno.ts",
+    "test:abogado-wizard": "tsx scripts/test-abogado-wizard.ts",
     "test:public-onboarding": "tsx scripts/test-public-onboarding.ts"
   },
   "dependencies": {

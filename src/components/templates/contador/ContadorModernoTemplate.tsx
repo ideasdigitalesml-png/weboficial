@@ -2,6 +2,7 @@ import { Instrument_Serif, Inter } from "next/font/google";
 import type { SectionConfigItem } from "@/lib/landings/update-landing";
 import { serviceEntries, serviceLabels } from "@/lib/professions/contadores";
 import { buildWaLink } from "@/lib/whatsapp";
+import { getInitials } from "@/lib/avatar-initials";
 import type { ContadorFormData } from "./ContadorLandingTemplate";
 
 // Ported from templates/contador.html (design approved separately) into a
@@ -30,16 +31,6 @@ const MODALIDAD_LABELS: Record<string, string> = {
   remoto: "Atención remota",
   ambos: "Atención presencial y remota",
 };
-
-function getInitials(name: string): string {
-  const trimmed = name.trim();
-  if (!trimmed) return "?";
-  return trimmed
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w.charAt(0).toUpperCase())
-    .join("");
-}
 
 function Avatar({ name, photoUrl }: { name: string; photoUrl?: string }) {
   if (photoUrl) {

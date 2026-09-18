@@ -8,6 +8,7 @@ import { FieldInput } from "@/components/forms/FieldInput";
 import { Wordmark } from "@/components/landing/Wordmark";
 import { checkSlugAvailabilityAction, createLandingAction } from "./actions";
 import { ContadorWizard } from "./ContadorWizard";
+import { AbogadoWizard } from "./AbogadoWizard";
 import { PRIMARY_BUTTON, SECONDARY_BUTTON } from "./styles";
 
 export interface Profession {
@@ -45,10 +46,10 @@ type SlugStatus =
   | { state: "invalid"; message: string };
 
 // Professions with a dedicated, richer wizard (own steps + live preview)
-// instead of the generic form_schema-driven fallback below. Today only
-// contadores has one; the grid in the "profession" step still renders every
-// row from the DB so adding a profession here is a UI-only change.
-const DEDICATED_WIZARD_PROFESSIONS = new Set(["contadores"]);
+// instead of the generic form_schema-driven fallback below. The grid in
+// the "profession" step still renders every row from the DB; the branch
+// right below this set picks which wizard component to render for each.
+const DEDICATED_WIZARD_PROFESSIONS = new Set(["contadores", "abogados"]);
 
 export function OnboardingWizard({
   professions,
@@ -148,13 +149,23 @@ export function OnboardingWizard({
       <WizardHeader />
 
       {step === "form" && profession && usesDedicatedWizard && selectedTemplate ? (
-        <ContadorWizard
-          profession={profession}
-          template={selectedTemplate}
-          stockImages={stockImages}
-          isAuthenticated={isAuthenticated}
-          onBack={() => setStep("template")}
-        />
+        profession.slug === "abogados" ? (
+          <AbogadoWizard
+            profession={profession}
+            template={selectedTemplate}
+            stockImages={stockImages}
+            isAuthenticated={isAuthenticated}
+            onBack={() => setStep("template")}
+          />
+        ) : (
+          <ContadorWizard
+            profession={profession}
+            template={selectedTemplate}
+            stockImages={stockImages}
+            isAuthenticated={isAuthenticated}
+            onBack={() => setStep("template")}
+          />
+        )
       ) : (
         <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-10">
           <Steps current={step} />

@@ -6,6 +6,12 @@ import {
   type ContadorFormData,
 } from "@/components/templates/contador/ContadorLandingTemplate";
 import { ContadorModernoTemplate } from "@/components/templates/contador/ContadorModernoTemplate";
+import {
+  AbogadoModernoTemplate,
+  type AbogadoFormData,
+} from "@/components/templates/abogado/AbogadoModernoTemplate";
+import { AbogadoClasicoTemplate } from "@/components/templates/abogado/AbogadoClasicoTemplate";
+import { AbogadoMinimalTemplate } from "@/components/templates/abogado/AbogadoMinimalTemplate";
 
 const PUBLICLY_VISIBLE_STATUSES = new Set(["active"]);
 
@@ -22,9 +28,8 @@ interface TemplateConfig {
 // in sync, so the fetch + render logic lives here once.
 //
 // Rendering itself is delegated to a per-profession, per-template-layout
-// component (only "contadores" exists today, with "modern" vs. everything
-// else as the two layouts) so the exact same markup/palette is used here
-// and in the onboarding wizard's live preview.
+// component so the exact same markup/palette is used here and in each
+// profession's onboarding wizard live preview.
 export async function PublicLandingView({ slug }: { slug: string }) {
   const supabase = await createClient();
 
@@ -59,6 +64,40 @@ export async function PublicLandingView({ slug }: { slug: string }) {
   );
   const templateConfig = templateRow?.config;
   const sectionsConfig = landing.sections_config as SectionConfigItem[];
+
+  if (professionSlug === "abogados") {
+    const formData = landing.form_data as AbogadoFormData;
+    if (templateConfig?.layout === "clasico") {
+      return (
+        <AbogadoClasicoTemplate
+          formData={formData}
+          sectionsConfig={sectionsConfig}
+          subdomain={landing.slug}
+          colorPrimary={templateConfig.primaryColor}
+          colorAccent={templateConfig.secondaryColor}
+        />
+      );
+    }
+    if (templateConfig?.layout === "modern") {
+      return (
+        <AbogadoModernoTemplate
+          formData={formData}
+          sectionsConfig={sectionsConfig}
+          subdomain={landing.slug}
+          colorPrimary={templateConfig.primaryColor}
+          colorAccent={templateConfig.secondaryColor}
+        />
+      );
+    }
+    return (
+      <AbogadoMinimalTemplate
+        formData={formData}
+        sectionsConfig={sectionsConfig}
+        subdomain={landing.slug}
+        colorPrimary={templateConfig?.primaryColor}
+      />
+    );
+  }
 
   if (professionSlug !== "contadores") {
     notFound();

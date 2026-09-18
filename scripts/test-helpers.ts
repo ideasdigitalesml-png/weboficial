@@ -82,19 +82,23 @@ export async function getSeedIds(): Promise<{
 
 // Like getSeedIds, but for a specific template slug (e.g. "moderno")
 // instead of whichever one happens to sort first -- needed by tests that
-// care which template's layout actually renders.
-export async function getSeedIdsForTemplateSlug(templateSlug: string): Promise<{
+// care which template's layout actually renders. `professionSlug` defaults
+// to "contadores" for backwards compatibility with existing callers.
+export async function getSeedIdsForTemplateSlug(
+  templateSlug: string,
+  professionSlug: string = "contadores"
+): Promise<{
   professionId: string;
   templateId: string;
 }> {
   const { data: profession, error: professionError } = await admin
     .from("professions")
     .select("id")
-    .eq("slug", "contadores")
+    .eq("slug", professionSlug)
     .single();
   if (professionError || !profession) {
     throw new Error(
-      "No se encontró la profesión seed 'contadores'. ¿Corriste 0003_seed.sql?"
+      `No se encontró la profesión seed '${professionSlug}'. ¿Corriste las migraciones de seed?`
     );
   }
 
@@ -105,7 +109,7 @@ export async function getSeedIdsForTemplateSlug(templateSlug: string): Promise<{
     .eq("slug", templateSlug)
     .single();
   if (templateError || !template) {
-    throw new Error(`No se encontró el template seed '${templateSlug}' para 'contadores'.`);
+    throw new Error(`No se encontró el template seed '${templateSlug}' para '${professionSlug}'.`);
   }
 
   return {
