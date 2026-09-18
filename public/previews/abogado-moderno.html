@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marina Beltrán — Derecho de Familia</title>
+<meta name="description" content="Derecho de Familia. Más de una década asesorando a familias de La Plata en procesos de divorcio, sucesiones y régimen de visitas, con un trato humano y honorarios claros desde el primer día.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  /* ============ Tokens ============
+     Paleta fija en :root -- a diferencia de otras plantillas del catálogo,
+     acá el color se edita directamente en el CSS, no vía placeholder. Tema
+     claro únicamente: el sector legal proyecta seriedad mejor con fondos
+     claros que con dark mode. */
+  :root{
+    --c-primary: #1C1C2E;
+    --c-accent: #C9A84C;
+    --c-accent-lt: #FDF6E3;
+    --c-bg: #FFFFFF;
+    --c-bg2: #F7F8FA;
+    --c-text: #0F0F1A;
+    --c-muted: #64748B;
+    --c-border: #E2E8F0;
+
+    --font-display: "Libre Baskerville", Georgia, "Times New Roman", serif;
+    --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    --shadow-sm: 0 1px 3px rgba(28,28,46,.08);
+    --shadow-md: 0 8px 20px rgba(28,28,46,.10);
+    --radius: 3px;
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    overflow-x:hidden;
+    background:var(--c-bg);
+    color:var(--c-text);
+    font-family:var(--font-body);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  img{ max-width:100%; display:block; }
+  a{ color:inherit; text-decoration:none; }
+  ul{ margin:0; padding:0; list-style:none; }
+  h1,h2,h3{ margin:0; font-family:var(--font-display); font-weight:700; letter-spacing:-.01em; }
+  p{ margin:0; }
+  section{ min-width:0; }
+  svg{ flex-shrink:0; }
+  .container{
+    width:100%;
+    max-width:1200px;
+    margin-inline:auto;
+    padding-inline:clamp(16px, 4vw, 32px);
+  }
+
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:12px;
+    font-size:.78rem;
+    font-weight:600;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--c-accent);
+  }
+  .eyebrow::before{
+    content:"";
+    width:28px;
+    height:1px;
+    background:var(--c-accent);
+    flex-shrink:0;
+  }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:14px 28px;
+    border-radius:var(--radius);
+    font-weight:600;
+    font-size:.92rem;
+    font-family:var(--font-body);
+    border:1px solid transparent;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease, background-color .15s ease, border-color .15s ease;
+    white-space:nowrap;
+  }
+  .btn:active{ transform:scale(.98); }
+  .btn-primary{
+    background:var(--c-accent);
+    color:var(--c-primary);
+  }
+  .btn-primary:hover{ box-shadow:var(--shadow-md); }
+  .btn-outline{
+    background:transparent;
+    border-color:var(--c-border);
+    color:var(--c-text);
+  }
+  .btn-outline:hover{ border-color:var(--c-primary); }
+  .btn-dark{
+    background:var(--c-primary);
+    color:#fff;
+  }
+  .btn-dark:hover{ box-shadow:var(--shadow-md); }
+
+  .avatar-fallback{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:100%; height:100%;
+    border-radius:50%;
+    background:linear-gradient(135deg,var(--c-primary),var(--c-accent));
+    color:#fff;
+    font-family:var(--font-display);
+    font-weight:700;
+  }
+
+  /* ============ Nav ============ */
+  .nav{
+    position:sticky; top:0; z-index:50;
+    background:rgba(255,255,255,.85);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--c-border);
+  }
+  .nav-inner{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding-block:16px;
+  }
+  .nav-logo{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    line-height:1.25;
+  }
+  .nav-logo strong{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:1.05rem;
+    color:var(--c-primary);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .nav-logo span{
+    font-size:.74rem;
+    color:var(--c-muted);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .nav-links{
+    display:flex;
+    align-items:center;
+    gap:32px;
+    font-size:.9rem;
+    font-weight:500;
+    color:var(--c-muted);
+  }
+  .nav-links a:hover{ color:var(--c-primary); }
+  .nav-cta{ flex-shrink:0; }
+  .nav-cta .btn{ padding:11px 20px; font-size:.85rem; }
+
+  @media (max-width:860px){
+    .nav-links{ display:none; }
+  }
+
+  /* ============ Hero ============ */
+  .hero{ padding-block:56px 72px; background:var(--c-bg); }
+  .hero-grid{
+    display:grid;
+    grid-template-columns:280px 1fr;
+    gap:64px;
+    align-items:center;
+  }
+  .hero-photo{
+    width:280px; height:280px;
+    border-radius:50%;
+    overflow:hidden;
+    box-shadow:var(--shadow-md);
+    border:1px solid var(--c-border);
+    background:var(--c-bg2);
+  }
+  .hero-photo img{ width:100%; height:100%; object-fit:cover; }
+  .hero-photo .avatar-fallback{ font-size:4.5rem; }
+
+  .hero-copy h1{
+    font-size:clamp(2.1rem,4vw,3rem);
+    line-height:1.14;
+    margin-block:16px 14px;
+    color:var(--c-primary);
+  }
+  .hero-tagline{
+    font-family:var(--font-display);
+    font-style:italic;
+    font-size:1.2rem;
+    color:var(--c-accent);
+    overflow-wrap:anywhere;
+    margin-bottom:18px;
+  }
+  .hero-copy .lead{
+    color:var(--c-muted);
+    font-size:1.05rem;
+    max-width:52ch;
+    margin-bottom:30px;
+  }
+  .hero-actions{ display:flex; flex-wrap:wrap; gap:14px; }
+
+  @media (max-width:760px){
+    .hero{ padding-block:40px 48px; }
+    .hero-grid{ grid-template-columns:1fr; gap:28px; text-align:center; justify-items:center; }
+    .hero-photo{ width:180px; height:180px; }
+    .hero-photo .avatar-fallback{ font-size:2.8rem; }
+    .hero-copy .lead{ margin-inline:auto; }
+    .hero-actions{ justify-content:center; }
+  }
+
+  /* ============ Trust bar ============ */
+  .trust{
+    background:var(--c-bg2);
+    border-block:1px solid var(--c-border);
+  }
+  .trust-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    padding-block:28px;
+  }
+  .trust-item{
+    text-align:center;
+    padding-inline:16px;
+    border-left:1px solid var(--c-border);
+    min-width:0;
+  }
+  .trust-item:first-child{ border-left:none; }
+  .trust-number{
+    display:block;
+    overflow-wrap:anywhere;
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:clamp(1.5rem,3vw,2rem);
+    color:var(--c-primary);
+  }
+  .trust-label{
+    display:block;
+    font-size:.78rem;
+    color:var(--c-muted);
+    margin-top:4px;
+  }
+
+  @media (max-width:600px){
+    .trust-grid{ grid-template-columns:1fr 1fr; row-gap:20px; }
+    .trust-item{ border-left:none; border-top:1px solid var(--c-border); padding-block-start:16px; }
+    .trust-item:first-child, .trust-item:nth-child(2){ border-top:none; }
+  }
+
+  /* ============ Sections shared ============ */
+  .section{ padding-block:80px; }
+  .section-head{
+    max-width:640px;
+    margin-bottom:44px;
+  }
+  .section-head h2{
+    font-size:clamp(1.7rem,3.2vw,2.3rem);
+    margin-top:14px;
+    color:var(--c-primary);
+  }
+  .section-head p{
+    color:var(--c-muted);
+    margin-top:14px;
+    font-size:1rem;
+  }
+  .section-alt{ background:var(--c-bg2); }
+
+  @media (max-width:600px){
+    .section{ padding-block:56px; }
+  }
+
+  /* ============ Áreas de práctica ============ */
+  .services-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:1px;
+    background:var(--c-border);
+    border:1px solid var(--c-border);
+  }
+  .service-card{
+    background:#fff;
+    padding:32px 28px;
+    min-width:0;
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .service-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow-sm); position:relative; z-index:1; }
+  .service-icon{
+    width:44px; height:44px;
+    color:var(--c-accent);
+    margin-bottom:20px;
+  }
+  .service-card h3{
+    font-size:1.15rem;
+    color:var(--c-text);
+    margin-bottom:10px;
+  }
+  .service-card p{ color:var(--c-muted); font-size:.92rem; }
+
+  @media (max-width:920px){
+    .services-grid{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:600px){
+    .services-grid{ grid-template-columns:1fr; }
+  }
+
+  /* ============ Proceso ============ */
+  .process{
+    background:var(--c-primary);
+    color:#fff;
+    padding-block:80px;
+  }
+  .process .section-head h2{ color:#fff; }
+  .process .section-head p{ color:rgba(255,255,255,.62); }
+  .process .eyebrow{ color:var(--c-accent); }
+  .process-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:32px;
+  }
+  .process-step{ min-width:0; }
+  .process-step .num{
+    display:block;
+    font-family:var(--font-display);
+    font-size:2rem;
+    font-weight:700;
+    color:var(--c-accent);
+    margin-bottom:14px;
+  }
+  .process-step h3{
+    font-family:var(--font-body);
+    font-weight:700;
+    font-size:1.02rem;
+    margin-bottom:8px;
+  }
+  .process-step p{
+    color:rgba(255,255,255,.62);
+    font-size:.9rem;
+  }
+  .process-step:not(:first-child){
+    border-top:1px solid rgba(255,255,255,.15);
+    padding-top:24px;
+  }
+
+  @media (min-width:761px){
+    .process-step:not(:first-child){ border-top:none; padding-top:0; border-left:1px solid rgba(255,255,255,.15); padding-left:24px; }
+  }
+  @media (max-width:760px){
+    .process-grid{ grid-template-columns:1fr; gap:24px; }
+  }
+
+  /* ============ Sobre mí ============ */
+  .about-grid{
+    display:grid;
+    grid-template-columns:1.3fr 1fr;
+    gap:56px;
+    align-items:start;
+  }
+  .about-bio h2{
+    font-size:clamp(1.6rem,3vw,2.1rem);
+    color:var(--c-primary);
+    margin-bottom:22px;
+  }
+  .about-bio p{
+    color:var(--c-text);
+    font-size:1rem;
+    line-height:1.75;
+    margin-bottom:16px;
+    max-width:62ch;
+  }
+  .credentials-box{
+    background:var(--c-accent-lt);
+    border-left:3px solid var(--c-accent);
+    padding:28px 26px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .credential-line{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    font-size:.92rem;
+    color:var(--c-text);
+    overflow-wrap:anywhere;
+  }
+  .credential-line .glyph{ flex-shrink:0; }
+
+  @media (max-width:860px){
+    .about-grid{ grid-template-columns:1fr; }
+  }
+
+  /* ============ Testimonios ============ */
+  .testimonials-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:24px;
+  }
+  .testimonial-card{
+    position:relative;
+    background:var(--c-bg2);
+    border:1px solid var(--c-border);
+    padding:32px 28px 26px;
+    min-width:0;
+  }
+  .testimonial-quote{
+    font-family:var(--font-display);
+    font-size:4rem;
+    line-height:1;
+    color:var(--c-accent);
+    opacity:.3;
+    margin-bottom:6px;
+  }
+  .testimonial-text{
+    color:var(--c-text);
+    font-size:.96rem;
+    line-height:1.65;
+    margin-bottom:18px;
+  }
+  .testimonial-who strong{ display:block; font-size:.92rem; color:var(--c-primary); }
+  .testimonial-who span{ display:block; font-size:.82rem; color:var(--c-muted); margin-top:2px; }
+
+  @media (max-width:920px){
+    .testimonials-grid{ grid-template-columns:1fr; }
+  }
+
+  /* ============ FAQ ============ */
+  .faq-list{ max-width:800px; margin-inline:auto; }
+  .faq-item{
+    border-bottom:1px solid var(--c-border);
+  }
+  .faq-item summary{
+    list-style:none;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding-block:22px;
+    font-weight:600;
+    font-size:1rem;
+    color:var(--c-primary);
+    cursor:pointer;
+  }
+  .faq-item summary::-webkit-details-marker{ display:none; }
+  .faq-chevron{
+    flex-shrink:0;
+    width:18px; height:18px;
+    color:var(--c-accent);
+    transition:transform .2s ease;
+  }
+  .faq-item[open] .faq-chevron{ transform:rotate(180deg); }
+  .faq-answer{
+    color:var(--c-muted);
+    font-size:.95rem;
+    line-height:1.7;
+    padding-bottom:22px;
+    max-width:66ch;
+  }
+
+  /* ============ CTA banner ============ */
+  .cta-banner{
+    background:var(--c-accent);
+    color:var(--c-primary);
+    padding-block:64px;
+    text-align:center;
+  }
+  .cta-banner h2{
+    color:var(--c-primary);
+    font-size:clamp(1.7rem,3.4vw,2.4rem);
+    margin-bottom:14px;
+  }
+  .cta-banner p{
+    color:rgba(28,28,46,.75);
+    font-size:1rem;
+    margin-bottom:28px;
+  }
+
+  /* ============ Footer ============ */
+  .footer{
+    background:var(--c-primary);
+    color:rgba(255,255,255,.68);
+    padding-block:48px 28px;
+  }
+  .footer-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+    padding-bottom:28px;
+    border-bottom:1px solid rgba(255,255,255,.14);
+    margin-bottom:20px;
+  }
+  .footer-brand strong{
+    display:block;
+    font-family:var(--font-display);
+    font-size:1.1rem;
+    color:#fff;
+    margin-bottom:4px;
+  }
+  .footer-brand p{ font-size:.85rem; margin-bottom:4px; }
+  .footer-contact{ font-size:.85rem; text-align:right; overflow-wrap:anywhere; }
+  .footer-contact p{ margin-bottom:4px; }
+  .footer-contact a:hover{ color:#fff; }
+  .footer-disclaimer{
+    font-size:.76rem;
+    color:rgba(255,255,255,.45);
+    max-width:70ch;
+    line-height:1.6;
+    margin-bottom:16px;
+  }
+  .footer-bottom{
+    font-size:.78rem;
+    color:rgba(255,255,255,.45);
+  }
+
+  @media (max-width:600px){
+    .footer-grid{ grid-template-columns:1fr; }
+    .footer-contact{ text-align:left; }
+  }
+
+  /* ============ WhatsApp flotante ============ */
+  .whatsapp-float{
+    position:fixed;
+    right:20px; bottom:20px;
+    z-index:60;
+    width:56px; height:56px;
+    border-radius:50%;
+    background:var(--c-accent);
+    color:var(--c-primary);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:var(--shadow-md);
+    transition:transform .18s ease;
+  }
+  .whatsapp-float svg{ width:26px; height:26px; }
+  .whatsapp-float:hover{ transform:scale(1.06); }
+
+  @media (max-width:480px){
+    .whatsapp-float{ width:50px; height:50px; right:16px; bottom:16px; }
+    .whatsapp-float svg{ width:22px; height:22px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ Nav ============ -->
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="nav-logo" href="#top">
+      <strong>Marina Beltrán</strong>
+      <span>Derecho de Familia</span>
+    </a>
+    <nav class="nav-links" aria-label="Navegación principal">
+      <a href="#servicios">Servicios</a>
+      <a href="#proceso">Proceso</a>
+      <a href="#sobre-mi">Sobre Mí</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn btn-primary" href="https://wa.me/5492215551234" target="_blank" rel="noopener">Consulta gratuita</a>
+    </div>
+  </div>
+</header>
+
+<!-- ============ Hero ============ -->
+<section class="hero" id="top">
+  <div class="container hero-grid">
+    <div class="hero-photo" data-avatar data-photo="https://i.pravatar.cc/600?img=47" data-name="Marina Beltrán"></div>
+    <div class="hero-copy">
+      <span class="eyebrow">Derecho de Familia · Mat. Nº 78901</span>
+      <h1>Marina Beltrán</h1>
+      <p class="hero-tagline">Acompañamiento legal cercano en cada etapa de tu caso.</p>
+      <p class="lead">Más de una década asesorando a familias de La Plata en procesos de divorcio, sucesiones y régimen de visitas, con un trato humano y honorarios claros desde el primer día.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="https://wa.me/5492215551234" target="_blank" rel="noopener">Consultá ahora</a>
+        <a class="btn btn-outline" href="#servicios">Ver servicios</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Trust bar ============ -->
+<div class="trust">
+  <div class="container trust-grid">
+    <div class="trust-item">
+      <span class="trust-number">14</span>
+      <span class="trust-label">Años de experiencia</span>
+    </div>
+    <div class="trust-item">
+      <span class="trust-number">320+</span>
+      <span class="trust-label">Casos resueltos</span>
+    </div>
+    <div class="trust-item">
+      <span class="trust-number">410+</span>
+      <span class="trust-label">Clientes asesorados</span>
+    </div>
+    <div class="trust-item">
+      <span class="trust-number">6</span>
+      <span class="trust-label">Áreas de derecho</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Áreas de práctica ============ -->
+<section class="section" id="servicios">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Servicios</span>
+      <h2>Áreas de Práctica</h2>
+    </div>
+    <div class="services-grid">
+      <article class="service-card">
+        <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="2.2"/><path d="M3.5 18v-1.5a4 4 0 0 1 4-4h1a4 4 0 0 1 4 4V18"/><circle cx="16.5" cy="7" r="1.8"/><path d="M13.8 18v-1.2a3.2 3.2 0 0 1 3.2-3.2h.2a3.2 3.2 0 0 1 3.3 3.2V18"/></svg>
+        <h3>Derecho de Familia</h3>
+        <p>Divorcios, alimentos, tenencia y régimen de visitas.</p>
+      </article>
+      <article class="service-card">
+        <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2.75h8l4 4V21a.75.75 0 0 1-.75.75H6A.75.75 0 0 1 5.25 21V3.5A.75.75 0 0 1 6 2.75Z"/><path d="M14 2.75V7h4"/><path d="M8.5 12h7M8.5 15.5h7M8.5 8.5h3"/></svg>
+        <h3>Sucesiones</h3>
+        <p>Declaratorias de herederos, testamentos y partición de bienes.</p>
+      </article>
+      <article class="service-card">
+        <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v18M8 21h8"/><path d="M4 7h16M4 7 2.5 11a2.5 2.5 0 0 0 5 0L6 7Zm14 0-1.5 4a2.5 2.5 0 0 0 5 0L20 7Z"/></svg>
+        <h3>Derecho Civil</h3>
+        <p>Contratos, daños y perjuicios, responsabilidad civil.</p>
+      </article>
+      <article class="service-card">
+        <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7.5" width="18" height="12" rx="1"/><path d="M8.5 7.5V6a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5"/><path d="M3 12.5h18"/></svg>
+        <h3>Derecho Laboral</h3>
+        <p>Despidos, liquidaciones y accidentes de trabajo.</p>
+      </article>
+      <article class="service-card">
+        <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2.5 4.5 5.5V11c0 5.2 3.2 8.6 7.5 10.5 4.3-1.9 7.5-5.3 7.5-10.5V5.5Z"/><path d="M9 12l2 2 4-4"/></svg>
+        <h3>Derecho Penal</h3>
+        <p>Defensa penal, excarcelaciones y exenciones.</p>
+      </article>
+      <article class="service-card">
+        <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 21V6l8-3.5L20 6v15"/><path d="M4 21h16"/><path d="M9 21v-5h6v5"/><path d="M8.5 9h1.5M14 9h1.5M8.5 13h1.5M14 13h1.5"/></svg>
+        <h3>Derecho Societario</h3>
+        <p>Constitución de sociedades y contratos comerciales.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Proceso ============ -->
+<section class="process" id="proceso">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Metodología</span>
+      <h2>Cómo trabajo</h2>
+    </div>
+    <div class="process-grid">
+      <div class="process-step">
+        <span class="num">01</span>
+        <h3>Consulta inicial</h3>
+        <p>Me contás tu situación y evaluamos juntos cómo puedo ayudarte.</p>
+      </div>
+      <div class="process-step">
+        <span class="num">02</span>
+        <h3>Análisis del caso</h3>
+        <p>Reviso la documentación y el contexto legal en detalle.</p>
+      </div>
+      <div class="process-step">
+        <span class="num">03</span>
+        <h3>Estrategia legal</h3>
+        <p>Definimos el camino más conveniente para tu caso.</p>
+      </div>
+      <div class="process-step">
+        <span class="num">04</span>
+        <h3>Resolución y seguimiento</h3>
+        <p>Avanzamos con la gestión y te mantengo al tanto en cada etapa.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Sobre mí ============ -->
+<section class="section" id="sobre-mi">
+  <div class="container about-grid">
+    <div class="about-bio">
+      <h2>Sobre Marina Beltrán</h2>
+      <p>Soy abogada matriculada con más de 14 años de trayectoria en derecho de familia y sucesiones.</p>
+      <p>Creo en un asesoramiento claro, sin tecnicismos innecesarios, para que cada cliente entienda con calma cada paso de su proceso.</p>
+    </div>
+    <div class="credentials-box">
+      <div class="credential-line"><span class="glyph">🎓</span><span>Universidad Nacional de La Plata — 2010</span></div>
+      <div class="credential-line" data-optional="Especialización en Derecho de Familia (UBA)"><span class="glyph">📚</span><span>Especialización en Derecho de Familia (UBA)</span></div>
+      <div class="credential-line" data-optional="Diplomatura en Mediación (UNLP)"><span class="glyph">📚</span><span>Diplomatura en Mediación (UNLP)</span></div>
+      <div class="credential-line"><span class="glyph">⚖️</span><span>Matrícula Nº 78901 — Colegio de Abogados de La Plata</span></div>
+      <div class="credential-line"><span class="glyph">🏛️</span><span>Colegio de Abogados de La Plata</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Testimonios ============ -->
+<section class="section section-alt" id="testimonios">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Testimonios</span>
+      <h2>Lo que dicen mis clientes</h2>
+    </div>
+    <div class="testimonials-grid">
+      <article class="testimonial-card">
+        <span class="testimonial-quote">&rdquo;</span>
+        <p class="testimonial-text">Marina me acompañó en un momento muy difícil y siempre explicó cada paso con mucha paciencia.</p>
+        <div class="testimonial-who">
+          <strong>Rocío Fernández</strong>
+          <span>Clienta</span>
+        </div>
+      </article>
+      <article class="testimonial-card">
+        <span class="testimonial-quote">&rdquo;</span>
+        <p class="testimonial-text">Excelente profesional, resolvió la sucesión de mi familia en tiempo récord.</p>
+        <div class="testimonial-who">
+          <strong>Julián Torres</strong>
+          <span>Cliente</span>
+        </div>
+      </article>
+      <article class="testimonial-card">
+        <span class="testimonial-quote">&rdquo;</span>
+        <p class="testimonial-text">Recomiendo su trabajo por la claridad y el trato cercano en todo momento.</p>
+        <div class="testimonial-who">
+          <strong>Estela Gómez</strong>
+          <span>Clienta</span>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="section" id="faq">
+  <div class="container">
+    <div class="section-head" style="margin-inline:auto;text-align:center;">
+      <span class="eyebrow" style="justify-content:center;">Dudas frecuentes</span>
+      <h2>Preguntas Frecuentes</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item">
+        <summary>¿Cuánto cuesta una consulta inicial?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+        <p class="faq-answer">La primera consulta es sin costo. Escribime por WhatsApp para coordinar un horario.</p>
+      </details>
+      <details class="faq-item">
+        <summary>¿Atendés casos fuera de La Plata?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+        <p class="faq-answer">Sí, trabajo con clientes de toda la provincia de Buenos Aires, de forma presencial o remota.</p>
+      </details>
+      <details class="faq-item">
+        <summary>¿Cuánto dura un proceso de divorcio?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+        <p class="faq-answer">Depende de cada caso, pero un divorcio de común acuerdo suele resolverse en pocos meses.</p>
+      </details>
+      <details class="faq-item">
+        <summary>¿Cómo se calculan los honorarios?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+        <p class="faq-answer">Los honorarios se definen según la complejidad del caso y se explican con claridad antes de empezar.</p>
+      </details>
+      <details class="faq-item">
+        <summary>¿Puedo hacer la consulta por videollamada?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+        <p class="faq-answer">Sí, ofrezco consultas presenciales y también por videollamada.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA banner ============ -->
+<section class="cta-banner" id="contacto">
+  <div class="container">
+    <h2>¿Tenés una consulta legal? Hablemos.</h2>
+    <p>Primera consulta sin costo</p>
+    <a class="btn btn-dark" href="https://wa.me/5492215551234" target="_blank" rel="noopener">Escribime por WhatsApp</a>
+  </div>
+</section>
+
+<!-- ============ Footer ============ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <strong>Marina Beltrán</strong>
+        <p>Derecho de Familia</p>
+        <p>Mat. Nº 78901 — Colegio de Abogados de La Plata</p>
+      </div>
+      <div class="footer-contact">
+        <p>marina.beltran@example.com</p>
+        <p>5492215551234</p>
+        <p>Calle 7 N° 1234, La Plata, Buenos Aires</p>
+        <p><a data-optional="https://linkedin.com/in/marina-beltran" href="https://linkedin.com/in/marina-beltran" target="_blank" rel="noopener">LinkedIn</a></p>
+      </div>
+    </div>
+    <p class="footer-disclaimer">La información en este sitio no constituye asesoramiento legal. Consultá con un profesional para tu caso específico.</p>
+    <p class="footer-bottom">© 2026 Marina Beltrán. Todos los derechos reservados.</p>
+  </div>
+</footer>
+
+<!-- ============ WhatsApp flotante ============ -->
+<a class="whatsapp-float" href="https://wa.me/5492215551234" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 11.5a8 8 0 0 1-11.6 7.1L4 20l1.5-4.2A8 8 0 1 1 20 11.5Z"/><path d="M8.5 9.7c.3 2.6 2.2 4.5 4.8 4.8.6.1 1-.4.9-1l-.2-.9a.6.6 0 0 0-.5-.4l-1.2-.2a.6.6 0 0 1-.4-.3l-.6-1a.6.6 0 0 1 0-.6l.4-.9a.6.6 0 0 0-.1-.6l-.7-.9a.6.6 0 0 0-.7-.2c-.9.3-1.8 1-1.7 2.2Z"/></svg>
+</a>
+
+<script>
+  // ---- Iniciales a partir del nombre completo ----
+  function getInitials(fullName) {
+    if (!fullName) return "";
+    return fullName
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map(function (w) { return w.charAt(0).toUpperCase(); })
+      .join("");
+  }
+
+  // "Vacío" cubre: sin valor, la palabra "null", "#" (placeholder de link
+  // sin destino real) y el token literal sin reemplazar, para que el
+  // archivo se pueda previsualizar tal cual sin procesar.
+  function isEmptyOrPlaceholder(value) {
+    if (!value) return true;
+    var v = value.trim();
+    if (v === "" || v.toLowerCase() === "null" || v === "#") return true;
+    return /^\{\{[a-z0-9_]+\}\}$/i.test(v);
+  }
+
+  document.querySelectorAll("[data-avatar]").forEach(function (el) {
+    var name = el.getAttribute("data-name") || "";
+    var photo = el.getAttribute("data-photo") || "";
+
+    if (!isEmptyOrPlaceholder(photo)) {
+      var img = document.createElement("img");
+      img.src = photo;
+      img.alt = name;
+      el.appendChild(img);
+      return;
+    }
+
+    var fallback = document.createElement("span");
+    fallback.className = "avatar-fallback";
+    fallback.textContent = isEmptyOrPlaceholder(name) ? "?" : getInitials(name);
+    el.appendChild(fallback);
+  });
+
+  // ---- Líneas opcionales: se ocultan si el dato no llegó (posgrado_2,
+  // linkedin_url) ----
+  document.querySelectorAll("[data-optional]").forEach(function (el) {
+    if (isEmptyOrPlaceholder(el.getAttribute("data-optional"))) {
+      el.style.display = "none";
+    }
+  });
+</script>
+
+</body>
+</html>

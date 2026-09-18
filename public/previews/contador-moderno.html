@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{nombre_completo}} — {{titulo_profesional}}</title>
-<meta name="description" content="{{titulo_profesional}} en {{ciudad}}. {{bio}}">
+<title>Laura Sosa — Contadora Pública</title>
+<meta name="description" content="Contadora Pública en Rosario. Asesoro a pymes y monotributistas de Rosario con balances claros y acompañamiento impositivo todo el año.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,11 +13,11 @@
 <style>
   /* ============ Tokens ============
      --c-primary / --c-accent / --c-accent-lt son reemplazables por el
-     backend ({{color_primary}} / {{color_accent}}). Defaults sugeridos:
+     backend (#0B2545 / #1A6B4A). Defaults sugeridos:
      navy #0B2545 y verde #1A6B4A. El resto de la paleta es fija. */
   :root{
-    --c-primary: {{color_primary}};
-    --c-accent: {{color_accent}};
+    --c-primary: #0B2545;
+    --c-accent: #1A6B4A;
     --c-accent-lt: #E8F3EE;
     --c-bg: #FFFFFF;
     --c-bg2: #F6F8FA;
@@ -615,8 +615,8 @@
 <header class="nav">
   <div class="container nav-inner">
     <a class="nav-logo" href="#top">
-      <span class="nav-logo-badge" data-avatar data-name="{{nombre_completo}}" data-photo="{{foto_url}}"></span>
-      <span>{{nombre_completo}}</span>
+      <span class="nav-logo-badge" data-avatar data-name="Laura Sosa" data-photo="https://i.pravatar.cc/600?img=32"></span>
+      <span>Laura Sosa</span>
     </a>
     <nav class="nav-links" aria-label="Navegación principal">
       <a href="#servicios">Servicios</a>
@@ -626,7 +626,7 @@
       <a href="#contacto">Contacto</a>
     </nav>
     <div class="nav-cta">
-      <a class="btn btn-primary" href="https://wa.me/{{whatsapp}}" target="_blank" rel="noopener">Agendar consulta</a>
+      <a class="btn btn-primary" href="https://wa.me/5493415551234" target="_blank" rel="noopener">Agendar consulta</a>
     </div>
   </div>
 </header>
@@ -635,30 +635,30 @@
 <section class="hero" id="top">
   <div class="container hero-grid">
     <div class="hero-copy">
-      <span class="eyebrow">{{titulo_profesional}} · {{ciudad}}</span>
+      <span class="eyebrow">Contadora Pública · Rosario</span>
       <h1>Contabilidad clara, sin vueltas.</h1>
       <p class="lead">Asesoramiento impositivo y contable personalizado, pensado para que entiendas cada decisión antes de tomarla.</p>
       <div class="hero-actions">
-        <a class="btn btn-primary" href="https://wa.me/{{whatsapp}}" target="_blank" rel="noopener">Escribime por WhatsApp</a>
+        <a class="btn btn-primary" href="https://wa.me/5493415551234" target="_blank" rel="noopener">Escribime por WhatsApp</a>
         <a class="btn btn-outline" href="#servicios">Ver servicios</a>
       </div>
     </div>
     <div class="hero-visual">
       <div class="photo-card">
         <span class="hero-badge">Consulta sin costo</span>
-        <span data-avatar data-name="{{nombre_completo}}" data-photo="{{foto_url}}" style="width:100%;height:100%;display:block;"></span>
+        <span data-avatar data-name="Laura Sosa" data-photo="https://i.pravatar.cc/600?img=32" style="width:100%;height:100%;display:block;"></span>
       </div>
       <div class="hero-stats">
         <div class="hero-stat">
-          <strong>{{stat_clientes}}</strong>
+          <strong>180</strong>
           <span>Clientes atendidos</span>
         </div>
         <div class="hero-stat">
-          <strong>{{stat_anos}}</strong>
+          <strong>10</strong>
           <span>Años de experiencia</span>
         </div>
         <div class="hero-stat">
-          <strong>{{stat_respuesta}}</strong>
+          <strong>24hs</strong>
           <span>Tiempo de respuesta</span>
         </div>
       </div>
@@ -670,7 +670,7 @@
 <div class="trust">
   <div class="container trust-inner">
     <span class="trust-label">Especialista en:</span>
-    <div class="trust-items" data-trust-list="{{especialidades}}"></div>
+    <div class="trust-items" data-trust-list="Monotributo, Balances, Asesoramiento impositivo"></div>
   </div>
 </div>
 
@@ -684,34 +684,34 @@
     </div>
     <div class="services-grid">
       <article class="service-card">
-        <span class="service-icon">{{servicio_1_icono}}</span>
-        <h3>{{servicio_1_titulo}}</h3>
-        <p>{{servicio_1_desc}}</p>
+        <span class="service-icon">📊</span>
+        <h3>Monotributo</h3>
+        <p>Alta, recategorización y liquidación mensual.</p>
       </article>
       <article class="service-card">
-        <span class="service-icon">{{servicio_2_icono}}</span>
-        <h3>{{servicio_2_titulo}}</h3>
-        <p>{{servicio_2_desc}}</p>
+        <span class="service-icon">🧾</span>
+        <h3>Balances</h3>
+        <p>Balances y estados contables al día.</p>
       </article>
       <article class="service-card">
-        <span class="service-icon">{{servicio_3_icono}}</span>
-        <h3>{{servicio_3_titulo}}</h3>
-        <p>{{servicio_3_desc}}</p>
+        <span class="service-icon">💼</span>
+        <h3>Asesoramiento impositivo</h3>
+        <p>Planificación fiscal para tu actividad.</p>
       </article>
       <article class="service-card">
-        <span class="service-icon">{{servicio_4_icono}}</span>
-        <h3>{{servicio_4_titulo}}</h3>
-        <p>{{servicio_4_desc}}</p>
+        <span class="service-icon">📈</span>
+        <h3>Liquidación de sueldos</h3>
+        <p>Gestión de nómina y cargas sociales.</p>
       </article>
       <article class="service-card">
-        <span class="service-icon">{{servicio_5_icono}}</span>
-        <h3>{{servicio_5_titulo}}</h3>
-        <p>{{servicio_5_desc}}</p>
+        <span class="service-icon">🏢</span>
+        <h3>Constitución de sociedades</h3>
+        <p>Trámites societarios completos.</p>
       </article>
       <article class="service-card">
-        <span class="service-icon">{{servicio_6_icono}}</span>
-        <h3>{{servicio_6_titulo}}</h3>
-        <p>{{servicio_6_desc}}</p>
+        <span class="service-icon">✅</span>
+        <h3>Auditoría</h3>
+        <p>Revisión y control de estados contables.</p>
       </article>
     </div>
   </div>
@@ -760,34 +760,34 @@
     <div class="testimonials-grid">
       <article class="testimonial-card">
         <span class="testimonial-stars">★★★★★</span>
-        <p class="testimonial-text">"{{testimonio_1_texto}}"</p>
+        <p class="testimonial-text">"Laura simplificó toda mi contabilidad, muy recomendable."</p>
         <div class="testimonial-who">
-          <span class="testimonial-avatar" data-avatar data-name="{{testimonio_1_nombre}}"></span>
+          <span class="testimonial-avatar" data-avatar data-name="Martín Díaz"></span>
           <span>
-            <strong>{{testimonio_1_nombre}}</strong>
-            <span>{{testimonio_1_rubro}}</span>
+            <strong>Martín Díaz</strong>
+            <span>Comercio</span>
           </span>
         </div>
       </article>
       <article class="testimonial-card">
         <span class="testimonial-stars">★★★★★</span>
-        <p class="testimonial-text">"{{testimonio_2_texto}}"</p>
+        <p class="testimonial-text">"Excelente atención y siempre responde rápido."</p>
         <div class="testimonial-who">
-          <span class="testimonial-avatar" data-avatar data-name="{{testimonio_2_nombre}}"></span>
+          <span class="testimonial-avatar" data-avatar data-name="Sofía Ruiz"></span>
           <span>
-            <strong>{{testimonio_2_nombre}}</strong>
-            <span>{{testimonio_2_rubro}}</span>
+            <strong>Sofía Ruiz</strong>
+            <span>Diseñadora freelance</span>
           </span>
         </div>
       </article>
       <article class="testimonial-card">
         <span class="testimonial-stars">★★★★★</span>
-        <p class="testimonial-text">"{{testimonio_3_texto}}"</p>
+        <p class="testimonial-text">"Me ayudó a ordenar el monotributo desde cero."</p>
         <div class="testimonial-who">
-          <span class="testimonial-avatar" data-avatar data-name="{{testimonio_3_nombre}}"></span>
+          <span class="testimonial-avatar" data-avatar data-name="Pablo Ramos"></span>
           <span>
-            <strong>{{testimonio_3_nombre}}</strong>
-            <span>{{testimonio_3_rubro}}</span>
+            <strong>Pablo Ramos</strong>
+            <span>Kiosco</span>
           </span>
         </div>
       </article>
@@ -798,17 +798,17 @@
 <!-- ============ Perfil ============ -->
 <section class="section section-alt" id="perfil">
   <div class="container profile-grid">
-    <div class="profile-photo" data-avatar data-name="{{nombre_completo}}" data-photo="{{foto_url}}"></div>
+    <div class="profile-photo" data-avatar data-name="Laura Sosa" data-photo="https://i.pravatar.cc/600?img=32"></div>
     <div>
-      <h2 class="profile-name">{{nombre_completo}}</h2>
-      <p class="profile-title">{{titulo_profesional}} · {{ciudad}}</p>
-      <span class="profile-matricula">Matrícula N° {{matricula}}</span>
-      <p class="profile-bio">{{bio}}</p>
+      <h2 class="profile-name">Laura Sosa</h2>
+      <p class="profile-title">Contadora Pública · Rosario</p>
+      <span class="profile-matricula">Matrícula N° 445566</span>
+      <p class="profile-bio">Asesoro a pymes y monotributistas de Rosario con balances claros y acompañamiento impositivo todo el año.</p>
       <div class="credentials">
-        <div class="credential-item"><span class="tick">✓</span><span>{{credencial_1}}</span></div>
-        <div class="credential-item"><span class="tick">✓</span><span>{{credencial_2}}</span></div>
-        <div class="credential-item"><span class="tick">✓</span><span>{{credencial_3}}</span></div>
-        <div class="credential-item"><span class="tick">✓</span><span>{{credencial_4}}</span></div>
+        <div class="credential-item"><span class="tick">✓</span><span>Matriculada en CPCE Santa Fe</span></div>
+        <div class="credential-item"><span class="tick">✓</span><span>Contadora Pública (UNR)</span></div>
+        <div class="credential-item"><span class="tick">✓</span><span>+10 años de experiencia</span></div>
+        <div class="credential-item"><span class="tick">✓</span><span>Especialista en Monotributo</span></div>
       </div>
     </div>
   </div>
@@ -820,12 +820,12 @@
     <h2>¿Listo para ordenar tus cuentas?</h2>
     <p>Escribime y coordinamos una primera consulta sin costo para ver cómo puedo ayudarte.</p>
     <div class="cta-actions">
-      <a class="btn btn-white" href="https://wa.me/{{whatsapp}}" target="_blank" rel="noopener">Escribime por WhatsApp</a>
+      <a class="btn btn-white" href="https://wa.me/5493415551234" target="_blank" rel="noopener">Escribime por WhatsApp</a>
     </div>
     <div class="cta-contact">
-      <a href="mailto:{{email}}">{{email}}</a>
-      <a href="https://wa.me/{{whatsapp}}" target="_blank" rel="noopener">{{whatsapp}}</a>
-      <span>Matrícula N° {{matricula}}</span>
+      <a href="mailto:laura.sosa@example.com">laura.sosa@example.com</a>
+      <a href="https://wa.me/5493415551234" target="_blank" rel="noopener">5493415551234</a>
+      <span>Matrícula N° 445566</span>
     </div>
   </div>
 </section>
@@ -835,20 +835,20 @@
   <div class="container">
     <div class="footer-top">
       <div class="footer-brand">
-        <span class="nav-logo-badge" data-avatar data-name="{{nombre_completo}}" data-photo="{{foto_url}}"></span>
-        <span>{{nombre_completo}}</span>
+        <span class="nav-logo-badge" data-avatar data-name="Laura Sosa" data-photo="https://i.pravatar.cc/600?img=32"></span>
+        <span>Laura Sosa</span>
       </div>
-      <span class="footer-domain">{{subdomain}}.weboficial.com.ar</span>
+      <span class="footer-domain">laurasosa.weboficial.com.ar</span>
     </div>
     <div class="footer-bottom">
-      <span>{{titulo_profesional}} · Matrícula N° {{matricula}}</span>
-      <span data-year-copyright data-name="{{nombre_completo}}"></span>
+      <span>Contadora Pública · Matrícula N° 445566</span>
+      <span data-year-copyright data-name="Laura Sosa"></span>
     </div>
   </div>
 </footer>
 
 <!-- ============ WhatsApp flotante ============ -->
-<a class="whatsapp-float" href="https://wa.me/{{whatsapp}}" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">💬</a>
+<a class="whatsapp-float" href="https://wa.me/5493415551234" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">💬</a>
 
 <script>
   // ---- Iniciales a partir del nombre completo ----
@@ -895,7 +895,7 @@
     el.appendChild(fallback);
   });
 
-  // ---- Trust bar: separa {{especialidades}} por comas ----
+  // ---- Trust bar: separa Monotributo, Balances, Asesoramiento impositivo por comas ----
   document.querySelectorAll("[data-trust-list]").forEach(function (el) {
     var raw = el.getAttribute("data-trust-list") || "";
     var items = raw.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
@@ -914,7 +914,7 @@
   });
 
   // ---- Fallback de colores solo para previsualización sin procesar ----
-  // Si el backend nunca reemplazó {{color_primary}}/{{color_accent}}, el
+  // Si el backend nunca reemplazó #0B2545/#1A6B4A, el
   // valor computado de la custom property sigue siendo ese token literal.
   // En ese caso (y solo en ese caso) se pisa con los defaults navy/verde
   // para que el diseño se vea completo al abrir el archivo directamente.

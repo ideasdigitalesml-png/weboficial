@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marina Beltrán — Derecho de Familia</title>
+<meta name="description" content="Derecho de Familia. Más de una década asesorando a familias de La Plata en procesos de divorcio, sucesiones y régimen de visitas, con un trato humano y honorarios claros desde el primer día.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  /* ============ Tokens ============
+     Variante "Minimal" -- una sola fuente, jerarquía por peso y tamaño.
+     Acento = primario (sin color de acento separado). Sin sombras, sin
+     gradientes, sin border-radius salvo el botón flotante de WhatsApp
+     (circular, caso aparte explícitamente pedido). */
+  :root{
+    --c-primary: #0F0F0F;
+    --c-accent: #0F0F0F;
+    --c-accent-lt: #F5F5F5;
+    --c-bg: #FFFFFF;
+    --c-bg2: #FAFAFA;
+    --c-text: #0F0F0F;
+    --c-muted: #888888;
+    --c-border: #E8E8E8;
+
+    --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    overflow-x:hidden;
+    background:var(--c-bg);
+    color:var(--c-text);
+    font-family:var(--font-body);
+    font-weight:400;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  img{ max-width:100%; display:block; }
+  a{ color:inherit; text-decoration:none; }
+  ul{ margin:0; padding:0; list-style:none; }
+  h1,h2,h3{ margin:0; font-family:var(--font-body); font-weight:500; }
+  p{ margin:0; overflow-wrap:anywhere; }
+  section{ min-width:0; }
+  svg{ flex-shrink:0; }
+  .container{
+    width:100%;
+    max-width:1160px;
+    margin-inline:auto;
+    padding-inline:clamp(16px, 4vw, 32px);
+  }
+  .uc{ text-transform:uppercase; letter-spacing:.12em; }
+
+  .link-cta{
+    display:inline-block;
+    font-weight:500;
+    font-size:.95rem;
+    border-bottom:1px solid var(--c-text);
+    padding-bottom:2px;
+    transition:opacity .15s ease;
+  }
+  .link-cta:hover{ opacity:.55; }
+
+  .avatar-fallback{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:100%; height:100%;
+    background:var(--c-primary);
+    color:#fff;
+    font-weight:300;
+  }
+
+  /* ============ Nav ============ */
+  .nav{
+    position:sticky; top:0; z-index:50;
+    background:var(--c-bg);
+    border-bottom:1px solid var(--c-border);
+  }
+  .nav-inner{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding-block:22px;
+  }
+  .nav-name{
+    font-weight:300;
+    font-size:1.1rem;
+    letter-spacing:.06em;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .nav-contact{ font-weight:500; font-size:.9rem; flex-shrink:0; }
+  .nav-contact:hover{ opacity:.55; }
+
+  /* ============ Hero ============ */
+  .hero{ padding-block:0; }
+  .hero-grid{
+    display:grid;
+    grid-template-columns:1.15fr .85fr;
+    align-items:stretch;
+    min-height:520px;
+  }
+  .hero-copy{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding-block:56px;
+    padding-right:56px;
+  }
+  .hero-eyebrow{ font-size:.82rem; color:var(--c-muted); margin-bottom:20px; }
+  .hero-copy h1{
+    font-size:clamp(3rem,8vw,7rem);
+    font-weight:300;
+    line-height:.98;
+    letter-spacing:-.02em;
+    overflow-wrap:anywhere;
+    margin-bottom:22px;
+  }
+  .hero-tagline{ font-weight:400; font-size:1.15rem; color:var(--c-text); overflow-wrap:anywhere; margin-bottom:16px; }
+  .hero-copy .lead{ color:var(--c-muted); font-size:1rem; max-width:48ch; margin-bottom:28px; }
+  .hero-actions{ display:flex; flex-wrap:wrap; gap:24px; }
+  .hero-photo{
+    width:100%; height:100%;
+    aspect-ratio:3/4;
+    background:var(--c-bg2);
+    overflow:hidden;
+  }
+  .hero-photo img{ width:100%; height:100%; object-fit:cover; }
+  .hero-photo .avatar-fallback{ font-size:5rem; aspect-ratio:3/4; }
+
+  @media (max-width:860px){
+    .hero-grid{ grid-template-columns:1fr; min-height:0; }
+    .hero-copy{ padding-inline:0; order:2; padding-block:36px; }
+    .hero-photo{ order:1; aspect-ratio:4/3; }
+    .hero-photo .avatar-fallback{ aspect-ratio:4/3; }
+  }
+
+  /* ============ Trust bar ============ */
+  .trust-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:24px;
+    padding-block:64px;
+  }
+  .trust-grid > div{ min-width:0; }
+  .trust-number{ display:block; font-size:clamp(2.2rem,5vw,4rem); font-weight:300; line-height:1; overflow-wrap:anywhere; }
+  .trust-label{ display:block; font-size:.7rem; color:var(--c-muted); margin-top:10px; }
+
+  @media (max-width:700px){
+    .trust-grid{ grid-template-columns:1fr 1fr; row-gap:36px; }
+  }
+
+  /* ============ Sections shared ============ */
+  .section{ padding-block:80px; }
+  .section-head{ margin-bottom:40px; }
+  .section-head h2{ font-size:1.5rem; font-weight:400; }
+
+  @media (max-width:600px){ .section{ padding-block:52px; } }
+
+  /* ============ Servicios (lista simple) ============ */
+  .services-list{ border-top:1px solid var(--c-border); }
+  .service-row{
+    display:grid;
+    grid-template-columns:64px 1fr;
+    gap:24px;
+    padding-block:26px;
+    border-bottom:1px solid var(--c-border);
+  }
+  .service-num{ font-size:.9rem; color:var(--c-muted); }
+  .service-row h3{ font-size:1.1rem; font-weight:500; margin-bottom:6px; }
+  .service-row p{ color:var(--c-muted); font-size:.92rem; }
+
+  @media (max-width:600px){
+    .service-row{ grid-template-columns:40px 1fr; }
+  }
+
+  /* ============ Proceso ============ */
+  .process-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:32px;
+  }
+  .process-step .num{ display:block; font-size:.75rem; color:var(--c-muted); margin-bottom:14px; }
+  .process-step h3{ font-size:1.1rem; font-weight:500; margin-bottom:8px; }
+  .process-step p{ font-size:.9rem; color:var(--c-muted); }
+
+  @media (max-width:760px){
+    .process-grid{ grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width:480px){
+    .process-grid{ grid-template-columns:1fr; }
+  }
+
+  /* ============ Sobre mí ============ */
+  .about-copy{ max-width:65ch; }
+  .about-copy p{ font-size:1.02rem; color:var(--c-text); margin-bottom:18px; }
+  .credentials-list{ margin-top:36px; display:flex; flex-direction:column; gap:10px; }
+  .credential-line{ font-size:.92rem; color:var(--c-muted); }
+  .credential-line::before{ content:"— "; color:var(--c-text); }
+
+  /* ============ Testimonios ============ */
+  .testimonials-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:32px;
+  }
+  .testimonial-card{ border-top:1px solid var(--c-border); padding-top:24px; }
+  .testimonial-text{ font-style:italic; font-size:.98rem; color:var(--c-text); margin-bottom:16px; }
+  .testimonial-name{ display:inline-block; font-size:.9rem; font-weight:500; overflow-wrap:anywhere; }
+  .testimonial-role{ display:block; font-size:.8rem; color:var(--c-muted); margin-top:2px; }
+
+  @media (max-width:760px){
+    .testimonials-grid{ grid-template-columns:1fr; gap:28px; }
+  }
+
+  /* ============ FAQ ============ */
+  .faq-list{ border-top:1px solid var(--c-border); }
+  .faq-item{ border-bottom:1px solid var(--c-border); }
+  .faq-item summary{
+    list-style:none;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding-block:22px;
+    font-weight:500;
+    font-size:1rem;
+    cursor:pointer;
+  }
+  .faq-item summary::-webkit-details-marker{ display:none; }
+  .faq-toggle{ font-size:1.1rem; font-weight:300; color:var(--c-muted); flex-shrink:0; }
+  .faq-item[open] .faq-toggle{ transform:rotate(45deg); }
+  .faq-toggle{ display:inline-block; transition:transform .15s ease; }
+  .faq-answer{ color:var(--c-muted); font-size:.94rem; line-height:1.7; padding-bottom:22px; max-width:66ch; }
+
+  /* ============ CTA ============ */
+  .cta{ text-align:center; padding-block:100px; }
+  .cta h2{ font-size:clamp(1.6rem,3.4vw,2.3rem); font-weight:300; margin-bottom:28px; }
+  .cta-phone{
+    display:inline-block;
+    max-width:100%;
+    overflow-wrap:anywhere;
+    font-size:clamp(1.8rem,5vw,3rem);
+    font-weight:300;
+    border-bottom:1px solid var(--c-text);
+    padding-bottom:6px;
+  }
+  .cta-phone:hover{ opacity:.6; }
+
+  /* ============ Footer ============ */
+  .footer{ border-top:1px solid var(--c-border); padding-block:32px; }
+  .footer-line{ font-size:.86rem; color:var(--c-text); }
+  .footer-line .sep{ color:var(--c-border); margin-inline:10px; }
+  .footer-disclaimer{ font-size:.76rem; color:var(--c-muted); margin-top:10px; max-width:70ch; }
+
+  @media (max-width:600px){
+    .footer-line{ line-height:1.9; }
+  }
+
+  /* ============ WhatsApp flotante ============ */
+  .whatsapp-float{
+    position:fixed;
+    right:20px; bottom:20px;
+    z-index:60;
+    width:52px; height:52px;
+    border-radius:50%;
+    background:#0F0F0F;
+    color:#fff;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .whatsapp-float svg{ width:22px; height:22px; }
+</style>
+</head>
+<body>
+
+<!-- ============ Nav ============ -->
+<header class="nav">
+  <div class="container nav-inner">
+    <span class="nav-name">Marina Beltrán</span>
+    <a class="nav-contact" href="#contacto">Contacto</a>
+  </div>
+</header>
+
+<!-- ============ Hero ============ -->
+<section class="hero" id="top">
+  <div class="hero-grid">
+    <div class="hero-copy container" style="padding-left:clamp(16px,4vw,32px);">
+      <span class="hero-eyebrow uc">Derecho de Familia · Mat. Nº 78901</span>
+      <h1>Marina Beltrán</h1>
+      <p class="hero-tagline">Acompañamiento legal cercano en cada etapa de tu caso.</p>
+      <p class="lead">Más de una década asesorando a familias de La Plata en procesos de divorcio, sucesiones y régimen de visitas, con un trato humano y honorarios claros desde el primer día.</p>
+      <div class="hero-actions">
+        <a class="link-cta" href="https://wa.me/5492215551234" target="_blank" rel="noopener">Consultá ahora</a>
+        <a class="link-cta" href="#servicios">Ver servicios</a>
+      </div>
+    </div>
+    <div class="hero-photo" data-avatar data-photo="https://i.pravatar.cc/600?img=47" data-name="Marina Beltrán"></div>
+  </div>
+</section>
+
+<!-- ============ Trust bar ============ -->
+<div class="container">
+  <div class="trust-grid">
+    <div><span class="trust-number">14</span><span class="trust-label uc">Años de experiencia</span></div>
+    <div><span class="trust-number">320+</span><span class="trust-label uc">Casos resueltos</span></div>
+    <div><span class="trust-number">410+</span><span class="trust-label uc">Clientes asesorados</span></div>
+    <div><span class="trust-number">6</span><span class="trust-label uc">Áreas de derecho</span></div>
+  </div>
+</div>
+
+<!-- ============ Servicios ============ -->
+<section class="section" id="servicios">
+  <div class="container">
+    <div class="section-head"><h2>Áreas de práctica</h2></div>
+    <div class="services-list">
+      <div class="service-row"><span class="service-num">01</span><div><h3>Derecho de Familia</h3><p>Divorcios, alimentos, tenencia y régimen de visitas.</p></div></div>
+      <div class="service-row"><span class="service-num">02</span><div><h3>Sucesiones</h3><p>Declaratorias de herederos, testamentos y partición de bienes.</p></div></div>
+      <div class="service-row"><span class="service-num">03</span><div><h3>Derecho Civil</h3><p>Contratos, daños y perjuicios, responsabilidad civil.</p></div></div>
+      <div class="service-row"><span class="service-num">04</span><div><h3>Derecho Laboral</h3><p>Despidos, liquidaciones y accidentes de trabajo.</p></div></div>
+      <div class="service-row"><span class="service-num">05</span><div><h3>Derecho Penal</h3><p>Defensa penal, excarcelaciones y exenciones.</p></div></div>
+      <div class="service-row"><span class="service-num">06</span><div><h3>Derecho Societario</h3><p>Constitución de sociedades y contratos comerciales.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Proceso ============ -->
+<section class="section" id="proceso">
+  <div class="container">
+    <div class="section-head"><h2>Cómo trabajo</h2></div>
+    <div class="process-grid">
+      <div class="process-step"><span class="num uc">Paso 01</span><h3>Consulta inicial</h3><p>Me contás tu situación y evaluamos juntos cómo puedo ayudarte.</p></div>
+      <div class="process-step"><span class="num uc">Paso 02</span><h3>Análisis del caso</h3><p>Reviso la documentación y el contexto legal en detalle.</p></div>
+      <div class="process-step"><span class="num uc">Paso 03</span><h3>Estrategia legal</h3><p>Definimos el camino más conveniente para tu caso.</p></div>
+      <div class="process-step"><span class="num uc">Paso 04</span><h3>Resolución y seguimiento</h3><p>Avanzamos con la gestión y te mantengo al tanto en cada etapa.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Sobre mí ============ -->
+<section class="section" id="sobre-mi">
+  <div class="container">
+    <div class="section-head"><h2>Sobre Marina Beltrán</h2></div>
+    <div class="about-copy">
+      <p>Soy abogada matriculada con más de 14 años de trayectoria en derecho de familia y sucesiones.</p>
+      <p>Creo en un asesoramiento claro, sin tecnicismos innecesarios, para que cada cliente entienda con calma cada paso de su proceso.</p>
+      <div class="credentials-list">
+        <p class="credential-line">Universidad Nacional de La Plata — 2010</p>
+        <p class="credential-line" data-optional="Especialización en Derecho de Familia (UBA)">Especialización en Derecho de Familia (UBA)</p>
+        <p class="credential-line" data-optional="Diplomatura en Mediación (UNLP)">Diplomatura en Mediación (UNLP)</p>
+        <p class="credential-line">Matrícula Nº 78901 — Colegio de Abogados de La Plata</p>
+        <p class="credential-line">Colegio de Abogados de La Plata</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Testimonios ============ -->
+<section class="section" id="testimonios">
+  <div class="container">
+    <div class="section-head"><h2>Lo que dicen mis clientes</h2></div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <p class="testimonial-text">Marina me acompañó en un momento muy difícil y siempre explicó cada paso con mucha paciencia.</p>
+        <span class="testimonial-name">Rocío Fernández</span>
+        <span class="testimonial-role">Clienta</span>
+      </div>
+      <div class="testimonial-card">
+        <p class="testimonial-text">Excelente profesional, resolvió la sucesión de mi familia en tiempo récord.</p>
+        <span class="testimonial-name">Julián Torres</span>
+        <span class="testimonial-role">Cliente</span>
+      </div>
+      <div class="testimonial-card">
+        <p class="testimonial-text">Recomiendo su trabajo por la claridad y el trato cercano en todo momento.</p>
+        <span class="testimonial-name">Estela Gómez</span>
+        <span class="testimonial-role">Clienta</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="section" id="faq">
+  <div class="container">
+    <div class="section-head"><h2>Preguntas frecuentes</h2></div>
+    <div class="faq-list">
+      <details class="faq-item"><summary>¿Cuánto cuesta una consulta inicial?<span class="faq-toggle">+</span></summary><p class="faq-answer">La primera consulta es sin costo. Escribime por WhatsApp para coordinar un horario.</p></details>
+      <details class="faq-item"><summary>¿Atendés casos fuera de La Plata?<span class="faq-toggle">+</span></summary><p class="faq-answer">Sí, trabajo con clientes de toda la provincia de Buenos Aires, de forma presencial o remota.</p></details>
+      <details class="faq-item"><summary>¿Cuánto dura un proceso de divorcio?<span class="faq-toggle">+</span></summary><p class="faq-answer">Depende de cada caso, pero un divorcio de común acuerdo suele resolverse en pocos meses.</p></details>
+      <details class="faq-item"><summary>¿Cómo se calculan los honorarios?<span class="faq-toggle">+</span></summary><p class="faq-answer">Los honorarios se definen según la complejidad del caso y se explican con claridad antes de empezar.</p></details>
+      <details class="faq-item"><summary>¿Puedo hacer la consulta por videollamada?<span class="faq-toggle">+</span></summary><p class="faq-answer">Sí, ofrezco consultas presenciales y también por videollamada.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section class="cta" id="contacto">
+  <div class="container">
+    <h2>¿Tenés una consulta legal? Primera consulta sin costo.</h2>
+    <a class="cta-phone" href="https://wa.me/5492215551234" target="_blank" rel="noopener">5492215551234</a>
+  </div>
+</section>
+
+<!-- ============ Footer ============ -->
+<footer class="footer">
+  <div class="container">
+    <p class="footer-line">
+      Marina Beltrán<span class="sep">·</span>Mat. Nº 78901<span class="sep">·</span>marina.beltran@example.com<span class="sep">·</span>La Plata<span class="sep">·</span>2026<span data-optional="https://linkedin.com/in/marina-beltran"><span class="sep">·</span><a class="link-cta" href="https://linkedin.com/in/marina-beltran" target="_blank" rel="noopener">LinkedIn</a></span>
+    </p>
+    <p class="footer-disclaimer">Calle 7 N° 1234, La Plata, Buenos Aires</p>
+    <p class="footer-disclaimer">La información en este sitio no constituye asesoramiento legal. Consultá con un profesional para tu caso específico.</p>
+  </div>
+</footer>
+
+<!-- ============ WhatsApp flotante ============ -->
+<a class="whatsapp-float" href="https://wa.me/5492215551234" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 11.5a8 8 0 0 1-11.6 7.1L4 20l1.5-4.2A8 8 0 1 1 20 11.5Z"/><path d="M8.5 9.7c.3 2.6 2.2 4.5 4.8 4.8.6.1 1-.4.9-1l-.2-.9a.6.6 0 0 0-.5-.4l-1.2-.2a.6.6 0 0 1-.4-.3l-.6-1a.6.6 0 0 1 0-.6l.4-.9a.6.6 0 0 0-.1-.6l-.7-.9a.6.6 0 0 0-.7-.2c-.9.3-1.8 1-1.7 2.2Z"/></svg>
+</a>
+
+<script>
+  // ---- Iniciales a partir del nombre completo ----
+  function getInitials(fullName) {
+    if (!fullName) return "";
+    return fullName
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map(function (w) { return w.charAt(0).toUpperCase(); })
+      .join("");
+  }
+
+  // "Vacío" cubre: sin valor, la palabra "null", "#" (placeholder de link
+  // sin destino real) y el token literal sin reemplazar, para que el
+  // archivo se pueda previsualizar tal cual sin procesar.
+  function isEmptyOrPlaceholder(value) {
+    if (!value) return true;
+    var v = value.trim();
+    if (v === "" || v.toLowerCase() === "null" || v === "#") return true;
+    return /^\{\{[a-z0-9_]+\}\}$/i.test(v);
+  }
+
+  document.querySelectorAll("[data-avatar]").forEach(function (el) {
+    var name = el.getAttribute("data-name") || "";
+    var photo = el.getAttribute("data-photo") || "";
+
+    if (!isEmptyOrPlaceholder(photo)) {
+      var img = document.createElement("img");
+      img.src = photo;
+      img.alt = name;
+      el.appendChild(img);
+      return;
+    }
+
+    var fallback = document.createElement("span");
+    fallback.className = "avatar-fallback";
+    fallback.textContent = isEmptyOrPlaceholder(name) ? "?" : getInitials(name);
+    el.appendChild(fallback);
+  });
+
+  // ---- Líneas opcionales: se ocultan si el dato no llegó (posgrado_2,
+  // linkedin_url) ----
+  document.querySelectorAll("[data-optional]").forEach(function (el) {
+    if (isEmptyOrPlaceholder(el.getAttribute("data-optional"))) {
+      el.style.display = "none";
+    }
+  });
+</script>
+
+</body>
+</html>

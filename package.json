@@ -16,7 +16,8 @@
     "test:contador-wizard": "tsx scripts/test-contador-wizard.ts",
     "test:contador-moderno": "tsx scripts/test-contador-moderno.ts",
     "test:abogado-wizard": "tsx scripts/test-abogado-wizard.ts",
-    "test:public-onboarding": "tsx scripts/test-public-onboarding.ts"
+    "test:public-onboarding": "tsx scripts/test-public-onboarding.ts",
+    "generate:previews": "node scripts/generate-previews.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -34,6 +35,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
+    "playwright": "^1.63.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.13",
     "typescript": "^5"
