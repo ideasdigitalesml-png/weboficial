@@ -131,6 +131,29 @@ export async function updateLandingSectionsConfigAction(
   return updateLandingSectionsConfig(supabase, user.id, landingId, sectionsConfig);
 }
 
+// TODO: integrate with Mercado Pago (cancel the preapproval, let the landing
+// stay active until the paid period ends, then flip status via the
+// existing webhook path) instead of this controlled dead end.
+export async function cancelSubscriptionAction(): Promise<{
+  ok: false;
+  message: string;
+}> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false, message: "No autenticado" };
+  }
+
+  return {
+    ok: false,
+    message:
+      "La cancelación vía panel estará disponible próximamente. Escribinos a ideasdigitalesml@gmail.com para gestionar tu baja.",
+  };
+}
+
 export async function updateLandingPaletaAction(
   landingId: string,
   paletaId: string

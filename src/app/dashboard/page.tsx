@@ -204,12 +204,22 @@ export default async function DashboardPage({
                   subscription.status)
                 : "Plan Gratuito"}
             </p>
-            <Link
-              href="/dashboard/plan"
-              className="rounded-full border border-border-subtle px-4 py-1.5 text-sm font-medium text-navy transition-colors hover:border-navy/40"
-            >
-              Actualizar plan
-            </Link>
+            <div className="flex gap-3">
+              <Link
+                href="/dashboard/plan"
+                className="rounded-full border border-border-subtle px-4 py-1.5 text-sm font-medium text-navy transition-colors hover:border-navy/40"
+              >
+                Actualizar plan
+              </Link>
+              {subscription && (
+                <Link
+                  href="/dashboard/cancelar"
+                  className="rounded-full px-4 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+                >
+                  Cancelar suscripción
+                </Link>
+              )}
+            </div>
           </div>
         </section>
       </div>
