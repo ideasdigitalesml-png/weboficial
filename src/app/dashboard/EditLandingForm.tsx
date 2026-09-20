@@ -11,11 +11,15 @@ export function EditLandingForm({
   formSchema,
   initialValues,
   stockImages,
+  onDirtyChange,
+  onSaved,
 }: {
   landingId: string;
   formSchema: FormSchema;
   initialValues: Record<string, FormFieldValue>;
   stockImages: StockImage[];
+  onDirtyChange?: (dirty: boolean) => void;
+  onSaved?: () => void;
 }) {
   const router = useRouter();
   const [values, setValues] = useState<Record<string, FormFieldValue>>(
@@ -27,7 +31,11 @@ export function EditLandingForm({
   const [isPending, startTransition] = useTransition();
 
   function updateValue(key: string, value: FormFieldValue) {
-    setValues((v) => ({ ...v, [key]: value }));
+    setValues((v) => {
+      const next = { ...v, [key]: value };
+      onDirtyChange?.(JSON.stringify(next) !== JSON.stringify(initialValues));
+      return next;
+    });
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -39,6 +47,8 @@ export function EditLandingForm({
       if (result.ok) {
         setValues(result.formData);
         setSavedAt(Date.now());
+        onDirtyChange?.(false);
+        onSaved?.();
         router.refresh();
         return;
       }

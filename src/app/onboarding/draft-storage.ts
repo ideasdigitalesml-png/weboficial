@@ -14,6 +14,7 @@ export interface DraftPage {
   templateId: string;
   formData: Record<string, FormFieldValue>;
   desiredSlug: string;
+  paletaId?: string;
 }
 
 export function saveDraftPage(draft: DraftPage): void {

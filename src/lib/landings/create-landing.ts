@@ -1,6 +1,19 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { validateFormData, type FormSchema } from "../forms/validate-form-data";
 import { slugify, isValidSlugFormat, generateSlugCandidates } from "./slug";
+import { CONTADOR_PALETAS, DEFAULT_CONTADOR_PALETA_ID } from "../templates/contador-paletas";
+import { ABOGADO_PALETAS, DEFAULT_ABOGADO_PALETA_ID } from "../templates/abogado-paletas";
+
+const PALETAS_BY_PROFESSION: Record<string, { ids: ReadonlySet<string>; defaultId: string }> = {
+  contadores: {
+    ids: new Set(CONTADOR_PALETAS.map((p) => p.id)),
+    defaultId: DEFAULT_CONTADOR_PALETA_ID,
+  },
+  abogados: {
+    ids: new Set(ABOGADO_PALETAS.map((p) => p.id)),
+    defaultId: DEFAULT_ABOGADO_PALETA_ID,
+  },
+};
 
 export const DEFAULT_SECTIONS_CONFIG = [
   { id: "hero", visible: true, order: 1 },
@@ -14,6 +27,11 @@ export interface CreateLandingInput {
   templateId: string;
   formData: Record<string, unknown>;
   desiredSlug: string;
+  // Optional paleta chosen in the "Elegí el estilo de colores" wizard step
+  // (see ContadorWizard.tsx). Silently ignored if it isn't one of the
+  // profession's known paletas -- falls back to that profession's default
+  // rather than rejecting the whole submission over a cosmetic choice.
+  paletaId?: string;
 }
 
 export type CreateLandingResult =
@@ -51,7 +69,7 @@ export async function createLandingForUser(
 
   const { data: profession } = await supabase
     .from("professions")
-    .select("id, form_schema")
+    .select("id, slug, form_schema")
     .eq("id", input.professionId)
     .maybeSingle();
 
@@ -89,6 +107,12 @@ export async function createLandingForUser(
     return { ok: false, reason: "no_active_plan" };
   }
 
+  const paletaConfig = PALETAS_BY_PROFESSION[profession.slug];
+  const paletaId =
+    paletaConfig && input.paletaId && paletaConfig.ids.has(input.paletaId)
+      ? input.paletaId
+      : paletaConfig?.defaultId;
+
   const { data: inserted, error: insertError } = await supabase
     .from("landings")
     .insert({
@@ -101,6 +125,7 @@ export async function createLandingForUser(
       domain_type: "subdomain",
       form_data: validation.data,
       sections_config: DEFAULT_SECTIONS_CONFIG,
+      ...(paletaId ? { paleta_id: paletaId } : {}),
     })
     .select("id, slug")
     .single();

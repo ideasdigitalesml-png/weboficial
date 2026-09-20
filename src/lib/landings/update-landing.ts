@@ -4,6 +4,8 @@ import {
   type FormSchema,
   type FormFieldValue,
 } from "../forms/validate-form-data";
+import { CONTADOR_PALETAS } from "../templates/contador-paletas";
+import { ABOGADO_PALETAS } from "../templates/abogado-paletas";
 
 export interface SectionConfigItem {
   id: string;
@@ -151,4 +153,65 @@ export async function updateLandingSectionsConfig(
   }
 
   return { ok: true, sectionsConfig };
+}
+
+export type UpdateLandingPaletaResult =
+  | { ok: true; paletaId: string }
+  | { ok: false; reason: "not_found" }
+  | { ok: false; reason: "invalid_paleta" };
+
+const PALETAS_BY_PROFESSION: Record<string, ReadonlySet<string>> = {
+  contadores: new Set(CONTADOR_PALETAS.map((p) => p.id)),
+  abogados: new Set(ABOGADO_PALETAS.map((p) => p.id)),
+};
+
+// Same shape of guarantee as the two functions above: RLS-scoped client,
+// only ever writes `paleta_id`. paletaId is validated against the fixed
+// set for the landing's profession rather than trusted as free text --
+// the column itself is just `text`, so this is the only thing stopping an
+// arbitrary string from ending up there and silently falling back to the
+// default paleta at render time.
+export async function updateLandingPaleta(
+  supabase: SupabaseClient,
+  userId: string,
+  landingId: string,
+  paletaId: string
+): Promise<UpdateLandingPaletaResult> {
+  const { data: landing } = await supabase
+    .from("landings")
+    .select("id, professions(slug)")
+    .eq("id", landingId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (!landing) {
+    return { ok: false, reason: "not_found" };
+  }
+
+  const professionRel = landing.professions as
+    | { slug: string }
+    | { slug: string }[]
+    | null;
+  const professionSlug = Array.isArray(professionRel)
+    ? professionRel[0]?.slug
+    : professionRel?.slug;
+
+  const allowed = professionSlug ? PALETAS_BY_PROFESSION[professionSlug] : undefined;
+  if (!allowed || !allowed.has(paletaId)) {
+    return { ok: false, reason: "invalid_paleta" };
+  }
+
+  const { data: updated } = await supabase
+    .from("landings")
+    .update({ paleta_id: paletaId })
+    .eq("id", landingId)
+    .eq("user_id", userId)
+    .select("id")
+    .maybeSingle();
+
+  if (!updated) {
+    return { ok: false, reason: "not_found" };
+  }
+
+  return { ok: true, paletaId };
 }

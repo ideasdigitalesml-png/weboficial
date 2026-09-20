@@ -6,8 +6,10 @@ import { mercadoPagoClient } from "@/lib/mercadopago/client";
 import {
   updateLandingFormData,
   updateLandingSectionsConfig,
+  updateLandingPaleta,
   type UpdateFormDataResult,
   type UpdateSectionsConfigResult,
+  type UpdateLandingPaletaResult,
 } from "@/lib/landings/update-landing";
 
 export async function createSubscriptionAction(): Promise<{
@@ -127,4 +129,20 @@ export async function updateLandingSectionsConfigAction(
   }
 
   return updateLandingSectionsConfig(supabase, user.id, landingId, sectionsConfig);
+}
+
+export async function updateLandingPaletaAction(
+  landingId: string,
+  paletaId: string
+): Promise<UpdateLandingPaletaResult | { ok: false; reason: "not_authenticated" }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false, reason: "not_authenticated" };
+  }
+
+  return updateLandingPaleta(supabase, user.id, landingId, paletaId);
 }

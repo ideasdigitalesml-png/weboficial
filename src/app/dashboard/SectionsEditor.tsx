@@ -25,31 +25,44 @@ function renumber(sections: SectionConfigItem[]): SectionConfigItem[] {
 export function SectionsEditor({
   landingId,
   initialSections,
+  onDirtyChange,
+  onSaved,
 }: {
   landingId: string;
   initialSections: SectionConfigItem[];
+  onDirtyChange?: (dirty: boolean) => void;
+  onSaved?: () => void;
 }) {
   const router = useRouter();
-  const [sections, setSections] = useState<SectionConfigItem[]>(
-    sortedByOrder(initialSections)
-  );
+  const initialSorted = sortedByOrder(initialSections);
+  const [sections, setSections] = useState<SectionConfigItem[]>(initialSorted);
   const [error, setError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  function checkDirty(next: SectionConfigItem[]) {
+    onDirtyChange?.(JSON.stringify(next) !== JSON.stringify(initialSorted));
+  }
 
   function move(index: number, direction: -1 | 1) {
     const target = index + direction;
     if (target < 0 || target >= sections.length) return;
     const next = [...sections];
     [next[index], next[target]] = [next[target], next[index]];
-    setSections(renumber(next));
+    const renumbered = renumber(next);
+    setSections(renumbered);
     setSavedAt(null);
+    checkDirty(renumbered);
   }
 
   function toggleVisible(id: string) {
-    setSections((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, visible: !s.visible } : s))
-    );
+    setSections((prev) => {
+      const next = prev.map((s) =>
+        s.id === id ? { ...s, visible: !s.visible } : s
+      );
+      checkDirty(next);
+      return next;
+    });
     setSavedAt(null);
   }
 
@@ -63,6 +76,8 @@ export function SectionsEditor({
       if (result.ok) {
         setSections(sortedByOrder(result.sectionsConfig));
         setSavedAt(Date.now());
+        onDirtyChange?.(false);
+        onSaved?.();
         router.refresh();
         return;
       }

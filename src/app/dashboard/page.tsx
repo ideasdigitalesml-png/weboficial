@@ -1,12 +1,14 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { ROOT_DOMAIN } from "@/lib/root-domain";
-import type { FormSchema, FormFieldValue } from "@/lib/forms/validate-form-data";
-import type { SectionConfigItem } from "@/lib/landings/update-landing";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { CONTADOR_PALETAS } from "@/lib/templates/contador-paletas";
+import { ABOGADO_PALETAS } from "@/lib/templates/abogado-paletas";
+import { WelcomeBanner } from "./WelcomeBanner";
+import { PaletteEditor } from "./PaletteEditor";
 import { SubscribeButton } from "./SubscribeButton";
-import { EditLandingForm } from "./EditLandingForm";
-import { SectionsEditor } from "./SectionsEditor";
 
 const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
   pending: "Pendiente",
@@ -15,7 +17,17 @@ const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
   cancelled: "Cancelada",
 };
 
-export default async function DashboardPage() {
+const PALETAS_BY_PROFESSION: Record<string, typeof CONTADOR_PALETAS> = {
+  contadores: CONTADOR_PALETAS,
+  abogados: ABOGADO_PALETAS,
+};
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ bienvenida?: string }>;
+}) {
+  const { bienvenida } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -37,19 +49,20 @@ export default async function DashboardPage() {
 
   const [
     { data: profession },
-    { data: stockImages },
+    { data: template },
     { data: subscription },
     { data: profile },
   ] = await Promise.all([
     supabase
       .from("professions")
-      .select("form_schema")
+      .select("name, slug")
       .eq("id", landing.profession_id)
       .maybeSingle(),
     supabase
-      .from("stock_images")
-      .select("id, category, image_url")
-      .eq("category", "perfil"),
+      .from("templates")
+      .select("name, slug, preview_image_url, config")
+      .eq("id", landing.template_id)
+      .maybeSingle(),
     supabase
       .from("subscriptions")
       .select("status, created_at")
@@ -61,84 +74,145 @@ export default async function DashboardPage() {
   ]);
 
   const publicUrl = `https://${landing.slug}.${ROOT_DOMAIN}`;
+  const isPublished = landing.status === "active";
+  const professionalName =
+    (landing.form_data as Record<string, unknown>)?.name;
+  const displayName =
+    typeof professionalName === "string" && professionalName.trim()
+      ? professionalName
+      : user.email;
+
+  const templateConfig = template?.config as
+    | { layout?: string }
+    | undefined;
+  const isModerno = templateConfig?.layout === "modern";
+  const paletas = profession?.slug ? PALETAS_BY_PROFESSION[profession.slug] : undefined;
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-10 px-6 py-12">
-      <section className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Tu landing</h1>
-          {profile?.role === "admin" && (
+    <>
+      <DashboardHeader email={user.email ?? ""} />
+      <div className="mx-auto flex w-full max-w-[900px] flex-1 flex-col gap-8 px-6 py-10">
+        {bienvenida === "1" && <WelcomeBanner publicUrl={publicUrl} />}
+
+        {profile?.role === "admin" && (
+          <div className="flex justify-end">
             <Link
               href="/admin"
               className="text-sm text-blue-600 underline dark:text-blue-400"
             >
               Panel de administración
             </Link>
-          )}
-        </div>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-          <dt className="text-zinc-500">Subdominio</dt>
-          <dd>
-            {landing.slug}.{ROOT_DOMAIN}
-          </dd>
-          <dt className="text-zinc-500">Estado</dt>
-          <dd>{landing.status}</dd>
-          {landing.status === "active" && (
-            <>
-              <dt className="text-zinc-500">Link público</dt>
-              <dd>
-                <a
-                  href={publicUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-blue-600 underline dark:text-blue-400"
-                >
-                  {publicUrl}
-                </a>
-              </dd>
-            </>
-          )}
-          <dt className="text-zinc-500">Suscripción</dt>
-          <dd>
-            {subscription
-              ? (SUBSCRIPTION_STATUS_LABELS[subscription.status] ??
-                subscription.status)
-              : "Sin suscripción"}
-          </dd>
-          <dt className="text-zinc-500">Creada</dt>
-          <dd>{new Date(landing.created_at).toLocaleString("es-AR")}</dd>
-        </dl>
-        <div>
-          <p className="mb-2 text-sm text-zinc-500">Datos actuales</p>
-          <pre className="overflow-x-auto rounded-lg bg-black/[.04] p-4 text-xs dark:bg-white/[.06]">
-            {JSON.stringify(landing.form_data, null, 2)}
-          </pre>
-        </div>
-        {landing.status === "draft" && <SubscribeButton />}
-      </section>
+          </div>
+        )}
 
-      {profession && (
-        <EditLandingForm
-          landingId={landing.id}
-          formSchema={profession.form_schema as FormSchema}
-          initialValues={landing.form_data as Record<string, FormFieldValue>}
-          stockImages={stockImages ?? []}
-        />
-      )}
+        {/* Hero card — Tu página */}
+        <section className="flex flex-col gap-4 rounded-2xl bg-navy/[.04] p-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-semibold text-navy">{displayName}</h1>
+              <p className="text-sm text-text-body">
+                {profession?.name}
+                {template?.name ? ` · Plantilla ${template.name}` : ""}
+              </p>
+            </div>
+            <span
+              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                isPublished
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-amber-100 text-amber-700"
+              }`}
+            >
+              {isPublished ? "Publicada ✓" : "Borrador"}
+            </span>
+          </div>
+          <a
+            href={publicUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm text-sky-dark underline"
+          >
+            {publicUrl}
+          </a>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/dashboard/editar"
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-sky px-5 text-sm font-semibold text-white transition-colors hover:bg-sky-dark"
+            >
+              Editar mi página
+            </Link>
+            <a
+              href={publicUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-border-subtle px-5 text-sm font-medium text-navy transition-colors hover:border-navy/40"
+            >
+              Ver mi página
+            </a>
+          </div>
+          {landing.status === "draft" && <SubscribeButton />}
+        </section>
 
-      <SectionsEditor
-        landingId={landing.id}
-        initialSections={landing.sections_config as SectionConfigItem[]}
-      />
+        {/* Mi plantilla */}
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold text-navy">Mi plantilla</h2>
+          <div className="flex flex-col gap-3 rounded-xl border border-border-subtle p-4 sm:flex-row sm:items-center">
+            {template?.preview_image_url && (
+              <Image
+                src={template.preview_image_url}
+                alt={template.name ?? "Plantilla"}
+                width={160}
+                height={107}
+                className="h-auto w-full max-w-40 rounded-lg border border-border-subtle object-cover"
+                unoptimized
+              />
+            )}
+            <div className="flex flex-1 flex-col gap-2">
+              <p className="text-sm font-medium text-navy">{template?.name}</p>
+              <p className="text-sm text-text-body">
+                (La plantilla se elige al crear la página)
+              </p>
+            </div>
+          </div>
+        </section>
 
-      <form action="/auth/signout" method="post">
-        <button
-          type="submit"
-          className="rounded-full border border-black/[.08] px-5 py-2 text-sm dark:border-white/[.145]"
-        >
-          Cerrar sesión
-        </button>
-      </form>
-    </div>
+        {/* Personalización — Paleta de colores */}
+        {isModerno && paletas ? (
+          <section>
+            <PaletteEditor
+              landingId={landing.id}
+              paletas={paletas}
+              initialPaletaId={landing.paleta_id ?? "bosque"}
+            />
+          </section>
+        ) : (
+          <section className="flex flex-col gap-2">
+            <h2 className="text-lg font-semibold text-navy">Personalización</h2>
+            <p className="text-sm text-text-body">
+              La personalización de colores está disponible próximamente para
+              tu plantilla.
+            </p>
+          </section>
+        )}
+
+        {/* Mi suscripción */}
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold text-navy">Mi suscripción</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border-subtle p-4">
+            <p className="text-sm text-text-body">
+              {subscription
+                ? (SUBSCRIPTION_STATUS_LABELS[subscription.status] ??
+                  subscription.status)
+                : "Plan Gratuito"}
+            </p>
+            <Link
+              href="/dashboard/plan"
+              className="rounded-full border border-border-subtle px-4 py-1.5 text-sm font-medium text-navy transition-colors hover:border-navy/40"
+            >
+              Actualizar plan
+            </Link>
+          </div>
+        </section>
+      </div>
+    </>
   );
 }

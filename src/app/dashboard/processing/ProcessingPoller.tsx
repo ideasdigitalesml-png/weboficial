@@ -21,7 +21,7 @@ export function ProcessingPoller() {
         if (res.ok) {
           const data = await res.json();
           if (data.status === "active") {
-            router.push("/dashboard");
+            router.push("/dashboard?bienvenida=1");
             return;
           }
         }

@@ -12,4 +12,6 @@ export const RESERVED_TOP_LEVEL_ROUTES = new Set([
   "api",
   "site",
   "admin",
+  "contadores",
+  "abogados",
 ]);

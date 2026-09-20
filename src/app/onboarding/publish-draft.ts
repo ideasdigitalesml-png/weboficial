@@ -55,6 +55,7 @@ export async function publishDraftPage(): Promise<PublishOutcome> {
     templateId: draft.templateId,
     formData: draft.formData,
     desiredSlug: draft.desiredSlug,
+    paletaId: draft.paletaId,
   });
 
   if (!result.ok) {

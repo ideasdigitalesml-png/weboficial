@@ -52,12 +52,19 @@ export function ContadorModernoTemplate({
   subdomain,
   colorPrimary = DEFAULT_PRIMARY,
   colorAccent = DEFAULT_ACCENT,
+  paletteVariables,
 }: {
   formData: ContadorFormData;
   sectionsConfig: SectionConfigItem[];
   subdomain?: string;
   colorPrimary?: string;
   colorAccent?: string;
+  // Full CSS variable override from a curated paleta (see
+  // src/lib/templates/contador-paletas.ts). When present, replaces every
+  // color variable below instead of just primary/accent -- a paleta also
+  // picks the lighter/neutral tones (bg2, muted, border, etc.), which a
+  // single accent color can't derive on its own.
+  paletteVariables?: Record<string, string>;
 }) {
   const visibleIds = new Set(
     sectionsConfig.filter((s) => s.visible).map((s) => s.id)
@@ -77,7 +84,7 @@ export function ContadorModernoTemplate({
     <div
       className={`${instrumentSerif.variable} ${inter.variable} cf-moderno`}
       style={
-        {
+        (paletteVariables ?? {
           "--c-primary": colorPrimary,
           "--c-accent": colorAccent,
           "--c-accent-lt": "#E8F3EE",
@@ -86,7 +93,7 @@ export function ContadorModernoTemplate({
           "--c-text": "#10151C",
           "--c-muted": "#5B6472",
           "--c-border": "#E3E8ED",
-        } as React.CSSProperties
+        }) as React.CSSProperties
       }
     >
       <style>{CSS}</style>

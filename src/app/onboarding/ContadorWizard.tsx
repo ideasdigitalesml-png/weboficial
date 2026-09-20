@@ -13,6 +13,12 @@ import {
   type ContadorFormData,
 } from "@/components/templates/contador/ContadorLandingTemplate";
 import { ContadorModernoTemplate } from "@/components/templates/contador/ContadorModernoTemplate";
+import { PaletteSelector } from "@/components/templates/PaletteSelector";
+import {
+  CONTADOR_PALETAS,
+  DEFAULT_CONTADOR_PALETA_ID,
+  findContadorPaleta,
+} from "@/lib/templates/contador-paletas";
 import { checkSlugAvailabilityAction, createLandingAction } from "./actions";
 import {
   PRIMARY_BUTTON,
@@ -27,13 +33,31 @@ import { AuthModal } from "./AuthModal";
 const PUBLISHING_PATH = "/onboarding/publishing";
 const DRAFT_SAVE_DEBOUNCE_MS = 300;
 
-type ContadorStep = "datos" | "contacto" | "servicios" | "quienes" | "revision";
+type ContadorStep =
+  | "datos"
+  | "contacto"
+  | "servicios"
+  | "quienes"
+  | "paleta"
+  | "revision";
 
-const STEP_ORDER: ContadorStep[] = [
+const BASE_STEP_ORDER: ContadorStep[] = [
   "datos",
   "contacto",
   "servicios",
   "quienes",
+  "revision",
+];
+
+// The "paleta" step only exists for the Moderno layout -- Clásico has no
+// paleta system yet (see src/lib/templates/contador-paletas.ts), so it
+// keeps the original 5-step flow.
+const MODERNO_STEP_ORDER: ContadorStep[] = [
+  "datos",
+  "contacto",
+  "servicios",
+  "quienes",
+  "paleta",
   "revision",
 ];
 
@@ -42,6 +66,7 @@ const STEP_LABELS: Record<ContadorStep, string> = {
   contacto: "Contacto",
   servicios: "Servicios",
   quienes: "Quiénes somos",
+  paleta: "Paleta de colores",
   revision: "Revisión y publicación",
 };
 
@@ -130,6 +155,13 @@ export function ContadorWizard({
     return "";
   });
   const [slugStatus, setSlugStatus] = useState<SlugStatus | null>(null);
+  const [paletaId, setPaletaId] = useState(() => {
+    const draft = loadDraftPage();
+    if (draft?.professionId === profession.id && draft.templateId === template.id) {
+      return draft.paletaId ?? DEFAULT_CONTADOR_PALETA_ID;
+    }
+    return DEFAULT_CONTADOR_PALETA_ID;
+  });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
@@ -167,10 +199,11 @@ export function ContadorWizard({
         templateId: template.id,
         formData: { ...values, description },
         desiredSlug: slugInput,
+        paletaId,
       });
     }, DRAFT_SAVE_DEBOUNCE_MS);
     return () => clearTimeout(handle);
-  }, [profession.id, template.id, values, description, slugInput]);
+  }, [profession.id, template.id, values, description, slugInput, paletaId]);
 
   useEffect(() => {
     if (step !== "revision" || slugInput.trim().length === 0) return;
@@ -199,7 +232,9 @@ export function ContadorWizard({
     }
   }
 
-  const stepIndex = STEP_ORDER.indexOf(step);
+  const isModerno = template.config?.layout === "modern";
+  const stepOrder = isModerno ? MODERNO_STEP_ORDER : BASE_STEP_ORDER;
+  const stepIndex = stepOrder.indexOf(step);
 
   function canContinue(): boolean {
     switch (step) {
@@ -215,6 +250,8 @@ export function ContadorWizard({
         return asStringArray(values.servicios).length > 0;
       case "quienes":
         return true;
+      case "paleta":
+        return true;
       case "revision":
         return slugStatus?.state === "available";
       default:
@@ -223,12 +260,12 @@ export function ContadorWizard({
   }
 
   function goNext() {
-    const next = STEP_ORDER[stepIndex + 1];
+    const next = stepOrder[stepIndex + 1];
     if (next) setStep(next);
   }
 
   function goBack() {
-    const prev = STEP_ORDER[stepIndex - 1];
+    const prev = stepOrder[stepIndex - 1];
     if (prev) setStep(prev);
     else onBack();
   }
@@ -242,6 +279,7 @@ export function ContadorWizard({
       templateId: template.id,
       formData: { ...values, description },
       desiredSlug: slugInput,
+      paletaId,
     });
 
     if (!isAuthenticated) {
@@ -257,6 +295,7 @@ export function ContadorWizard({
         templateId: template.id,
         formData: { ...values, description },
         desiredSlug: slugInput,
+        paletaId: isModerno ? paletaId : undefined,
       });
 
       if (result.ok) {
@@ -275,9 +314,9 @@ export function ContadorWizard({
           const erroredSteps = Object.keys(result.errors)
             .map((key) => FIELD_STEP[key])
             .filter((s): s is ContadorStep => Boolean(s))
-            .map((s) => STEP_ORDER.indexOf(s));
+            .map((s) => stepOrder.indexOf(s));
           if (erroredSteps.length > 0) {
-            setStep(STEP_ORDER[Math.min(...erroredSteps)]);
+            setStep(stepOrder[Math.min(...erroredSteps)]);
           }
           break;
         }
@@ -308,21 +347,23 @@ export function ContadorWizard({
     servicios: asStringArray(values.servicios),
     description: description || undefined,
   };
-  const isModerno = template.config?.layout === "modern";
   const colorPrimary = template.config?.primaryColor;
   const colorAccent = template.config?.secondaryColor;
+  const paletteVariables = isModerno
+    ? findContadorPaleta(paletaId).variables
+    : undefined;
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-12">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-navy">
-          Paso {stepIndex + 1} de {STEP_ORDER.length} — {STEP_LABELS[step]}
+          Paso {stepIndex + 1} de {stepOrder.length} — {STEP_LABELS[step]}
         </p>
       </div>
       <div className="h-1 w-full overflow-hidden rounded-full bg-border-subtle">
         <div
           className="h-full bg-sky transition-all"
-          style={{ width: `${((stepIndex + 1) / STEP_ORDER.length) * 100}%` }}
+          style={{ width: `${((stepIndex + 1) / stepOrder.length) * 100}%` }}
         />
       </div>
 
@@ -337,6 +378,7 @@ export function ContadorWizard({
           isModerno={isModerno}
           colorPrimary={colorPrimary}
           colorAccent={colorAccent}
+          paletteVariables={paletteVariables}
           subdomain={slugInput}
           onBack={goBack}
           onSubmit={handleSubmit}
@@ -492,6 +534,19 @@ export function ContadorWizard({
               </div>
             )}
 
+            {step === "paleta" && (
+              <div className="flex flex-col gap-4">
+                <h2 className="text-xl font-semibold text-navy">
+                  Elegí el estilo de colores
+                </h2>
+                <PaletteSelector
+                  paletas={CONTADOR_PALETAS}
+                  selectedId={paletaId}
+                  onSelect={setPaletaId}
+                />
+              </div>
+            )}
+
             <div className="flex gap-3">
               <button onClick={goBack} className={SECONDARY_BUTTON}>
                 Volver
@@ -513,6 +568,7 @@ export function ContadorWizard({
                 formData={previewFormData}
                 colorPrimary={colorPrimary}
                 colorAccent={colorAccent}
+                paletteVariables={paletteVariables}
                 subdomain={slugInput}
               />
             </div>
@@ -572,6 +628,7 @@ function RevisionStep({
   isModerno,
   colorPrimary,
   colorAccent,
+  paletteVariables,
   subdomain,
   onBack,
   onSubmit,
@@ -586,6 +643,7 @@ function RevisionStep({
   isModerno: boolean;
   colorPrimary?: string;
   colorAccent?: string;
+  paletteVariables?: Record<string, string>;
   subdomain: string;
   onBack: () => void;
   onSubmit: () => void;
@@ -617,6 +675,7 @@ function RevisionStep({
             formData={previewFormData}
             colorPrimary={colorPrimary}
             colorAccent={colorAccent}
+            paletteVariables={paletteVariables}
             subdomain={subdomain}
           />
         </div>
@@ -649,12 +708,14 @@ function TemplatePreview({
   formData,
   colorPrimary,
   colorAccent,
+  paletteVariables,
   subdomain,
 }: {
   isModerno: boolean;
   formData: ContadorFormData;
   colorPrimary?: string;
   colorAccent?: string;
+  paletteVariables?: Record<string, string>;
   subdomain: string;
 }) {
   if (isModerno) {
@@ -665,6 +726,7 @@ function TemplatePreview({
         subdomain={subdomain || undefined}
         colorPrimary={colorPrimary}
         colorAccent={colorAccent}
+        paletteVariables={paletteVariables}
       />
     );
   }

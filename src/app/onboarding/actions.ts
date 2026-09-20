@@ -24,6 +24,7 @@ export async function createLandingAction(input: {
   templateId: string;
   formData: Record<string, unknown>;
   desiredSlug: string;
+  paletaId?: string;
 }): Promise<CreateLandingResult> {
   const supabase = await createClient();
   const {

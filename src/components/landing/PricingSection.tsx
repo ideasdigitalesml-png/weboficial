@@ -8,11 +8,12 @@ export function PricingSection() {
           Un precio simple, sin sorpresas
         </h2>
         <p className="font-display text-5xl font-bold text-navy sm:text-6xl">
-          $25.000
+          $13.400
           <span className="text-xl font-medium text-text-body"> /mes</span>
         </p>
         <p className="text-lg text-text-body">
-          Incluye tu dominio, hosting y todas las ediciones que necesites.
+          Incluye tu URL propia en weboficial.com.ar, hosting y todas las
+          ediciones que necesites.
         </p>
         <div className="flex flex-col items-center gap-2">
           <span className="text-lg font-semibold text-navy">Pagás con</span>

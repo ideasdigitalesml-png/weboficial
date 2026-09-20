@@ -127,12 +127,17 @@ export function AbogadoModernoTemplate({
   subdomain,
   colorPrimary = DEFAULT_PRIMARY,
   colorAccent = DEFAULT_ACCENT,
+  paletteVariables,
 }: {
   formData: AbogadoFormData;
   sectionsConfig: SectionConfigItem[];
   subdomain?: string;
   colorPrimary?: string;
   colorAccent?: string;
+  // Full CSS variable override from a curated paleta (see
+  // src/lib/templates/abogado-paletas.ts). Same convention as
+  // ContadorModernoTemplate.
+  paletteVariables?: Record<string, string>;
 }) {
   const visibleIds = new Set(
     sectionsConfig.filter((s) => s.visible).map((s) => s.id)
@@ -152,7 +157,7 @@ export function AbogadoModernoTemplate({
     <div
       className={`${libreBaskerville.variable} ${inter.variable} aw-moderno`}
       style={
-        {
+        (paletteVariables ?? {
           "--c-primary": colorPrimary,
           "--c-accent": colorAccent,
           "--c-accent-lt": "#FDF6E3",
@@ -161,7 +166,7 @@ export function AbogadoModernoTemplate({
           "--c-text": "#0F0F1A",
           "--c-muted": "#64748B",
           "--c-border": "#E2E8F0",
-        } as React.CSSProperties
+        }) as React.CSSProperties
       }
     >
       <style>{CSS}</style>

@@ -1,6 +1,38 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { RESERVED_TOP_LEVEL_ROUTES } from "@/lib/tenancy/reserved-routes";
-import { PublicLandingView } from "@/components/PublicLandingView";
+import { PublicLandingView, getPublicLandingMeta } from "@/components/PublicLandingView";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  if (RESERVED_TOP_LEVEL_ROUTES.has(slug)) return {};
+
+  const meta = await getPublicLandingMeta(slug);
+  if (!meta) return {};
+
+  const title = `${meta.name} — weboficial`;
+  const description = meta.description ?? "Tu página profesional, hecha con weboficial.";
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      images: ["/og-image.png"],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
+}
 
 // TEMPORARY: path-based access to a landing (weboficial.com.ar/<slug>),
 // while the project doesn't have Vercel Pro's wildcard subdomain support

@@ -12,6 +12,8 @@ import {
 } from "@/components/templates/abogado/AbogadoModernoTemplate";
 import { AbogadoClasicoTemplate } from "@/components/templates/abogado/AbogadoClasicoTemplate";
 import { AbogadoMinimalTemplate } from "@/components/templates/abogado/AbogadoMinimalTemplate";
+import { findContadorPaleta } from "@/lib/templates/contador-paletas";
+import { findAbogadoPaleta } from "@/lib/templates/abogado-paletas";
 
 const PUBLICLY_VISIBLE_STATUSES = new Set(["active"]);
 
@@ -19,6 +21,33 @@ interface TemplateConfig {
   primaryColor?: string;
   secondaryColor?: string;
   layout?: string;
+}
+
+// Shared by both public-landing routes' generateMetadata (site/[slug] and
+// the temporary path-based /[slug]) so their Open Graph tags stay in sync
+// with the same resolution rules PublicLandingView itself uses -- a
+// non-active landing gets no dynamic meta, same as it gets notFound() below.
+export async function getPublicLandingMeta(
+  slug: string
+): Promise<{ name: string; description?: string } | null> {
+  const supabase = await createClient();
+
+  const { data: landing } = await supabase
+    .from("landings")
+    .select("form_data, status")
+    .eq("internal_subdomain", slug)
+    .maybeSingle();
+
+  if (!landing || !PUBLICLY_VISIBLE_STATUSES.has(landing.status)) {
+    return null;
+  }
+
+  const formData = landing.form_data as { name?: string; description?: string };
+  if (!formData?.name) {
+    return null;
+  }
+
+  return { name: formData.name, description: formData.description };
 }
 
 // Shared by both public-landing routes: the subdomain one (site/[slug],
@@ -36,7 +65,7 @@ export async function PublicLandingView({ slug }: { slug: string }) {
   const { data: landing } = await supabase
     .from("landings")
     .select(
-      "slug, form_data, sections_config, status, professions(slug), templates(config)"
+      "slug, form_data, sections_config, status, paleta_id, professions(slug), templates(config)"
     )
     .eq("internal_subdomain", slug)
     .maybeSingle();
@@ -86,6 +115,7 @@ export async function PublicLandingView({ slug }: { slug: string }) {
           subdomain={landing.slug}
           colorPrimary={templateConfig.primaryColor}
           colorAccent={templateConfig.secondaryColor}
+          paletteVariables={findAbogadoPaleta(landing.paleta_id).variables}
         />
       );
     }
@@ -111,6 +141,7 @@ export async function PublicLandingView({ slug }: { slug: string }) {
         subdomain={landing.slug}
         colorPrimary={templateConfig.primaryColor}
         colorAccent={templateConfig.secondaryColor}
+        paletteVariables={findContadorPaleta(landing.paleta_id).variables}
       />
     );
   }

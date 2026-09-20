@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Hero } from "@/components/landing/Hero";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { PricingSection } from "@/components/landing/PricingSection";
+import { FAQ } from "@/components/landing/FAQ";
 import { FinalCta } from "@/components/landing/FinalCta";
 import { Footer } from "@/components/landing/Footer";
 
@@ -48,9 +49,18 @@ export default async function Home() {
 
   return (
     <div className="flex flex-1 flex-col bg-white">
+      <header className="flex justify-end px-6 py-4">
+        <Link
+          href="/login"
+          className="text-sm text-black/60 transition-colors hover:text-black"
+        >
+          Iniciar sesión
+        </Link>
+      </header>
       <Hero />
       <HowItWorks />
       <PricingSection />
+      <FAQ />
       <FinalCta />
       <Footer />
     </div>
