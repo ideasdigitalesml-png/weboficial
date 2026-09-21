@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { FormSchema, FormFieldValue } from "@/lib/forms/validate-form-data";
 import { WHATSAPP_VALUE_RE } from "@/lib/whatsapp";
@@ -101,7 +101,20 @@ export function AbogadoWizard({
   onBack: () => void;
 }) {
   const router = useRouter();
-  const [step, setStep] = useState<AbogadoStep>("datos");
+  // Preview scaling — fills the container width dynamically
+  const previewContainerRef = useRef<HTMLDivElement>(null);
+  const [previewScale, setPreviewScale] = useState(0.4);
+  useEffect(() => {
+    const el = previewContainerRef.current;
+    if (!el) return;
+    const update = () => setPreviewScale(el.offsetWidth / 1100);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+    const [step, setStep] = useState<AbogadoStep>("datos");
 
   // Restores a draft left over from before this visitor signed in -- same
   // rationale as ContadorWizard.tsx. Lazy initializers so this only ever
@@ -547,16 +560,18 @@ export function AbogadoWizard({
           </div>
 
           <div className="hidden lg:block">
-            <div className="sticky top-6 overflow-hidden rounded-2xl border border-border-subtle shadow-sm bg-white" style={{ height: "calc(100vh - 3rem)", position: "relative" }}>
+            <div className="sticky top-6 overflow-y-auto overflow-x-hidden rounded-2xl border border-border-subtle shadow-sm bg-slate-100" style={{ height: "calc(100vh - 3rem)" }}>
               {/* Escala el template real para que se vea como miniatura */}
-              <div style={{ position: "absolute", top: 0, left: 0, width: "1100px", transform: "scale(0.4)", transformOrigin: "top left", pointerEvents: "none" }}>
-                <TemplatePreview
-                  layout={layout}
-                  formData={previewFormData}
-                  colorPrimary={colorPrimary}
-                  colorAccent={colorAccent}
-                  subdomain={slugInput}
-                />
+              <div ref={previewContainerRef} style={{ width: "100%", overflow: "hidden" }}>
+                <div style={{ zoom: previewScale, width: "1100px", pointerEvents: "none" }}>
+                  <TemplatePreview
+                    layout={layout}
+                    formData={previewFormData}
+                    colorPrimary={colorPrimary}
+                    colorAccent={colorAccent}
+                    subdomain={slugInput}
+                  />
+                </div>
               </div>
             </div>
           </div>
