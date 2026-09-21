@@ -126,7 +126,6 @@ export function AbogadoWizard({
     }
     return {};
   });
-  const [imageMode, setImageMode] = useState<"stock" | "manual">("stock");
   const [bioMode, setBioMode] = useState<"suggested" | "custom">(() => {
     const draft = loadDraftPage();
     const restored =
@@ -370,36 +369,24 @@ export function AbogadoWizard({
                   value={values.name ?? ""}
                   error={formErrors.name}
                   onChange={(v) => updateValue("name", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
                 <FieldInput
                   field={fieldByKey("matricula_numero")}
                   value={values.matricula_numero ?? ""}
                   error={formErrors.matricula_numero}
                   onChange={(v) => updateValue("matricula_numero", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
                 <FieldInput
                   field={fieldByKey("matricula_colegio")}
                   value={values.matricula_colegio ?? ""}
                   error={formErrors.matricula_colegio}
                   onChange={(v) => updateValue("matricula_colegio", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
                 <FieldInput
                   field={fieldByKey("profile_image")}
                   value={values.profile_image ?? ""}
                   error={formErrors.profile_image}
                   onChange={(v) => updateValue("profile_image", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
               </div>
             )}
@@ -411,54 +398,36 @@ export function AbogadoWizard({
                   value={values.phone ?? ""}
                   error={formErrors.phone}
                   onChange={(v) => updateValue("phone", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
                 <FieldInput
                   field={fieldByKey("email")}
                   value={values.email ?? ""}
                   error={formErrors.email}
                   onChange={(v) => updateValue("email", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
                 <FieldInput
                   field={fieldByKey("direccion")}
                   value={values.direccion ?? ""}
                   error={formErrors.direccion}
                   onChange={(v) => updateValue("direccion", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
                 <FieldInput
                   field={fieldByKey("ciudad")}
                   value={values.ciudad ?? ""}
                   error={formErrors.ciudad}
                   onChange={(v) => updateValue("ciudad", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
                 <FieldInput
                   field={fieldByKey("provincia")}
                   value={values.provincia ?? ""}
                   error={formErrors.provincia}
                   onChange={(v) => updateValue("provincia", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
                 <FieldInput
                   field={fieldByKey("linkedin_url")}
                   value={values.linkedin_url ?? ""}
                   error={formErrors.linkedin_url}
                   onChange={(v) => updateValue("linkedin_url", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
               </div>
             )}
@@ -469,9 +438,6 @@ export function AbogadoWizard({
                 value={values.servicios ?? []}
                 error={formErrors.servicios}
                 onChange={(v) => updateValue("servicios", v)}
-                imageMode={imageMode}
-                onImageModeChange={setImageMode}
-                stockImages={stockImages}
               />
             )}
 
@@ -524,27 +490,18 @@ export function AbogadoWizard({
                   value={values.universidad ?? ""}
                   error={formErrors.universidad}
                   onChange={(v) => updateValue("universidad", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
                 <FieldInput
                   field={fieldByKey("año_graduacion")}
                   value={values.año_graduacion ?? ""}
                   error={formErrors.año_graduacion}
                   onChange={(v) => updateValue("año_graduacion", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
                 <FieldInput
                   field={fieldByKey("asociacion_profesional")}
                   value={values.asociacion_profesional ?? ""}
                   error={formErrors.asociacion_profesional}
                   onChange={(v) => updateValue("asociacion_profesional", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
               </div>
             )}

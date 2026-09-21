@@ -149,7 +149,6 @@ export function ContadorWizard({
     }
     return {};
   });
-  const [imageMode, setImageMode] = useState<"stock" | "manual">("stock");
   const [quienesMode, setQuienesMode] = useState<"suggested" | "custom">(() => {
     const draft = loadDraftPage();
     const restoredDescription =
@@ -407,36 +406,24 @@ export function ContadorWizard({
                   value={values.name ?? ""}
                   error={formErrors.name}
                   onChange={(v) => updateValue("name", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
                 <FieldInput
                   field={fieldByKey("matricula")}
                   value={values.matricula ?? ""}
                   error={formErrors.matricula}
                   onChange={(v) => updateValue("matricula", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
                 <FieldInput
                   field={fieldByKey("jurisdiccion")}
                   value={values.jurisdiccion ?? ""}
                   error={formErrors.jurisdiccion}
                   onChange={(v) => updateValue("jurisdiccion", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
                 <FieldInput
                   field={fieldByKey("profile_image")}
                   value={values.profile_image ?? ""}
                   error={formErrors.profile_image}
                   onChange={(v) => updateValue("profile_image", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
               </div>
             )}
@@ -448,36 +435,24 @@ export function ContadorWizard({
                   value={values.phone ?? ""}
                   error={formErrors.phone}
                   onChange={(v) => updateValue("phone", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
                 <FieldInput
                   field={fieldByKey("email")}
                   value={values.email ?? ""}
                   error={formErrors.email}
                   onChange={(v) => updateValue("email", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
                 <FieldInput
                   field={fieldByKey("zona")}
                   value={values.zona ?? ""}
                   error={formErrors.zona}
                   onChange={(v) => updateValue("zona", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
                 <FieldInput
                   field={fieldByKey("modalidad")}
                   value={values.modalidad ?? ""}
                   error={formErrors.modalidad}
                   onChange={(v) => updateValue("modalidad", v)}
-                  imageMode={imageMode}
-                  onImageModeChange={setImageMode}
-                  stockImages={stockImages}
                 />
               </div>
             )}
@@ -488,9 +463,6 @@ export function ContadorWizard({
                 value={values.servicios ?? []}
                 error={formErrors.servicios}
                 onChange={(v) => updateValue("servicios", v)}
-                imageMode={imageMode}
-                onImageModeChange={setImageMode}
-                stockImages={stockImages}
               />
             )}
 

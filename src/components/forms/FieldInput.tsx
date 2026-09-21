@@ -10,7 +10,10 @@ import {
   buildWhatsappValue,
   splitWhatsappValue,
 } from "@/lib/whatsapp";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+
+const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
 
 export interface StockImage {
   id: string;
@@ -42,63 +45,15 @@ export function FieldInput({
   value: FormFieldValue;
   error?: string;
   onChange: (value: FormFieldValue) => void;
-  imageMode: "stock" | "manual";
-  onImageModeChange: (mode: "stock" | "manual") => void;
-  stockImages: StockImage[];
+  imageMode?: "stock" | "manual";
+  onImageModeChange?: (mode: "stock" | "manual") => void;
+  stockImages?: StockImage[];
 }) {
   const stringValue = typeof value === "string" ? value : "";
 
   if (field.type === "image") {
     return (
-      <div className="flex flex-col gap-2">
-        <label className={LABEL_CLASS}>{field.label}</label>
-        <div className="flex gap-4 text-sm">
-          <button
-            type="button"
-            onClick={() => onImageModeChange("stock")}
-            className={
-              imageMode === "stock" ? TOGGLE_ACTIVE_CLASS : TOGGLE_INACTIVE_CLASS
-            }
-          >
-            Elegir de la galería
-          </button>
-          <button
-            type="button"
-            onClick={() => onImageModeChange("manual")}
-            className={
-              imageMode === "manual" ? TOGGLE_ACTIVE_CLASS : TOGGLE_INACTIVE_CLASS
-            }
-          >
-            Pegar URL
-          </button>
-        </div>
-        {imageMode === "stock" ? (
-          <div className="grid grid-cols-4 gap-3 sm:grid-cols-6">
-            {stockImages.map((img) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={img.id}
-                src={img.image_url}
-                alt=""
-                onClick={() => onChange(img.image_url)}
-                className={`aspect-square cursor-pointer rounded-full object-cover ${
-                  stringValue === img.image_url
-                    ? "ring-2 ring-sky ring-offset-2"
-                    : ""
-                }`}
-              />
-            ))}
-          </div>
-        ) : (
-          <input
-            value={stringValue}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder="https://..."
-            className={INPUT_CLASS}
-          />
-        )}
-        {error && <p className="text-sm text-red-600">{error}</p>}
-      </div>
+      <ImageFieldInput field={field} value={stringValue} error={error} onChange={onChange} />
     );
   }
 
@@ -194,6 +149,111 @@ export function FieldInput({
       )}
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
+  );
+}
+
+function ImageFieldInput({
+  field,
+  value,
+  error,
+  onChange,
+}: {
+  field: FormFieldSchema;
+  value: string;
+  error?: string;
+  onChange: (value: FormFieldValue) => void;
+}) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    // Reset the input so selecting the same file again still fires onChange.
+    e.target.value = "";
+    if (!file) return;
+
+    if (file.size > MAX_PHOTO_SIZE_BYTES) {
+      setUploadError("La imagen no puede pesar más de 5MB.");
+      return;
+    }
+
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const supabase = createClient();
+      const path = `photos/${Date.now()}-${file.name}`;
+      const { data, error: uploadErr } = await supabase.storage
+        .from("profile-photos")
+        .upload(path, file, { upsert: true });
+
+      if (uploadErr || !data) {
+        throw uploadErr ?? new Error("upload failed");
+      }
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("profile-photos").getPublicUrl(data.path);
+
+      onChange(publicUrl);
+    } catch {
+      setUploadError("Error al subir la foto, intentá de nuevo");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <label className={LABEL_CLASS}>{field.label}</label>
+      <div className="flex items-center gap-4">
+        {value && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={value}
+            alt=""
+            className="h-16 w-16 shrink-0 rounded-full object-cover"
+          />
+        )}
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-border-subtle bg-white px-4 text-sm font-medium text-navy transition-colors hover:border-sky disabled:opacity-50"
+        >
+          <CameraIcon />
+          {uploading ? "Subiendo..." : value ? "Cambiar foto" : "Subir foto"}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+      </div>
+      {uploadError && <p className="text-sm text-red-600">{uploadError}</p>}
+      {error && <p className="text-sm text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+function CameraIcon() {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      className="h-4 w-4"
+      aria-hidden="true"
+    >
+      <path
+        d="M6.5 4.5L7.5 3h5l1 1.5H16a1 1 0 011 1V15a1 1 0 01-1 1H4a1 1 0 01-1-1V5.5a1 1 0 011-1h2.5z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      <circle cx="10" cy="10.5" r="3" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
   );
 }
 
