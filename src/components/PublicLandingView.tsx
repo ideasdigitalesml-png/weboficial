@@ -15,7 +15,7 @@ import { AbogadoMinimalTemplate } from "@/components/templates/abogado/AbogadoMi
 import { findContadorPaleta } from "@/lib/templates/contador-paletas";
 import { findAbogadoPaleta } from "@/lib/templates/abogado-paletas";
 
-const PUBLICLY_VISIBLE_STATUSES = new Set(["active"]);
+const PUBLICLY_VISIBLE_STATUSES = new Set(["active", "draft"]);
 
 interface TemplateConfig {
   primaryColor?: string;

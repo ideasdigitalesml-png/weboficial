@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import type { FormSchema } from "@/lib/forms/validate-form-data";
 import { ROOT_DOMAIN } from "@/lib/root-domain";
 import { FieldInput } from "@/components/forms/FieldInput";
@@ -63,6 +65,26 @@ const TEMPLATE_PREVIEW_IMAGE: Record<string, string> = {
   "abogados:moderno": "/previews/abogado-moderno.jpg",
   "abogados:clasico": "/previews/abogado-clasico.jpg",
   "abogados:minimal": "/previews/abogado-minimal.jpg",
+};
+
+// For the "profession" step card, one representative screenshot per
+// profession (its flagship "Moderno" template) rather than a generic
+// icon -- reuses the same real Playwright-rendered images above instead
+// of a placeholder gradient, for the professions that have one.
+const PROFESSION_PREVIEW_IMAGE: Record<string, string> = {
+  contadores: "/previews/contador-moderno.jpg",
+  abogados: "/previews/abogado-moderno.jpg",
+};
+
+// Fallback for a profession with no rendered preview yet.
+const PROFESSION_GRADIENT: Record<string, string> = {
+  contadores: "linear-gradient(135deg, #0B2545, #1A6B4A)",
+  abogados: "linear-gradient(135deg, #1C1C2E, #C9A84C)",
+};
+
+const PROFESSION_SUBTITLE: Record<string, string> = {
+  contadores: "Impuestos · Liquidaciones · Asesoramiento",
+  abogados: "Derecho Civil · Familia · Societario · Laboral",
 };
 
 export function OnboardingWizard({
@@ -159,7 +181,7 @@ export function OnboardingWizard({
   }
 
   return (
-    <div className="flex min-h-full flex-1 flex-col bg-white">
+    <div className="flex min-h-full flex-1 flex-col bg-[#f8fafc]">
       <WizardHeader />
 
       {step === "form" && profession && usesDedicatedWizard && selectedTemplate ? (
@@ -181,41 +203,131 @@ export function OnboardingWizard({
           />
         )
       ) : (
-        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-10">
-          <Steps current={step} />
+        <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-16 px-8 py-16">
+          {(step === "form" || step === "slug") && <Steps current={step} />}
 
           {step === "profession" && (
-            <section className="flex flex-col gap-4">
-              <h2 className="text-xl font-semibold text-navy">
-                Elegí tu profesión
-              </h2>
-              <div className="grid gap-5 sm:grid-cols-2">
-                {professions.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => {
-                      setProfessionId(p.id);
-                      setTemplateId(null);
-                      setStep("template");
-                    }}
-                    className="flex aspect-[4/3] flex-col justify-end gap-1 rounded-2xl border border-border-subtle bg-surface-muted p-6 text-left shadow-sm transition-colors hover:border-sky hover:bg-white"
-                  >
-                    <span className="text-xl font-semibold text-navy">
-                      {p.name}
-                    </span>
-                    <span className="text-sm font-medium text-sky">Elegir</span>
-                  </button>
-                ))}
+            <section className="flex flex-col gap-8">
+              <div className="flex flex-col gap-2">
+                <h2 className="text-3xl font-bold text-navy">
+                  Elegí tu profesión
+                </h2>
+                <p className="text-base text-gray-500">
+                  Seleccioná tu área profesional para ver las plantillas
+                  disponibles.
+                </p>
               </div>
+
+              <div className="flex justify-center">
+                <div className="w-full max-w-sm">
+                  <Steps current="profession" subtle />
+                </div>
+              </div>
+
+              <div className="grid gap-6 sm:grid-cols-3">
+                {professions.map((p) => {
+                  const previewImage = PROFESSION_PREVIEW_IMAGE[p.slug];
+                  const gradient =
+                    PROFESSION_GRADIENT[p.slug] ??
+                    "linear-gradient(135deg, #0f1f3d, #334155)";
+                  const subtitle =
+                    PROFESSION_SUBTITLE[p.slug] ??
+                    "Plantillas profesionales listas para usar";
+
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        setProfessionId(p.id);
+                        setTemplateId(null);
+                        setStep("template");
+                      }}
+                      className="group relative flex flex-col overflow-hidden rounded-2xl bg-white text-left shadow-sm ring-1 ring-black/5 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+                    >
+                      {/* imagen fija — siempre 220 px, recortada desde arriba */}
+                      <div className="relative h-[220px] w-full shrink-0 overflow-hidden">
+                        {previewImage ? (
+                          <Image
+                            src={previewImage}
+                            alt={`Vista previa de páginas de ${p.name}`}
+                            fill
+                            sizes="(min-width: 640px) 33vw, 100vw"
+                            className="object-cover object-top"
+                          />
+                        ) : (
+                          <div
+                            className="flex h-full w-full items-center justify-center"
+                            style={{ background: gradient }}
+                          >
+                            <span className="text-sm font-medium text-white/90">
+                              Moderno · Clásico · Minimal
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* info — altura fija para que todas las cards sean iguales */}
+                      <div className="flex min-h-[88px] flex-col justify-center gap-1 px-5 py-4">
+                        <span className="text-lg font-semibold text-gray-900 leading-snug">
+                          {p.name}
+                        </span>
+                        <span className="text-xs text-gray-400 leading-relaxed">
+                          {subtitle}
+                        </span>
+                      </div>
+
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-11 items-center justify-center bg-navy text-sm font-medium text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                        Comenzar →
+                      </div>
+                    </button>
+                  );
+                })}
+
+                {/* Psicólogos — próximamente */}
+                <div className="relative flex flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-black/5 opacity-55 cursor-not-allowed select-none">
+                  <div className="relative h-[220px] w-full shrink-0 overflow-hidden">
+                    <div
+                      className="flex h-full w-full items-center justify-center"
+                      style={{ background: "linear-gradient(135deg, #4A5568, #A0AEC0)" }}
+                    >
+                      <span className="rounded-full bg-white/25 px-4 py-1.5 text-xs font-semibold tracking-wide text-white uppercase">
+                        Próximamente
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex min-h-[88px] flex-col justify-center gap-1 px-5 py-4">
+                    <span className="text-lg font-semibold text-gray-900 leading-snug">Psicólogos</span>
+                    <span className="text-xs text-gray-400 leading-relaxed">Clínica · Infanto-juvenil · Organizacional</span>
+                  </div>
+                </div>
+              </div>
+
+              <Link
+                href="/"
+                className="pt-2 text-center text-sm text-sky hover:underline"
+              >
+                También podés ver ejemplos de páginas terminadas antes de
+                empezar →
+              </Link>
             </section>
           )}
 
           {step === "template" && profession && (
-            <section className="flex flex-col gap-4">
-              <h2 className="text-xl font-semibold text-navy">
-                Elegí una plantilla
-              </h2>
-              <div className="grid gap-5 sm:grid-cols-3">
+            <section className="flex flex-col gap-8">
+              <div className="flex flex-col gap-1">
+                <h2 className="text-3xl font-bold text-navy">Elegí tu diseño</h2>
+                <p className="text-base text-gray-500">
+                  Todos los diseños incluyen las mismas secciones. Podés cambiar el estilo después.
+                </p>
+              </div>
+
+              <div className="flex justify-center">
+                <div className="w-full max-w-sm">
+                  <Steps current="template" subtle />
+                </div>
+              </div>
+
+              <div className="grid gap-6 sm:grid-cols-3">
                 {professionTemplates.map((t) => (
                   <TemplateCard
                     key={t.id}
@@ -229,11 +341,12 @@ export function OnboardingWizard({
                   />
                 ))}
               </div>
+
               <button
                 onClick={() => setStep("profession")}
-                className="self-start text-sm font-medium text-text-body hover:text-navy hover:underline"
+                className="self-start text-sm text-gray-400 hover:text-navy hover:underline"
               >
-                Volver
+                ← Volver a profesiones
               </button>
             </section>
           )}
@@ -310,6 +423,15 @@ export function OnboardingWizard({
           )}
         </div>
       )}
+      <footer className="mt-auto border-t border-gray-100 px-6 py-5 text-center text-xs text-gray-400">
+        <span>© {new Date().getFullYear()} weboficial</span>
+        {" · "}
+        <a href="/terminos" className="hover:text-gray-600 hover:underline">Términos</a>
+        {" · "}
+        <a href="/privacidad" className="hover:text-gray-600 hover:underline">Privacidad</a>
+        {" · "}
+        <a href="mailto:ideasdigitalesml@gmail.com" className="hover:text-gray-600 hover:underline">Contacto</a>
+      </footer>
     </div>
   );
 }
@@ -322,23 +444,45 @@ function WizardHeader() {
   );
 }
 
-function Steps({ current }: { current: Step }) {
+function Steps({ current, subtle = false }: { current: Step; subtle?: boolean }) {
   const steps: { key: Step; label: string }[] = [
     { key: "profession", label: "Profesión" },
     { key: "template", label: "Plantilla" },
     { key: "form", label: "Datos" },
     { key: "slug", label: "Subdominio" },
   ];
+  const currentIndex = steps.findIndex((s) => s.key === current);
+
   return (
-    <ol className="flex gap-4 text-sm text-text-body">
-      {steps.map((s) => (
-        <li
-          key={s.key}
-          className={s.key === current ? "font-semibold text-navy" : ""}
-        >
-          {s.label}
-        </li>
-      ))}
+    <ol className={`flex w-full items-start ${subtle ? "opacity-50" : ""}`}>
+      {steps.map((s, i) => {
+        const isActive = i === currentIndex;
+        return (
+          <li key={s.key} className="flex flex-1 flex-col items-center">
+            <div className="flex w-full items-center">
+              <div
+                className={`flex shrink-0 items-center justify-center rounded-full font-semibold ${
+                  subtle ? "h-6 w-6 text-xs" : "h-8 w-8 text-sm"
+                } ${
+                  isActive ? "bg-navy text-white" : "bg-gray-200 text-gray-400"
+                }`}
+              >
+                {i + 1}
+              </div>
+              {i < steps.length - 1 && (
+                <div className="mx-2 h-px flex-1 bg-gray-200" />
+              )}
+            </div>
+            <span
+              className={`mt-1.5 ${subtle ? "text-[10px]" : "mt-2 text-xs"} ${
+                isActive ? "font-bold text-navy" : "text-gray-300"
+              }`}
+            >
+              {s.label}
+            </span>
+          </li>
+        );
+      })}
     </ol>
   );
 }
@@ -369,49 +513,70 @@ function TemplateCard({
           onSelect();
         }
       }}
-      className={`group relative aspect-[3/4] w-full cursor-pointer overflow-hidden rounded-2xl bg-white transition-shadow ${
-        selected
-          ? "ring-4 ring-sky"
-          : "ring-1 ring-border-subtle hover:ring-2 hover:ring-sky/50"
+      className={`group flex cursor-pointer flex-col gap-0 transition-all duration-200 hover:-translate-y-1 focus-visible:outline-none ${
+        selected ? "opacity-100" : ""
       }`}
     >
-      {previewImage ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={previewImage}
-          alt={`Vista previa del diseño ${template.name}`}
-          className="block h-full w-full object-cover object-top"
-        />
-      ) : template.preview_image_url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={template.preview_image_url}
-          alt={template.name}
-          className="h-full w-full object-cover"
-        />
-      ) : (
-        <div className="flex h-full items-center justify-center text-sm font-medium text-text-body/60">
-          {template.name}
-        </div>
-      )}
+      {/* imagen del template — ancho completo sin recorte */}
+      <div
+        className={`relative w-full overflow-hidden rounded-2xl bg-white transition-shadow duration-200 ${
+          selected
+            ? "ring-[3px] ring-sky shadow-lg shadow-sky/20"
+            : "ring-1 ring-black/8 group-hover:shadow-md group-hover:ring-black/15"
+        }`}
+      >
+        {previewImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={previewImage}
+            alt={`Vista previa del diseño ${template.name}`}
+            className="block w-full h-auto"
+          />
+        ) : template.preview_image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={template.preview_image_url}
+            alt={template.name}
+            className="block w-full h-auto"
+          />
+        ) : (
+          <div className="flex h-48 items-center justify-center text-sm font-medium text-gray-400">
+            {template.name}
+          </div>
+        )}
 
-      <div className="absolute inset-0 flex items-center justify-center bg-black/15 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
-        <span className="text-lg font-semibold text-white">Seleccionar</span>
+        {/* overlay hover */}
+        <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-navy/70 via-transparent to-transparent pb-5 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+          <span className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-navy shadow-sm">
+            Elegir este diseño
+          </span>
+        </div>
+
+        {/* check si está seleccionado */}
+        {selected && (
+          <div className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-sky text-white shadow-md">
+            <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4">
+              <path
+                d="M4 10.5l3.5 3.5L16 5.5"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        )}
       </div>
 
-      {selected && (
-        <div className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-sky text-white shadow-md">
-          <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4">
-            <path
-              d="M4 10.5l3.5 3.5L16 5.5"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-      )}
+      {/* nombre del template abajo */}
+      <div className="flex items-center justify-between px-1 pt-3">
+        <span className={`text-sm font-semibold ${selected ? "text-sky" : "text-gray-800"}`}>
+          {template.name}
+        </span>
+        {selected && (
+          <span className="text-xs font-medium text-sky">Seleccionado</span>
+        )}
+      </div>
     </div>
   );
 }

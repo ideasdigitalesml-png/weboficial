@@ -42,7 +42,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es" className={`${spaceGrotesk.variable} h-full antialiased`}>
+    <html lang="es" className={`${spaceGrotesk.variable} h-full antialiased`} data-theme="light">
       <head>
         {/* Meta Pixel -- base pixel code, only when NEXT_PUBLIC_META_PIXEL_ID is set. */}
         {META_PIXEL_ID && (

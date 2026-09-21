@@ -547,14 +547,17 @@ export function AbogadoWizard({
           </div>
 
           <div className="hidden lg:block">
-            <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto rounded-2xl border border-border-subtle shadow-sm">
-              <TemplatePreview
-                layout={layout}
-                formData={previewFormData}
-                colorPrimary={colorPrimary}
-                colorAccent={colorAccent}
-                subdomain={slugInput}
-              />
+            <div className="sticky top-6 overflow-hidden rounded-2xl border border-border-subtle shadow-sm bg-white" style={{ height: "calc(100vh - 3rem)", position: "relative" }}>
+              {/* Escala el template real para que se vea como miniatura */}
+              <div style={{ position: "absolute", top: 0, left: 0, width: "1100px", transform: "scale(0.4)", transformOrigin: "top left", pointerEvents: "none" }}>
+                <TemplatePreview
+                  layout={layout}
+                  formData={previewFormData}
+                  colorPrimary={colorPrimary}
+                  colorAccent={colorAccent}
+                  subdomain={slugInput}
+                />
+              </div>
             </div>
           </div>
         </div>

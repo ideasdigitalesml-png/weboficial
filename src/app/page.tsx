@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { Wordmark } from "@/components/landing/Wordmark";
 import { Hero } from "@/components/landing/Hero";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { PricingSection } from "@/components/landing/PricingSection";
@@ -48,14 +49,17 @@ export default async function Home() {
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-white">
-      <header className="flex justify-end px-6 py-4">
-        <Link
-          href="/login"
-          className="text-sm text-black/60 transition-colors hover:text-black"
-        >
-          Iniciar sesión
-        </Link>
+    <div className="relative flex flex-1 flex-col bg-white">
+      <header className="absolute inset-x-0 top-0 z-20">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
+          <Wordmark tone="white" className="text-lg" />
+          <Link
+            href="/login"
+            className="text-sm text-white/70 transition-colors hover:text-white"
+          >
+            Iniciar sesión
+          </Link>
+        </div>
       </header>
       <Hero />
       <HowItWorks />

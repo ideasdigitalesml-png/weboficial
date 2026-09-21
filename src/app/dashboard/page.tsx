@@ -10,6 +10,13 @@ import { WelcomeBanner } from "./WelcomeBanner";
 import { PaletteEditor } from "./PaletteEditor";
 import { SubscribeButton } from "./SubscribeButton";
 
+const TEMPLATE_PREVIEW_IMAGE: Record<string, string> = {
+  "contadores:moderno": "/previews/contador-moderno.jpg",
+  "abogados:moderno": "/previews/abogado-moderno.jpg",
+  "abogados:clasico": "/previews/abogado-clasico.jpg",
+  "abogados:minimal": "/previews/abogado-minimal.jpg",
+};
+
 const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
   pending: "Pendiente",
   authorized: "Activa",
@@ -73,8 +80,12 @@ export default async function DashboardPage({
     supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
   ]);
 
-  const publicUrl = `https://${landing.slug}.${ROOT_DOMAIN}`;
+  // Borrador → URL provisoria por path (funciona sin subdominio ni pago)
+  // Activa  → URL real con subdominio (estudioferrario.weboficial.com.ar)
   const isPublished = landing.status === "active";
+  const publicUrl = isPublished
+    ? `https://${landing.slug}.${ROOT_DOMAIN}`
+    : `https://${ROOT_DOMAIN}/${landing.slug}`;
   const professionalName =
     (landing.form_data as Record<string, unknown>)?.name;
   const displayName =
@@ -86,6 +97,9 @@ export default async function DashboardPage({
     | { layout?: string }
     | undefined;
   const isModerno = templateConfig?.layout === "modern";
+  const localPreviewImage = profession?.slug && template?.slug
+    ? TEMPLATE_PREVIEW_IMAGE[`${profession.slug}:${template.slug}`]
+    : undefined;
   const paletas = profession?.slug ? PALETAS_BY_PROFESSION[profession.slug] : undefined;
 
   return (
@@ -156,20 +170,24 @@ export default async function DashboardPage({
         <section className="flex flex-col gap-3">
           <h2 className="text-lg font-semibold text-navy">Mi plantilla</h2>
           <div className="flex flex-col gap-3 rounded-xl border border-border-subtle p-4 sm:flex-row sm:items-center">
-            {template?.preview_image_url && (
+            {(localPreviewImage || template?.preview_image_url) && (
               <Image
-                src={template.preview_image_url}
-                alt={template.name ?? "Plantilla"}
+                src={localPreviewImage ?? template!.preview_image_url!}
+                alt={template?.name ?? "Plantilla"}
                 width={160}
                 height={107}
-                className="h-auto w-full max-w-40 rounded-lg border border-border-subtle object-cover"
+                className="h-auto w-full max-w-40 rounded-lg border border-border-subtle object-cover object-top"
                 unoptimized
               />
             )}
             <div className="flex flex-1 flex-col gap-2">
-              <p className="text-sm font-medium text-navy">{template?.name}</p>
+              <p className="text-sm font-medium text-navy">{template?.name ?? "—"}</p>
               <p className="text-sm text-text-body">
-                (La plantilla se elige al crear la página)
+                Tu plantilla activa. Podés{" "}
+                <Link href="/dashboard/cambiar-plantilla" className="text-sky underline hover:text-sky-dark">
+                  cambiarla
+                </Link>{" "}
+                cuando quieras.
               </p>
             </div>
           </div>

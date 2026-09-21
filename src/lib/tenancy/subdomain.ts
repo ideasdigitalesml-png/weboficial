@@ -12,7 +12,7 @@ export const RESERVED_HOSTS = new Set([
 // tested without spinning up a server or an Edge runtime.
 //
 // Supports two shapes:
-//   - production: "<slug>.<rootDomain>" (e.g. juanperez.plataforma.com.ar)
+//   - production: "<slug>.<rootDomain>" (e.g. juanperez.weboficial.com.ar)
 //   - local dev:  "<slug>.lvh.me" (lvh.me publicly resolves to 127.0.0.1,
 //     so it behaves like a real subdomain in the browser without any
 //     /etc/hosts editing or DNS setup)
