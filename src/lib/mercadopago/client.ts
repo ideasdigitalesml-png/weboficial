@@ -79,7 +79,6 @@ export const mercadoPagoClient: MercadoPagoClient = {
       method: "POST",
       body: JSON.stringify({
         reason: input.reason,
-        payer_email: input.payerEmail,
         external_reference: input.externalReference,
         back_url: input.backUrl,
         status: "pending",
