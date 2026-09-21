@@ -23,6 +23,8 @@ import {
 } from "./styles";
 import { createSubscriptionAction } from "@/app/dashboard/actions";
 import { saveDraftPage, loadDraftPage, clearDraftPage } from "./draft-storage";
+import { uploadPendingPhotos } from "./photo-upload";
+import { createClient } from "@/lib/supabase/client";
 import { AuthModal } from "./AuthModal";
 
 const PUBLISHING_PATH = "/onboarding/publishing";
@@ -264,10 +266,24 @@ export function AbogadoWizard({
     setSubmitError(null);
     setFormErrors({});
     startTransition(async () => {
+      // values.profile_image may be a base64 data URL (see ImageFieldInput
+      // in FieldInput.tsx) rather than a real URL yet -- upload it now,
+      // since we're guaranteed a session at this point (isAuthenticated).
+      let formData: Record<string, unknown> = {
+        ...values,
+        descripcion_corta: descripcionCorta,
+      };
+      try {
+        formData = await uploadPendingPhotos(createClient(), formData);
+      } catch {
+        setSubmitError("No se pudo subir la foto de perfil. Intentá de nuevo.");
+        return;
+      }
+
       const result = await createLandingAction({
         professionId: profession.id,
         templateId: template.id,
-        formData: { ...values, descripcion_corta: descripcionCorta },
+        formData,
         desiredSlug: slugInput,
       });
 

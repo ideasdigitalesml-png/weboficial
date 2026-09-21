@@ -1,8 +1,10 @@
 "use client";
 
+import { createClient } from "@/lib/supabase/client";
 import { createLandingAction } from "./actions";
 import { createSubscriptionAction } from "@/app/dashboard/actions";
 import { loadDraftPage, clearDraftPage } from "./draft-storage";
+import { uploadPendingPhotos } from "./photo-upload";
 
 export type PublishOutcome =
   | { status: "no_draft" }
@@ -50,10 +52,23 @@ export async function publishDraftPage(): Promise<PublishOutcome> {
     return { status: "no_draft" };
   }
 
+  // draft.formData may hold a base64 data URL for the photo field (see
+  // ImageFieldInput) instead of a real URL -- this is the first point
+  // after login where uploading it is actually allowed by RLS.
+  let formData: Record<string, unknown> = draft.formData;
+  try {
+    formData = await uploadPendingPhotos(createClient(), draft.formData);
+  } catch {
+    return {
+      status: "create_failed",
+      message: "No se pudo subir la foto de perfil. Intentá de nuevo.",
+    };
+  }
+
   const result = await createLandingAction({
     professionId: draft.professionId,
     templateId: draft.templateId,
-    formData: draft.formData,
+    formData,
     desiredSlug: draft.desiredSlug,
     paletaId: draft.paletaId,
   });

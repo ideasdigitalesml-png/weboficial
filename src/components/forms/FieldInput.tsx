@@ -11,7 +11,6 @@ import {
   splitWhatsappValue,
 } from "@/lib/whatsapp";
 import { useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 
 const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
 
@@ -152,6 +151,14 @@ export function FieldInput({
   );
 }
 
+// Photos are captured as base64 data URLs here, not uploaded yet -- the
+// onboarding wizard is reachable by anonymous visitors (they sign in only
+// at publish time), and the storage.objects insert policy requires an
+// authenticated role, so an upload attempted from this component would
+// fail with a permissions error for anyone not already logged in. The
+// actual Supabase Storage upload happens once at publish time, when a
+// session is guaranteed to exist -- see uploadPendingPhotos in
+// src/app/onboarding/photo-upload.ts.
 function ImageFieldInput({
   field,
   value,
@@ -164,43 +171,32 @@ function ImageFieldInput({
   onChange: (value: FormFieldValue) => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [readError, setReadError] = useState<string | null>(null);
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     // Reset the input so selecting the same file again still fires onChange.
     e.target.value = "";
     if (!file) return;
 
     if (file.size > MAX_PHOTO_SIZE_BYTES) {
-      setUploadError("La imagen no puede pesar más de 5MB.");
+      setReadError("La imagen no puede pesar más de 5MB.");
       return;
     }
 
-    setUploadError(null);
-    setUploading(true);
-    try {
-      const supabase = createClient();
-      const path = `photos/${Date.now()}-${file.name}`;
-      const { data, error: uploadErr } = await supabase.storage
-        .from("profile-photos")
-        .upload(path, file, { upsert: true });
-
-      if (uploadErr || !data) {
-        throw uploadErr ?? new Error("upload failed");
+    setReadError(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        onChange(reader.result);
+      } else {
+        setReadError("Error al leer la foto, intentá de nuevo");
       }
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("profile-photos").getPublicUrl(data.path);
-
-      onChange(publicUrl);
-    } catch {
-      setUploadError("Error al subir la foto, intentá de nuevo");
-    } finally {
-      setUploading(false);
-    }
+    };
+    reader.onerror = () => {
+      setReadError("Error al leer la foto, intentá de nuevo");
+    };
+    reader.readAsDataURL(file);
   }
 
   return (
@@ -218,11 +214,10 @@ function ImageFieldInput({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-border-subtle bg-white px-4 text-sm font-medium text-navy transition-colors hover:border-sky disabled:opacity-50"
+          className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-border-subtle bg-white px-4 text-sm font-medium text-navy transition-colors hover:border-sky"
         >
           <CameraIcon />
-          {uploading ? "Subiendo..." : value ? "Cambiar foto" : "Subir foto"}
+          {value ? "Cambiar foto" : "Subir foto"}
         </button>
         <input
           ref={fileInputRef}
@@ -232,7 +227,7 @@ function ImageFieldInput({
           className="hidden"
         />
       </div>
-      {uploadError && <p className="text-sm text-red-600">{uploadError}</p>}
+      {readError && <p className="text-sm text-red-600">{readError}</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );
