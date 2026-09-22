@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { FormSchema, FormFieldValue } from "@/lib/forms/validate-form-data";
 import { FieldInput, type StockImage } from "@/components/forms/FieldInput";
+import { createClient } from "@/lib/supabase/client";
+import { uploadPendingPhotos } from "@/app/onboarding/photo-upload";
 import { updateLandingFormDataAction } from "./actions";
 
 export function EditLandingForm({
@@ -43,7 +45,18 @@ export function EditLandingForm({
     setErrors({});
     setSavedAt(null);
     startTransition(async () => {
-      const result = await updateLandingFormDataAction(landingId, values);
+      // A field of type "image" holds a base64 data URL until it's actually
+      // uploaded (see ImageFieldInput in FieldInput.tsx) -- upload it now,
+      // same as the onboarding wizard does before creating a landing.
+      let formData: Record<string, unknown> = values;
+      try {
+        formData = await uploadPendingPhotos(createClient(), values);
+      } catch {
+        setErrors({ _form: "No se pudo subir la foto de perfil. Intentá de nuevo." });
+        return;
+      }
+
+      const result = await updateLandingFormDataAction(landingId, formData);
       if (result.ok) {
         setValues(result.formData);
         setSavedAt(Date.now());

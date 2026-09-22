@@ -12,13 +12,19 @@ const SUPABASE_WS_ORIGIN = "wss://pqkwpgojpkwcrufhfjpx.supabase.co";
 // landing pages, which should stay staticly-optimizable) into dynamic
 // rendering. 'unsafe-inline' is the documented fallback for that tradeoff --
 // see node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md.
+// connect-src needs 'data:' (not just img-src) because uploadPendingPhotos
+// does fetch(dataUrl).blob() to turn a captured photo into a Blob before
+// uploading it -- fetch() to a data: URI is gated by connect-src, unlike an
+// <img src="data:..."> which only needs img-src. Without it, every
+// profile-photo upload throws "Failed to fetch" in the browser only (CSP
+// isn't enforced in Node scripts/tests, which is how this went unnoticed).
 const CSP = `
   default-src 'self';
   script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net;
   style-src 'self' 'unsafe-inline';
   img-src 'self' data: blob: ${SUPABASE_ORIGIN} https://www.facebook.com https://www.google-analytics.com;
   font-src 'self' data:;
-  connect-src 'self' ${SUPABASE_ORIGIN} ${SUPABASE_WS_ORIGIN} https://www.google-analytics.com https://connect.facebook.net;
+  connect-src 'self' data: ${SUPABASE_ORIGIN} ${SUPABASE_WS_ORIGIN} https://www.google-analytics.com https://connect.facebook.net;
   object-src 'none';
   base-uri 'self';
   form-action 'self';
