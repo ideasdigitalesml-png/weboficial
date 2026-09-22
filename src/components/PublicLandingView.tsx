@@ -16,6 +16,12 @@ import { AbogadoClasicoTemplate } from "@/components/templates/abogado/AbogadoCl
 import { AbogadoMinimalTemplate } from "@/components/templates/abogado/AbogadoMinimalTemplate";
 import { findContadorPaleta } from "@/lib/templates/contador-paletas";
 import { findAbogadoPaleta } from "@/lib/templates/abogado-paletas";
+import {
+  PsicologoModernoTemplate,
+  type PsicologoFormData,
+} from "@/components/templates/psicologo/PsicologoModernoTemplate";
+import { PsicologoClasicoTemplate } from "@/components/templates/psicologo/PsicologoClasicoTemplate";
+import { PsicologoMinimalTemplate } from "@/components/templates/psicologo/PsicologoMinimalTemplate";
 
 const PUBLICLY_VISIBLE_STATUSES = new Set(["active", "draft"]);
 
@@ -127,6 +133,40 @@ export async function PublicLandingView({ slug }: { slug: string }) {
         sectionsConfig={sectionsConfig}
         subdomain={landing.slug}
         colorPrimary={templateConfig?.primaryColor}
+      />
+    );
+  }
+
+  if (professionSlug === "psicologos") {
+    const formData = landing.form_data as PsicologoFormData;
+    if (templateConfig?.layout === "clasico") {
+      return (
+        <PsicologoClasicoTemplate
+          formData={formData}
+          sectionsConfig={sectionsConfig}
+          subdomain={landing.slug}
+          colorPrimary={templateConfig.primaryColor}
+          colorAccent={templateConfig.secondaryColor}
+        />
+      );
+    }
+    if (templateConfig?.layout === "minimal") {
+      return (
+        <PsicologoMinimalTemplate
+          formData={formData}
+          sectionsConfig={sectionsConfig}
+          subdomain={landing.slug}
+          colorPrimary={templateConfig?.primaryColor}
+        />
+      );
+    }
+    return (
+      <PsicologoModernoTemplate
+        formData={formData}
+        sectionsConfig={sectionsConfig}
+        subdomain={landing.slug}
+        colorPrimary={templateConfig?.primaryColor}
+        colorAccent={templateConfig?.secondaryColor}
       />
     );
   }

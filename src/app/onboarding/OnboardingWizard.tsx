@@ -84,13 +84,15 @@ const PROFESSION_PREVIEW_IMAGE: Record<string, string> = {
 
 // Fallback for a profession with no rendered preview yet.
 const PROFESSION_GRADIENT: Record<string, string> = {
-  contadores: "linear-gradient(135deg, #0B2545, #1A6B4A)",
-  abogados: "linear-gradient(135deg, #1C1C2E, #C9A84C)",
+  contadores: "linear-gradient(135deg, #1b4f72, #1b4f72)",
+  abogados: "linear-gradient(135deg, #1a2744, #c9a84c)",
+  psicologos: "linear-gradient(135deg, #5b6b8c, #6b7f6b)",
 };
 
 const PROFESSION_SUBTITLE: Record<string, string> = {
   contadores: "Impuestos · Liquidaciones · Asesoramiento",
   abogados: "Derecho Civil · Familia · Societario · Laboral",
+  psicologos: "Clínica · Infanto-juvenil · Organizacional",
 };
 
 export function OnboardingWizard({
@@ -289,23 +291,6 @@ export function OnboardingWizard({
                   );
                 })}
 
-                {/* Psicólogos — próximamente */}
-                <div className="relative flex flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-black/5 opacity-55 cursor-not-allowed select-none">
-                  <div className="relative h-[220px] w-full shrink-0 overflow-hidden">
-                    <div
-                      className="flex h-full w-full items-center justify-center"
-                      style={{ background: "linear-gradient(135deg, #4A5568, #A0AEC0)" }}
-                    >
-                      <span className="rounded-full bg-white/25 px-4 py-1.5 text-xs font-semibold tracking-wide text-white uppercase">
-                        Próximamente
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex min-h-[88px] flex-col justify-center gap-1 px-5 py-4">
-                    <span className="text-lg font-semibold text-gray-900 leading-snug">Psicólogos</span>
-                    <span className="text-xs text-gray-400 leading-relaxed">Clínica · Infanto-juvenil · Organizacional</span>
-                  </div>
-                </div>
               </div>
 
               <Link
