@@ -14,7 +14,7 @@
   /* ============ Tokens ============
      --c-primary / --c-accent / --c-accent-lt son reemplazables por el
      backend ({{color_primary}} / {{color_accent}}). Defaults sugeridos:
-     navy #0B2545 y verde #1A6B4A. El resto de la paleta es fija. */
+     navy #1b4f72 y verde #1b4f72. El resto de la paleta es fija. */
   :root{
     --c-primary: {{color_primary}};
     --c-accent: {{color_accent}};
@@ -924,7 +924,7 @@
     var isPlaceholder = function (v) {
       return /^\{\{[a-z0-9_]+\}\}$/i.test((v || "").trim());
     };
-    var defaults = { primary: "#0B2545", accent: "#1A6B4A" };
+    var defaults = { primary: "#1b4f72", accent: "#1b4f72" };
 
     if (isPlaceholder(styles.getPropertyValue("--c-primary"))) {
       root.style.setProperty("--c-primary", defaults.primary);

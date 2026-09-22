@@ -100,7 +100,9 @@ function asString(value: FormFieldValue | undefined): string {
 }
 
 function asStringArray(value: FormFieldValue | undefined): string[] {
-  return Array.isArray(value) ? value : [];
+  return Array.isArray(value)
+    ? value.filter((v): v is string => typeof v === "string")
+    : [];
 }
 
 export function ContadorWizard({

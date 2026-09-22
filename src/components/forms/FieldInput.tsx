@@ -3,6 +3,7 @@
 import type {
   FormFieldSchema,
   FormFieldValue,
+  RepeaterItem,
 } from "@/lib/forms/validate-form-data";
 import {
   WHATSAPP_COUNTRY_CODES,
@@ -88,8 +89,24 @@ export function FieldInput({
     );
   }
 
+  if (field.type === "repeater") {
+    const items = Array.isArray(value) && typeof value[0] !== "string"
+      ? (value as RepeaterItem[])
+      : [];
+    return (
+      <RepeaterFieldInput
+        field={field}
+        items={items}
+        error={error}
+        onChange={(next) => onChange(next as unknown as FormFieldValue)}
+      />
+    );
+  }
+
   if (field.type === "checkbox-group") {
-    const selected = Array.isArray(value) ? value : [];
+    const selected = Array.isArray(value)
+      ? value.filter((v): v is string => typeof v === "string")
+      : [];
     function toggle(optionValue: string) {
       const next = selected.includes(optionValue)
         ? selected.filter((v) => v !== optionValue)
@@ -249,6 +266,114 @@ function CameraIcon() {
       />
       <circle cx="10" cy="10.5" r="3" stroke="currentColor" strokeWidth="1.4" />
     </svg>
+  );
+}
+
+// Renders an add/remove list of cards (servicios, testimonios, "por qué
+// elegirnos") -- each card's columns come from field.item_fields, not
+// hardcoded here, so the same component serves every repeater field across
+// every profession. min_items/max_items are UI hints only (see
+// validate-form-data.ts): saving with fewer than min_items still works, the
+// professional can build the list up over multiple edits.
+function RepeaterFieldInput({
+  field,
+  items,
+  error,
+  onChange,
+}: {
+  field: FormFieldSchema;
+  items: RepeaterItem[];
+  error?: string;
+  onChange: (items: RepeaterItem[]) => void;
+}) {
+  const itemFields = field.item_fields ?? [];
+  const maxReached = field.max_items ? items.length >= field.max_items : false;
+
+  function updateItem(index: number, key: string, itemValue: string) {
+    const next = items.map((item, i) =>
+      i === index ? { ...item, [key]: itemValue } : item
+    );
+    onChange(next);
+  }
+
+  function addItem() {
+    const blank: RepeaterItem = Object.fromEntries(
+      itemFields.map((f) => [f.key, ""])
+    );
+    onChange([...items, blank]);
+  }
+
+  function removeItem(index: number) {
+    onChange(items.filter((_, i) => i !== index));
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <label className={LABEL_CLASS}>{field.label}</label>
+      {field.min_items && (
+        <p className="text-xs text-text-body/70">
+          {items.length >= field.min_items
+            ? `${items.length} elemento(s) — recomendado: al menos ${field.min_items}`
+            : `Tenés ${items.length} de ${field.min_items} recomendados`}
+        </p>
+      )}
+      <div className="flex flex-col gap-3">
+        {items.map((item, index) => (
+          <div
+            key={index}
+            className="flex flex-col gap-2 rounded-lg border border-border-subtle bg-white p-3"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-xs font-medium text-text-body/60">
+                #{index + 1}
+              </span>
+              <button
+                type="button"
+                onClick={() => removeItem(index)}
+                className="text-xs font-medium text-red-600 hover:underline"
+              >
+                Eliminar
+              </button>
+            </div>
+            {itemFields.map((itemField) => (
+              <div key={itemField.key} className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-navy">
+                  {itemField.label}
+                </label>
+                {itemField.type === "textarea" ? (
+                  <textarea
+                    value={item[itemField.key] ?? ""}
+                    onChange={(e) => updateItem(index, itemField.key, e.target.value)}
+                    rows={3}
+                    maxLength={itemField.max_length}
+                    className={INPUT_CLASS}
+                  />
+                ) : (
+                  <input
+                    value={item[itemField.key] ?? ""}
+                    onChange={(e) => updateItem(index, itemField.key, e.target.value)}
+                    maxLength={itemField.type === "icon" ? 4 : itemField.max_length}
+                    placeholder={itemField.type === "icon" ? "🙂" : undefined}
+                    className={
+                      itemField.type === "icon" ? `${INPUT_CLASS} w-20 text-center text-lg` : INPUT_CLASS
+                    }
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={addItem}
+        disabled={maxReached}
+        className="inline-flex min-h-10 items-center justify-center self-start rounded-lg border border-border-subtle bg-white px-4 text-sm font-medium text-navy transition-colors hover:border-sky disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        + Agregar
+      </button>
+      {error && <p className="text-sm text-red-600">{error}</p>}
+    </div>
   );
 }
 

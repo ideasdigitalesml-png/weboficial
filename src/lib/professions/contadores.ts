@@ -87,6 +87,41 @@ export function serviceEntries(values: string[]): ServiceEntry[] {
   return CONTADOR_SERVICES.filter((s) => selected.has(s.value));
 }
 
+interface RepeaterItem {
+  [key: string]: string;
+}
+
+// Prefer formData.servicios_detallados (fully professional-editable) when
+// present; otherwise derive equivalent cards from the older servicios
+// checkbox-group + the fixed catalog above (CONTADOR_SERVICES icons are
+// already emoji, so no separate mapping table is needed here unlike
+// abogados.ts), so a landing that pre-dates migration 0018 still shows a
+// real services grid instead of an empty one.
+export function deriveContadorServiceEntries(formData: {
+  servicios_detallados?: RepeaterItem[];
+  servicios?: string[];
+}): RepeaterItem[] {
+  if (formData.servicios_detallados && formData.servicios_detallados.length > 0) {
+    return formData.servicios_detallados;
+  }
+  return serviceEntries(formData.servicios ?? []).map((s) => ({
+    icono: s.icon,
+    titulo: s.label,
+    descripcion: s.description,
+  }));
+}
+
+// Generic value-props, not data about a specific professional -- fixed
+// informational copy is fine (same rationale as any other static section),
+// fabricated specific facts are not. Used only when a landing has no
+// por_que_elegirnos of its own.
+export const DEFAULT_CONTADOR_WHY_US: RepeaterItem[] = [
+  { icono: "🤝", titulo: "Atención personalizada, sin letra chica" },
+  { icono: "⚡", titulo: "Respuesta rápida por WhatsApp" },
+  { icono: "📊", titulo: "Vencimientos y obligaciones siempre al día" },
+  { icono: "💬", titulo: "Explicaciones claras, sin jerga contable" },
+];
+
 export interface TextTemplateData {
   nombre: string;
   matricula: string;

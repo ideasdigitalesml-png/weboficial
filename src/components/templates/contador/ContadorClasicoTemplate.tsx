@@ -1,8 +1,13 @@
-import { Lora, Inter } from "next/font/google";
+import { Playfair_Display, Inter } from "next/font/google";
 import type { SectionConfigItem } from "@/lib/landings/update-landing";
-import { serviceEntries } from "@/lib/professions/contadores";
+import {
+  deriveContadorServiceEntries,
+  DEFAULT_CONTADOR_WHY_US,
+} from "@/lib/professions/contadores";
 import { buildWaLink } from "@/lib/whatsapp";
 import { getInitials } from "@/lib/avatar-initials";
+import { FadeInSection } from "@/components/templates/shared/FadeInSection";
+import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 import type { ContadorFormData } from "./ContadorLandingTemplate";
 
 // Classic-professional layout: sticky nav, hero with copy on the left and
@@ -10,10 +15,11 @@ import type { ContadorFormData } from "./ContadorLandingTemplate";
 // reveal on scroll, no client JS ticker: every other template here is a
 // plain server component and this one shouldn't be the first to need a
 // "use client" boundary just for a cosmetic count-up), credentials table,
-// and a contact section. Same content rule as every other template in this
-// directory: fields with no data (stats, redes, horario) are omitted
-// entirely rather than filled with placeholder/fabricated copy.
-const lora = Lora({
+// "por qué elegirnos" and testimonios (only when populated), and a contact
+// section. Same content rule as every other template in this directory:
+// fields with no data are omitted entirely rather than filled with
+// placeholder/fabricated copy.
+const playfairDisplay = Playfair_Display({
   weight: ["500", "600", "700"],
   style: ["normal", "italic"],
   subsets: ["latin"],
@@ -25,8 +31,12 @@ const inter = Inter({
   variable: "--font-cc-body",
 });
 
-const DEFAULT_PRIMARY = "#0B3D2E";
-const DEFAULT_ACCENT = "#B8925A";
+// Definitive contador palette (azul petróleo + white + gray) -- not a
+// picker. Primary and accent share the same hue on purpose, see the
+// redesign brief: this profession leans on tone/contrast/whitespace rather
+// than a second bright accent color.
+const DEFAULT_PRIMARY = "#1B4F72";
+const DEFAULT_ACCENT = "#1B4F72";
 
 const MODALIDAD_LABELS: Record<string, string> = {
   presencial: "Atención presencial",
@@ -74,25 +84,30 @@ export function ContadorClasicoTemplate({
   const showContact = visibleIds.has("contact");
 
   const name = formData.name || "";
-  const services = serviceEntries(formData.servicios ?? []);
+  const services = deriveContadorServiceEntries(formData);
   const waLink = formData.phone ? buildWaLink(formData.phone) : null;
   const year = new Date().getFullYear();
   const tituloProfesional = formData.titulo_profesional || "Contador Público";
   const hasStats = Boolean(formData.anos_experiencia || formData.cantidad_clientes);
   const hasRedes = isRealUrl(formData.linkedin_url) || isRealUrl(formData.instagram_url);
+  const whyUs =
+    formData.por_que_elegirnos && formData.por_que_elegirnos.length > 0
+      ? formData.por_que_elegirnos
+      : DEFAULT_CONTADOR_WHY_US;
+  const testimonios = formData.testimonios ?? [];
 
   return (
     <div
-      className={`${lora.variable} ${inter.variable} cc-clasico`}
+      className={`${playfairDisplay.variable} ${inter.variable} cc-clasico`}
       style={
         {
           "--c-primary": colorPrimary,
           "--c-accent": colorAccent,
           "--c-bg": "#FFFFFF",
-          "--c-bg2": "#F5F3EF",
-          "--c-text": "#1B1B18",
-          "--c-muted": "#6B6A63",
-          "--c-border": "#E4E1D8",
+          "--c-bg2": "#F1F5F9",
+          "--c-text": "#1C2B36",
+          "--c-muted": "#64748B",
+          "--c-border": "#E2E8F0",
         } as React.CSSProperties
       }
     >
@@ -107,6 +122,7 @@ export function ContadorClasicoTemplate({
           <nav className="cc-nav-links" aria-label="Navegación principal">
             {showServices && services.length > 0 && <a href="#servicios">Servicios</a>}
             {showAbout && <a href="#sobre-mi">Sobre mí</a>}
+            {testimonios.length > 0 && <a href="#testimonios">Testimonios</a>}
             {showContact && <a href="#contacto">Contacto</a>}
           </nav>
           {waLink && (
@@ -119,7 +135,7 @@ export function ContadorClasicoTemplate({
 
       {showHero && (
         <section className="cc-hero" id="top">
-          <div className="cc-container cc-hero-grid">
+          <FadeInSection as="div" className="cc-container cc-hero-grid">
             <div className="cc-hero-copy">
               <span className="cc-eyebrow">
                 {tituloProfesional}
@@ -128,12 +144,13 @@ export function ContadorClasicoTemplate({
               <h1>{name || "Tu nombre"}</h1>
               <p className="cc-lead">
                 {formData.slogan ||
+                  formData.description ||
                   "Contabilidad prolija y a tiempo, con respuestas claras para cada decisión."}
               </p>
               <div className="cc-hero-actions">
                 {waLink && (
                   <a className="cc-btn cc-btn-primary" href={waLink} target="_blank" rel="noopener">
-                    Escribime por WhatsApp
+                    {formData.cta_text || "Escribime por WhatsApp"}
                   </a>
                 )}
                 {showServices && services.length > 0 && (
@@ -148,24 +165,29 @@ export function ContadorClasicoTemplate({
                 <Avatar name={name} photoUrl={formData.profile_image} />
               </div>
             </div>
-          </div>
+          </FadeInSection>
         </section>
       )}
 
       {showServices && services.length > 0 && (
         <section className="cc-section" id="servicios">
           <div className="cc-container">
-            <div className="cc-section-head">
+            <FadeInSection as="div" className="cc-section-head">
               <span className="cc-eyebrow">Servicios</span>
               <h2>En qué puedo ayudarte</h2>
-            </div>
+            </FadeInSection>
             <div className="cc-services-grid">
-              {services.map((s) => (
-                <article key={s.value} className="cc-service-card">
-                  <span className="cc-service-icon">{s.icon}</span>
-                  <h3>{s.label}</h3>
-                  <p>{s.description}</p>
-                </article>
+              {services.map((s, i) => (
+                <FadeInSection
+                  key={i}
+                  as="article"
+                  delayMs={i * 60}
+                  className="cc-service-card"
+                >
+                  {s.icono && <span className="cc-service-icon">{s.icono}</span>}
+                  <h3>{s.titulo}</h3>
+                  {s.descripcion && <p>{s.descripcion}</p>}
+                </FadeInSection>
               ))}
             </div>
           </div>
@@ -193,7 +215,7 @@ export function ContadorClasicoTemplate({
 
       {showAbout && (
         <section className="cc-section" id="sobre-mi">
-          <div className="cc-container cc-about-grid">
+          <FadeInSection as="div" className="cc-container cc-about-grid">
             <div>
               <span className="cc-eyebrow">Trayectoria</span>
               <h2>Sobre {name || "Tu nombre"}</h2>
@@ -227,6 +249,59 @@ export function ContadorClasicoTemplate({
                   <span className="cc-v">{formData.horario_atencion}</span>
                 </div>
               )}
+              {formData.direccion && (
+                <div className="cc-row">
+                  <span className="cc-k">Dirección</span>
+                  <span className="cc-v">{formData.direccion}</span>
+                </div>
+              )}
+            </div>
+          </FadeInSection>
+        </section>
+      )}
+
+      <section className="cc-section cc-section-alt" id="por-que-elegirme">
+        <div className="cc-container">
+          <FadeInSection as="div" className="cc-section-head">
+            <span className="cc-eyebrow">Por qué elegirme</span>
+            <h2>Lo que me diferencia</h2>
+          </FadeInSection>
+          <div className="cc-why-grid">
+            {whyUs.map((item, i) => (
+              <FadeInSection
+                key={i}
+                as="div"
+                delayMs={i * 60}
+                className="cc-why-item"
+              >
+                <span className="cc-why-icon">{item.icono}</span>
+                <p>{item.titulo}</p>
+              </FadeInSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {testimonios.length > 0 && (
+        <section className="cc-section" id="testimonios">
+          <div className="cc-container">
+            <FadeInSection as="div" className="cc-section-head">
+              <span className="cc-eyebrow">Testimonios</span>
+              <h2>Lo que dicen mis clientes</h2>
+            </FadeInSection>
+            <div className="cc-testimonial-grid">
+              {testimonios.map((t, i) => (
+                <FadeInSection
+                  key={i}
+                  as="article"
+                  delayMs={i * 60}
+                  className="cc-testimonial-card"
+                >
+                  <p className="cc-testimonial-text">&ldquo;{t.texto}&rdquo;</p>
+                  <p className="cc-testimonial-name">{t.nombre}</p>
+                  {t.cargo && <p className="cc-testimonial-role">{t.cargo}</p>}
+                </FadeInSection>
+              ))}
             </div>
           </div>
         </section>
@@ -234,12 +309,12 @@ export function ContadorClasicoTemplate({
 
       {showContact && (
         <section className="cc-cta-banner" id="contacto">
-          <div className="cc-container">
+          <FadeInSection as="div" className="cc-container">
             <h2>¿Listo para ordenar tus cuentas?</h2>
             <p>Escribime y coordinamos una primera consulta.</p>
             {waLink && (
               <a className="cc-btn cc-btn-ivory" href={waLink} target="_blank" rel="noopener">
-                Escribime por WhatsApp
+                {formData.cta_text || "Escribime por WhatsApp"}
               </a>
             )}
             <div className="cc-cta-contact">
@@ -247,6 +322,8 @@ export function ContadorClasicoTemplate({
               {(formData.zona || formData.jurisdiccion) && (
                 <span>{[formData.zona, formData.jurisdiccion].filter(Boolean).join(" · ")}</span>
               )}
+              {formData.direccion && <span>{formData.direccion}</span>}
+              {formData.horario_atencion && <span>{formData.horario_atencion}</span>}
               {hasRedes && (
                 <span className="cc-cta-redes">
                   {isRealUrl(formData.linkedin_url) && (
@@ -262,7 +339,7 @@ export function ContadorClasicoTemplate({
                 </span>
               )}
             </div>
-          </div>
+          </FadeInSection>
         </section>
       )}
 
@@ -278,21 +355,18 @@ export function ContadorClasicoTemplate({
         </div>
       </footer>
 
-      {waLink && (
-        <a className="cc-whatsapp-float" href={waLink} target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-            <path d="M20 11.5a8 8 0 0 1-11.6 7.1L4 20l1.5-4.2A8 8 0 1 1 20 11.5Z" />
-            <path d="M8.5 9.7c.3 2.6 2.2 4.5 4.8 4.8.6.1 1-.4.9-1l-.2-.9a.6.6 0 0 0-.5-.4l-1.2-.2a.6.6 0 0 1-.4-.3l-.6-1a.6.6 0 0 1 0-.6l.4-.9a.6.6 0 0 0-.1-.6l-.7-.9a.6.6 0 0 0-.7-.2c-.9.3-1.8 1-1.7 2.2Z" />
-          </svg>
-        </a>
-      )}
+      <FloatingWhatsappButton
+        phone={formData.phone}
+        accentColor={colorAccent}
+        desktopVisible={false}
+      />
     </div>
   );
 }
 
 const CSS = `
 .cc-clasico{
-  font-family: var(--font-cc-body), Georgia, serif;
+  font-family: var(--font-cc-body), -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--c-text);
   background: var(--c-bg);
   line-height: 1.65;
@@ -340,7 +414,7 @@ const CSS = `
 .cc-clasico .cc-nav-links a:hover{ color:var(--c-accent); }
 @media (max-width:800px){ .cc-clasico .cc-nav-links{ display:none; } }
 
-.cc-clasico .cc-hero{ padding-block:64px 80px; }
+.cc-clasico .cc-hero{ padding-block:64px 80px; background:linear-gradient(180deg,color-mix(in srgb,var(--c-primary) 8%,white) 0%,var(--c-bg) 70%); }
 .cc-clasico .cc-hero-grid{ display:grid; grid-template-columns:1.1fr .9fr; gap:56px; align-items:center; }
 .cc-clasico .cc-hero-copy h1{ font-size:clamp(2.1rem,4.2vw,3.2rem); line-height:1.12; margin-block:16px 18px; }
 .cc-clasico .cc-lead{ color:var(--c-muted); font-size:1.05rem; max-width:46ch; margin-bottom:30px; }
@@ -359,7 +433,12 @@ const CSS = `
 @media (max-width:600px){ .cc-clasico .cc-section{ padding-block:56px; } }
 
 .cc-clasico .cc-services-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
-.cc-clasico .cc-service-card{ background:var(--c-bg); border:1px solid var(--c-border); border-top:3px solid var(--c-accent); padding:28px 24px; min-width:0; }
+.cc-clasico .cc-service-card{
+  background:var(--c-bg); border:1px solid var(--c-border); border-top:3px solid var(--c-accent);
+  border-radius:8px; padding:28px 24px; min-width:0; box-shadow:0 8px 24px rgba(27,79,114,.06);
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.cc-clasico .cc-service-card:hover{ transform:translateY(-4px); box-shadow:0 12px 32px rgba(27,79,114,.12); }
 .cc-clasico .cc-service-icon{ font-size:1.7rem; display:block; margin-bottom:16px; }
 .cc-clasico .cc-service-card h3{ font-size:1.05rem; margin-bottom:8px; }
 .cc-clasico .cc-service-card p{ color:var(--c-muted); font-size:.92rem; }
@@ -382,6 +461,29 @@ const CSS = `
 .cc-clasico .cc-v{ padding:14px 16px; font-size:.92rem; }
 @media (max-width:860px){ .cc-clasico .cc-about-grid{ grid-template-columns:1fr; } }
 
+.cc-clasico .cc-section-alt{ background:var(--c-bg2); }
+.cc-clasico .cc-why-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+.cc-clasico .cc-why-item{
+  display:flex; flex-direction:column; align-items:flex-start; gap:10px;
+  padding:22px 20px; border-radius:8px; background:var(--c-bg); border:1px solid var(--c-border);
+  box-shadow:0 8px 24px rgba(27,79,114,.06);
+}
+.cc-clasico .cc-why-icon{ font-size:1.7rem; }
+.cc-clasico .cc-why-item p{ font-weight:600; font-size:.96rem; color:var(--c-text); }
+@media (max-width:920px){ .cc-clasico .cc-why-grid{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:560px){ .cc-clasico .cc-why-grid{ grid-template-columns:1fr; } }
+
+.cc-clasico .cc-testimonial-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+.cc-clasico .cc-testimonial-card{
+  background:var(--c-bg); border:1px solid var(--c-border); border-radius:8px; padding:26px 24px; min-width:0;
+  box-shadow:0 8px 24px rgba(27,79,114,.06);
+}
+.cc-clasico .cc-testimonial-text{ color:var(--c-text); font-size:.96rem; line-height:1.6; margin-bottom:16px; font-style:italic; }
+.cc-clasico .cc-testimonial-name{ font-weight:700; font-size:.92rem; color:var(--c-primary); }
+.cc-clasico .cc-testimonial-role{ font-size:.82rem; color:var(--c-muted); margin-top:2px; }
+@media (max-width:920px){ .cc-clasico .cc-testimonial-grid{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:600px){ .cc-clasico .cc-testimonial-grid{ grid-template-columns:1fr; } }
+
 .cc-clasico .cc-cta-banner{ background:var(--c-primary); color:#fff; padding-block:64px; text-align:center; }
 .cc-clasico .cc-cta-banner h2{ color:#fff; font-size:clamp(1.6rem,3.2vw,2.2rem); margin-bottom:12px; }
 .cc-clasico .cc-cta-banner p{ color:rgba(255,255,255,.78); margin-bottom:26px; }
@@ -393,13 +495,4 @@ const CSS = `
 .cc-clasico .cc-footer-name{ font-family: var(--font-cc-display), serif; font-weight:700; font-size:1.1rem; color:var(--c-primary); }
 .cc-clasico .cc-footer-line{ font-size:.86rem; color:var(--c-muted); margin-top:6px; overflow-wrap:anywhere; }
 .cc-clasico .cc-footer-bottom{ margin-top:16px; font-size:.78rem; color:var(--c-muted); }
-
-.cc-clasico .cc-whatsapp-float{
-  position:fixed; right:20px; bottom:20px; z-index:60;
-  width:54px; height:54px; border-radius:50%; background:var(--c-accent); color:#fff;
-  display:flex; align-items:center; justify-content:center; box-shadow:0 12px 30px rgba(11,61,46,.24);
-  transition:transform .18s ease;
-}
-.cc-clasico .cc-whatsapp-float svg{ width:24px; height:24px; }
-.cc-clasico .cc-whatsapp-float:hover{ transform:scale(1.06); }
 `;

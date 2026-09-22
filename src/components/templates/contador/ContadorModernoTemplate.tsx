@@ -1,18 +1,23 @@
-import { Instrument_Serif, Inter } from "next/font/google";
+import { Playfair_Display, Inter } from "next/font/google";
 import type { SectionConfigItem } from "@/lib/landings/update-landing";
-import { serviceEntries, serviceLabels } from "@/lib/professions/contadores";
+import {
+  deriveContadorServiceEntries,
+  DEFAULT_CONTADOR_WHY_US,
+} from "@/lib/professions/contadores";
 import { buildWaLink } from "@/lib/whatsapp";
 import { getInitials } from "@/lib/avatar-initials";
+import { FadeInSection } from "@/components/templates/shared/FadeInSection";
+import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 import type { ContadorFormData } from "./ContadorLandingTemplate";
 
 // Ported from templates/contador.html (design approved separately) into a
 // server component that plugs into the real data model instead of
-// {{mustache}} placeholders. Sections with no real data source today
-// (testimonios, stats, credenciales, free-text ciudad/título) are
-// intentionally omitted rather than filled with fabricated content -- see
-// the conversation this shipped in for that decision.
-const instrumentSerif = Instrument_Serif({
-  weight: "400",
+// {{mustache}} placeholders. Testimonios and "por qué elegirnos" render only
+// when the professional has real data (see deriveContadorServiceEntries /
+// DEFAULT_CONTADOR_WHY_US) -- fabricating stats/quotes is intentionally
+// avoided, see the conversation this shipped in for that decision.
+const playfairDisplay = Playfair_Display({
+  weight: ["600", "700"],
   style: ["normal", "italic"],
   subsets: ["latin"],
   variable: "--font-cf-display",
@@ -23,14 +28,22 @@ const inter = Inter({
   variable: "--font-cf-body",
 });
 
-const DEFAULT_PRIMARY = "#0B2545";
-const DEFAULT_ACCENT = "#1A6B4A";
+// Definitive contador palette (azul petróleo + white + gray) -- not a
+// picker. Primary and accent share the same hue on purpose: this profession
+// leans on tone/contrast/whitespace rather than a second bright accent
+// color, per the redesign brief.
+const DEFAULT_PRIMARY = "#1B4F72";
+const DEFAULT_ACCENT = "#1B4F72";
 
 const MODALIDAD_LABELS: Record<string, string> = {
   presencial: "Atención presencial",
   remoto: "Atención remota",
   ambos: "Atención presencial y remota",
 };
+
+function isRealUrl(value?: string): value is string {
+  return Boolean(value && value !== "#");
+}
 
 function Avatar({ name, photoUrl }: { name: string; photoUrl?: string }) {
   if (photoUrl) {
@@ -75,24 +88,32 @@ export function ContadorModernoTemplate({
   const showContact = visibleIds.has("contact");
 
   const name = formData.name || "";
-  const services = serviceEntries(formData.servicios ?? []);
-  const specialties = serviceLabels(formData.servicios ?? []);
+  const services = deriveContadorServiceEntries(formData);
+  const specialties = services.map((s) => s.titulo).filter(Boolean);
   const waLink = formData.phone ? buildWaLink(formData.phone) : null;
   const year = new Date().getFullYear();
+  const tituloProfesional = formData.titulo_profesional || "Contador Público";
+  const whyUs =
+    formData.por_que_elegirnos && formData.por_que_elegirnos.length > 0
+      ? formData.por_que_elegirnos
+      : DEFAULT_CONTADOR_WHY_US;
+  const testimonios = formData.testimonios ?? [];
+  const hasRedes =
+    isRealUrl(formData.linkedin_url) || isRealUrl(formData.instagram_url);
 
   return (
     <div
-      className={`${instrumentSerif.variable} ${inter.variable} cf-moderno`}
+      className={`${playfairDisplay.variable} ${inter.variable} cf-moderno`}
       style={
         (paletteVariables ?? {
           "--c-primary": colorPrimary,
           "--c-accent": colorAccent,
-          "--c-accent-lt": "#E8F3EE",
+          "--c-accent-lt": "#E6EDF2",
           "--c-bg": "#FFFFFF",
-          "--c-bg2": "#F6F8FA",
-          "--c-text": "#10151C",
-          "--c-muted": "#5B6472",
-          "--c-border": "#E3E8ED",
+          "--c-bg2": "#F1F5F9",
+          "--c-text": "#1C2B36",
+          "--c-muted": "#64748B",
+          "--c-border": "#E2E8F0",
         }) as React.CSSProperties
       }
     >
@@ -112,6 +133,7 @@ export function ContadorModernoTemplate({
             )}
             <a href="#proceso">Proceso</a>
             {showAbout && <a href="#perfil">Perfil</a>}
+            {testimonios.length > 0 && <a href="#testimonios">Testimonios</a>}
             {showContact && <a href="#contacto">Contacto</a>}
           </nav>
           {waLink && (
@@ -131,16 +153,17 @@ export function ContadorModernoTemplate({
 
       {showHero && (
         <section className="cf-hero" id="top">
-          <div className="cf-container cf-hero-grid">
+          <FadeInSection as="div" className="cf-container cf-hero-grid">
             <div className="cf-hero-copy">
               <span className="cf-eyebrow">
-                Contador Público
+                {tituloProfesional}
                 {formData.zona ? ` · ${formData.zona}` : ""}
               </span>
-              <h1>Contabilidad clara, sin vueltas.</h1>
+              <h1>{name || "Tu nombre"}</h1>
               <p className="cf-lead">
-                Asesoramiento impositivo y contable personalizado, pensado
-                para que entiendas cada decisión antes de tomarla.
+                {formData.slogan ||
+                  formData.description ||
+                  "Asesoramiento impositivo y contable personalizado, pensado para que entiendas cada decisión antes de tomarla."}
               </p>
               <div className="cf-hero-actions">
                 {waLink && (
@@ -150,7 +173,7 @@ export function ContadorModernoTemplate({
                     target="_blank"
                     rel="noopener"
                   >
-                    Escribime por WhatsApp
+                    {formData.cta_text || "Escribime por WhatsApp"}
                   </a>
                 )}
                 {showServices && services.length > 0 && (
@@ -166,7 +189,7 @@ export function ContadorModernoTemplate({
                 <Avatar name={name} photoUrl={formData.profile_image} />
               </div>
             </div>
-          </div>
+          </FadeInSection>
         </section>
       )}
 
@@ -188,21 +211,26 @@ export function ContadorModernoTemplate({
       {showServices && services.length > 0 && (
         <section className="cf-section" id="servicios">
           <div className="cf-container">
-            <div className="cf-section-head">
+            <FadeInSection as="div" className="cf-section-head">
               <span className="cf-eyebrow">Servicios</span>
               <h2>En qué puedo ayudarte</h2>
               <p>
                 Servicios pensados para cada etapa de tu actividad, desde el
                 alta hasta el cierre de balance.
               </p>
-            </div>
+            </FadeInSection>
             <div className="cf-services-grid">
-              {services.map((s) => (
-                <article key={s.value} className="cf-service-card">
-                  <span className="cf-service-icon">{s.icon}</span>
-                  <h3>{s.label}</h3>
-                  <p>{s.description}</p>
-                </article>
+              {services.map((s, i) => (
+                <FadeInSection
+                  key={i}
+                  as="article"
+                  delayMs={i * 60}
+                  className="cf-service-card"
+                >
+                  {s.icono && <span className="cf-service-icon">{s.icono}</span>}
+                  <h3>{s.titulo}</h3>
+                  {s.descripcion && <p>{s.descripcion}</p>}
+                </FadeInSection>
               ))}
             </div>
           </div>
@@ -211,49 +239,71 @@ export function ContadorModernoTemplate({
 
       <section className="cf-process" id="proceso">
         <div className="cf-container">
-          <div className="cf-section-head">
+          <FadeInSection as="div" className="cf-section-head">
             <span className="cf-eyebrow">Proceso</span>
             <h2>Cómo trabajamos juntos</h2>
             <p>
               Un circuito simple, pensado para que siempre sepas en qué etapa
               está tu gestión.
             </p>
-          </div>
+          </FadeInSection>
           <div className="cf-process-grid">
-            <div className="cf-process-step">
+            <FadeInSection as="div" className="cf-process-step">
               <span className="cf-num">01</span>
               <h3>Contacto inicial</h3>
               <p>Me escribís por WhatsApp y coordinamos una consulta sin costo.</p>
-            </div>
-            <div className="cf-process-step">
+            </FadeInSection>
+            <FadeInSection as="div" delayMs={60} className="cf-process-step">
               <span className="cf-num">02</span>
               <h3>Diagnóstico</h3>
               <p>Revisamos tu situación impositiva y contable actual.</p>
-            </div>
-            <div className="cf-process-step">
+            </FadeInSection>
+            <FadeInSection as="div" delayMs={120} className="cf-process-step">
               <span className="cf-num">03</span>
               <h3>Propuesta</h3>
               <p>Te presento un plan de trabajo claro, con plazos y costos definidos.</p>
-            </div>
-            <div className="cf-process-step">
+            </FadeInSection>
+            <FadeInSection as="div" delayMs={180} className="cf-process-step">
               <span className="cf-num">04</span>
               <h3>Seguimiento</h3>
               <p>Acompañamiento continuo, con recordatorios de cada vencimiento.</p>
-            </div>
+            </FadeInSection>
+          </div>
+        </div>
+      </section>
+
+      <section className="cf-section" id="por-que-elegirnos">
+        <div className="cf-container">
+          <FadeInSection as="div" className="cf-section-head">
+            <span className="cf-eyebrow">Por qué elegirme</span>
+            <h2>Lo que me diferencia</h2>
+          </FadeInSection>
+          <div className="cf-why-grid">
+            {whyUs.map((item, i) => (
+              <FadeInSection
+                key={i}
+                as="div"
+                delayMs={i * 60}
+                className="cf-why-item"
+              >
+                <span className="cf-why-icon">{item.icono}</span>
+                <p>{item.titulo}</p>
+              </FadeInSection>
+            ))}
           </div>
         </div>
       </section>
 
       {showAbout && (
         <section className="cf-section cf-section-alt" id="perfil">
-          <div className="cf-container cf-profile-grid">
+          <FadeInSection as="div" className="cf-container cf-profile-grid">
             <div className="cf-profile-photo">
               <Avatar name={name} photoUrl={formData.profile_image} />
             </div>
             <div>
               <h2 className="cf-profile-name">{name || "Tu nombre"}</h2>
               <p className="cf-profile-title">
-                Contador Público
+                {tituloProfesional}
                 {formData.zona ? ` · ${formData.zona}` : ""}
                 {formData.modalidad
                   ? ` · ${MODALIDAD_LABELS[formData.modalidad] ?? formData.modalidad}`
@@ -268,6 +318,55 @@ export function ContadorModernoTemplate({
               {formData.description && (
                 <p className="cf-profile-bio">{formData.description}</p>
               )}
+              {(formData.anos_experiencia || formData.cantidad_clientes) && (
+                <div className="cf-profile-stats">
+                  {formData.anos_experiencia && (
+                    <div>
+                      <span className="cf-profile-stat-num">
+                        {formData.anos_experiencia}
+                      </span>
+                      <span className="cf-profile-stat-label">
+                        Años de experiencia
+                      </span>
+                    </div>
+                  )}
+                  {formData.cantidad_clientes && (
+                    <div>
+                      <span className="cf-profile-stat-num">
+                        {formData.cantidad_clientes}
+                      </span>
+                      <span className="cf-profile-stat-label">
+                        Clientes atendidos
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </FadeInSection>
+        </section>
+      )}
+
+      {testimonios.length > 0 && (
+        <section className="cf-section" id="testimonios">
+          <div className="cf-container">
+            <FadeInSection as="div" className="cf-section-head">
+              <span className="cf-eyebrow">Testimonios</span>
+              <h2>Lo que dicen mis clientes</h2>
+            </FadeInSection>
+            <div className="cf-testimonial-grid">
+              {testimonios.map((t, i) => (
+                <FadeInSection
+                  key={i}
+                  as="article"
+                  delayMs={i * 60}
+                  className="cf-testimonial-card"
+                >
+                  <p className="cf-testimonial-text">&ldquo;{t.texto}&rdquo;</p>
+                  <p className="cf-testimonial-name">{t.nombre}</p>
+                  {t.cargo && <p className="cf-testimonial-role">{t.cargo}</p>}
+                </FadeInSection>
+              ))}
             </div>
           </div>
         </section>
@@ -275,7 +374,7 @@ export function ContadorModernoTemplate({
 
       {showContact && (
         <section className="cf-section" id="contacto" style={{ paddingBlock: "0 88px" }}>
-          <div className="cf-cta-banner">
+          <FadeInSection as="div" className="cf-cta-banner">
             <h2>¿Listo para ordenar tus cuentas?</h2>
             <p>
               Escribime y coordinamos una primera consulta sin costo para ver
@@ -289,7 +388,7 @@ export function ContadorModernoTemplate({
                   target="_blank"
                   rel="noopener"
                 >
-                  Escribime por WhatsApp
+                  {formData.cta_text || "Escribime por WhatsApp"}
                 </a>
               </div>
             )}
@@ -303,8 +402,26 @@ export function ContadorModernoTemplate({
                 </a>
               )}
               {formData.matricula && <span>Matrícula N° {formData.matricula}</span>}
+              {formData.direccion && <span>{formData.direccion}</span>}
+              {formData.horario_atencion && (
+                <span>{formData.horario_atencion}</span>
+              )}
+              {hasRedes && (
+                <span className="cf-cta-redes">
+                  {isRealUrl(formData.linkedin_url) && (
+                    <a href={formData.linkedin_url} target="_blank" rel="noopener">
+                      LinkedIn
+                    </a>
+                  )}
+                  {isRealUrl(formData.instagram_url) && (
+                    <a href={formData.instagram_url} target="_blank" rel="noopener">
+                      Instagram
+                    </a>
+                  )}
+                </span>
+              )}
             </div>
-          </div>
+          </FadeInSection>
         </section>
       )}
 
@@ -323,7 +440,7 @@ export function ContadorModernoTemplate({
           </div>
           <div className="cf-footer-bottom">
             <span>
-              Contador Público
+              {tituloProfesional}
               {formData.matricula ? ` · Matrícula N° ${formData.matricula}` : ""}
             </span>
             <span>
@@ -333,17 +450,11 @@ export function ContadorModernoTemplate({
         </div>
       </footer>
 
-      {waLink && (
-        <a
-          className="cf-whatsapp-float"
-          href={waLink}
-          target="_blank"
-          rel="noopener"
-          aria-label="Contactar por WhatsApp"
-        >
-          💬
-        </a>
-      )}
+      <FloatingWhatsappButton
+        phone={formData.phone}
+        accentColor={colorAccent}
+        desktopVisible={false}
+      />
     </div>
   );
 }
@@ -369,7 +480,7 @@ const CSS = `
 .cf-moderno h1, .cf-moderno h2, .cf-moderno h3{
   margin:0;
   font-family: var(--font-cf-display), serif;
-  font-weight:400;
+  font-weight:700;
   letter-spacing:-.01em;
 }
 .cf-moderno p{ margin:0; }
@@ -425,7 +536,7 @@ const CSS = `
 .cf-moderno .cf-nav-cta .cf-btn{ padding:11px 20px; font-size:.88rem; }
 @media (max-width:860px){ .cf-moderno .cf-nav-links{ display:none; } }
 
-.cf-moderno .cf-hero{ padding-block:64px 80px; background:var(--c-bg); }
+.cf-moderno .cf-hero{ padding-block:64px 80px; background:linear-gradient(180deg,var(--c-accent-lt) 0%,var(--c-bg) 65%); }
 .cf-moderno .cf-hero-grid{ display:grid; grid-template-columns:1.1fr .9fr; gap:56px; align-items:center; }
 .cf-moderno .cf-hero-copy h1{ font-size:clamp(2.2rem,4.4vw,3.4rem); line-height:1.08; margin-block:18px 20px; color:var(--c-primary); }
 .cf-moderno .cf-lead{ color:var(--c-muted); font-size:1.08rem; max-width:46ch; margin-bottom:32px; }
@@ -504,10 +615,35 @@ const CSS = `
   background:var(--c-accent-lt); padding:6px 12px; border-radius:999px; margin-bottom:22px;
 }
 .cf-moderno .cf-profile-bio{ color:var(--c-text); font-size:1.02rem; line-height:1.7; margin-bottom:28px; max-width:60ch; overflow-wrap:break-word; }
+.cf-moderno .cf-profile-stats{ display:flex; flex-wrap:wrap; gap:32px; }
+.cf-moderno .cf-profile-stats > div{ display:flex; flex-direction:column; gap:2px; }
+.cf-moderno .cf-profile-stat-num{ font-family: var(--font-cf-display), serif; font-weight:700; font-size:1.9rem; color:var(--c-primary); }
+.cf-moderno .cf-profile-stat-label{ font-size:.82rem; color:var(--c-muted); }
 @media (max-width:860px){
   .cf-moderno .cf-profile-grid{ grid-template-columns:1fr; }
   .cf-moderno .cf-profile-photo{ max-width:320px; margin-inline:auto; }
 }
+
+.cf-moderno .cf-why-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+.cf-moderno .cf-why-item{
+  display:flex; flex-direction:column; align-items:flex-start; gap:10px;
+  padding:22px 20px; border-radius:16px; background:var(--c-bg2); border:1px solid var(--c-border);
+}
+.cf-moderno .cf-why-icon{ font-size:1.7rem; }
+.cf-moderno .cf-why-item p{ font-weight:600; font-size:.96rem; color:var(--c-text); }
+@media (max-width:920px){ .cf-moderno .cf-why-grid{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:560px){ .cf-moderno .cf-why-grid{ grid-template-columns:1fr; } }
+
+.cf-moderno .cf-testimonial-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+.cf-moderno .cf-testimonial-card{
+  background:#fff; border:1px solid var(--c-border); border-radius:18px; padding:28px 26px; min-width:0;
+  box-shadow:0 8px 24px rgba(16,21,28,.06);
+}
+.cf-moderno .cf-testimonial-text{ color:var(--c-text); font-size:.98rem; line-height:1.6; margin-bottom:18px; font-style:italic; }
+.cf-moderno .cf-testimonial-name{ font-weight:700; font-size:.94rem; color:var(--c-primary); }
+.cf-moderno .cf-testimonial-role{ font-size:.84rem; color:var(--c-muted); margin-top:2px; }
+@media (max-width:920px){ .cf-moderno .cf-testimonial-grid{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:600px){ .cf-moderno .cf-testimonial-grid{ grid-template-columns:1fr; } }
 
 .cf-moderno .cf-cta-banner{
   background:linear-gradient(120deg,var(--c-primary),var(--c-accent)); color:#fff;
@@ -518,6 +654,7 @@ const CSS = `
 .cf-moderno .cf-cta-actions{ display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin-bottom:28px; }
 .cf-moderno .cf-cta-contact{ display:flex; flex-wrap:wrap; justify-content:center; gap:24px; font-size:.9rem; color:rgba(255,255,255,.85); }
 .cf-moderno .cf-cta-contact a:hover{ color:#fff; }
+.cf-moderno .cf-cta-redes{ display:flex; gap:16px; }
 @media (max-width:600px){ .cf-moderno .cf-cta-banner{ padding:44px 24px; margin-inline:16px; } }
 
 .cf-moderno .cf-footer{ background:#0B0F14; color:rgba(255,255,255,.62); padding-block:48px 32px; margin-top:96px; }
@@ -529,15 +666,4 @@ const CSS = `
 .cf-moderno .cf-footer-brand .cf-nav-logo-badge{ width:38px; height:38px; }
 .cf-moderno .cf-footer-domain{ font-size:.86rem; color:rgba(255,255,255,.5); overflow-wrap:break-word; }
 .cf-moderno .cf-footer-bottom{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:12px; font-size:.8rem; color:rgba(255,255,255,.45); }
-
-.cf-moderno .cf-whatsapp-float{
-  position:fixed; right:20px; bottom:20px; z-index:60;
-  width:58px; height:58px; border-radius:50%; background:var(--c-accent); color:#fff;
-  display:flex; align-items:center; justify-content:center; box-shadow:0 24px 60px rgba(16,21,28,.14);
-  font-size:1.6rem; transition:transform .18s ease;
-}
-.cf-moderno .cf-whatsapp-float:hover{ transform:scale(1.07); }
-@media (max-width:480px){
-  .cf-moderno .cf-whatsapp-float{ width:52px; height:52px; right:16px; bottom:16px; font-size:1.4rem; }
-}
 `;

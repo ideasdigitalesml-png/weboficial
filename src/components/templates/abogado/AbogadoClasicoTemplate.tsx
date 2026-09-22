@@ -1,30 +1,34 @@
-import { Playfair_Display, Source_Serif_4 } from "next/font/google";
+import { Playfair_Display, Inter } from "next/font/google";
 import type { SectionConfigItem } from "@/lib/landings/update-landing";
-import { serviceEntries } from "@/lib/professions/abogados";
+import {
+  deriveAbogadoServiceEntries,
+  DEFAULT_ABOGADO_WHY_US,
+} from "@/lib/professions/abogados";
 import { buildWaLink } from "@/lib/whatsapp";
 import { getInitials } from "@/lib/avatar-initials";
+import { FadeInSection } from "@/components/templates/shared/FadeInSection";
+import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 import type { AbogadoFormData } from "./AbogadoModernoTemplate";
 
 // Ported from templates/abogado-clasico.html. Same content rules as
-// AbogadoModernoTemplate.tsx: proceso/FAQ are fixed generic copy,
-// testimonios/trust-bar/posgrado are omitted (not collected by the
-// wizard, so no real data to show).
+// AbogadoModernoTemplate.tsx: proceso/FAQ are fixed generic copy. Servicios,
+// "Por qué elegirnos" and Testimonios render the professional's own data --
+// testimonios stays hidden entirely when there's none (never fabricate
+// quotes).
 const playfair = Playfair_Display({
   weight: ["400", "700"],
   style: ["normal", "italic"],
   subsets: ["latin"],
   variable: "--font-ac-display",
 });
-const sourceSerif = Source_Serif_4({
+const inter = Inter({
   weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
   variable: "--font-ac-body",
 });
 
-const DEFAULT_PRIMARY = "#1A0A00";
-const DEFAULT_ACCENT = "#8B1A1A";
-
-const ROMAN = ["I", "II", "III", "IV", "V", "VI"];
+const DEFAULT_PRIMARY = "#1a2744";
+const DEFAULT_ACCENT = "#c9a84c";
 
 const PROCESO = [
   { titulo: "Consulta inicial", desc: "Me contás tu situación y evaluamos juntos cómo puedo ayudarte." },
@@ -81,23 +85,31 @@ export function AbogadoClasicoTemplate({
   const showContact = visibleIds.has("contact");
 
   const name = formData.name || "";
-  const services = serviceEntries(formData.servicios ?? []);
-  const especialidadPrincipal = services[0]?.label ?? "";
+  const services = deriveAbogadoServiceEntries(formData);
+  const especialidadPrincipal = services[0]?.titulo ?? "";
   const waLink = formData.phone ? buildWaLink(formData.phone) : null;
   const year = new Date().getFullYear();
+  const heroTagline = formData.slogan || formData.descripcion_corta || "";
+  const ctaText = formData.cta_text || "Consultá ahora";
+  const whyUs =
+    formData.por_que_elegirnos && formData.por_que_elegirnos.length > 0
+      ? formData.por_que_elegirnos
+      : DEFAULT_ABOGADO_WHY_US;
+  const testimonios = formData.testimonios ?? [];
 
   return (
     <div
-      className={`${playfair.variable} ${sourceSerif.variable} ac-clasico`}
+      className={`${playfair.variable} ${inter.variable} ac-clasico`}
       style={
         {
           "--c-primary": colorPrimary,
           "--c-accent": colorAccent,
-          "--c-bg": "#FAF7F2",
-          "--c-bg2": "#F0EBE3",
-          "--c-text": "#1A0A00",
-          "--c-muted": "#7A6A5A",
-          "--c-border": "#D4C5B0",
+          "--c-accent-lt": "#F7EFDA",
+          "--c-bg": "#FFFFFF",
+          "--c-bg2": "#F7F5EF",
+          "--c-text": "#1B2130",
+          "--c-muted": "#6B7280",
+          "--c-border": "#E2DFD6",
         } as React.CSSProperties
       }
     >
@@ -142,13 +154,11 @@ export function AbogadoClasicoTemplate({
                 {formData.matricula_numero ? `Mat. Nº ${formData.matricula_numero}` : ""}
               </span>
               <h1>{name || "Tu nombre"}</h1>
-              {formData.descripcion_corta && (
-                <p className="ac-lead">{formData.descripcion_corta}</p>
-              )}
+              {heroTagline && <p className="ac-lead">{heroTagline}</p>}
               <div className="ac-hero-actions">
                 {waLink && (
                   <a className="ac-btn ac-btn-primary" href={waLink} target="_blank" rel="noopener">
-                    Consultá ahora
+                    {ctaText}
                   </a>
                 )}
                 {showServices && services.length > 0 && (
@@ -165,38 +175,63 @@ export function AbogadoClasicoTemplate({
       {showServices && services.length > 0 && (
         <section className="ac-section" id="servicios">
           <div className="ac-container">
-            <div className="ac-section-head">
+            <FadeInSection className="ac-section-head">
               <span className="ac-eyebrow ac-uc">Servicios</span>
               <h2>Áreas de Práctica</h2>
-            </div>
+            </FadeInSection>
             <div className="ac-services-list">
               {services.map((s, i) => (
-                <div key={s.value} className="ac-service-row">
-                  <span className="ac-service-numeral">{ROMAN[i] ?? i + 1}</span>
+                <FadeInSection
+                  key={`${s.titulo}-${i}`}
+                  delayMs={Math.min(i, 5) * 70}
+                  className="ac-service-row"
+                >
+                  <span className="ac-service-medallion">{s.icono || "⚖️"}</span>
                   <div>
-                    <h3>{s.label}</h3>
-                    <p>{s.description}</p>
+                    <h3>{s.titulo}</h3>
+                    {s.descripcion && <p>{s.descripcion}</p>}
                   </div>
-                </div>
+                </FadeInSection>
               ))}
             </div>
           </div>
         </section>
       )}
 
+      <section className="ac-section ac-whyus" id="por-que-elegirnos">
+        <div className="ac-container">
+          <FadeInSection className="ac-section-head">
+            <span className="ac-eyebrow ac-uc">Por qué elegirnos</span>
+            <h2>La diferencia está en el acompañamiento</h2>
+          </FadeInSection>
+          <div className="ac-whyus-grid">
+            {whyUs.map((item, i) => (
+              <FadeInSection
+                key={`${item.titulo}-${i}`}
+                delayMs={Math.min(i, 5) * 70}
+                className="ac-whyus-item"
+              >
+                <span className="ac-whyus-icon">{item.icono || "✓"}</span>
+                <p>{item.titulo}</p>
+              </FadeInSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="ac-section ac-process" id="proceso">
         <div className="ac-container">
-          <div className="ac-section-head">
+          <FadeInSection className="ac-section-head">
             <span className="ac-eyebrow ac-uc">Metodología</span>
             <h2>Cómo trabajo</h2>
-          </div>
+          </FadeInSection>
           <div className="ac-timeline">
             {PROCESO.map((step, i) => (
-              <div key={step.titulo} className="ac-timeline-step">
+              <FadeInSection key={step.titulo} delayMs={i * 70} className="ac-timeline-step">
                 <span className="ac-timeline-marker">{i + 1}</span>
                 <h3>{step.titulo}</h3>
                 <p>{step.desc}</p>
-              </div>
+              </FadeInSection>
             ))}
           </div>
         </div>
@@ -205,16 +240,22 @@ export function AbogadoClasicoTemplate({
       {showAbout && (
         <section className="ac-section" id="sobre-mi">
           <div className="ac-container">
-            <div className="ac-section-head">
+            <FadeInSection className="ac-section-head">
               <span className="ac-eyebrow ac-uc">Trayectoria</span>
               <h2>Sobre {name || "Tu nombre"}</h2>
-            </div>
+            </FadeInSection>
             {formData.descripcion_corta && (
-              <div className="ac-about-cols">
+              <FadeInSection delayMs={60} className="ac-about-cols">
                 <p className="ac-dropcap">{formData.descripcion_corta}</p>
-              </div>
+              </FadeInSection>
             )}
-            <div className="ac-credentials-table">
+            <FadeInSection delayMs={120} className="ac-credentials-table">
+              {formData.anos_experiencia && (
+                <div className="ac-row">
+                  <span className="ac-k ac-uc">Experiencia</span>
+                  <span className="ac-v">{formData.anos_experiencia} años</span>
+                </div>
+              )}
               {(formData.universidad || formData.año_graduacion) && (
                 <div className="ac-row">
                   <span className="ac-k ac-uc">Formación</span>
@@ -240,6 +281,34 @@ export function AbogadoClasicoTemplate({
                   <span className="ac-v">{formData.asociacion_profesional}</span>
                 </div>
               )}
+            </FadeInSection>
+          </div>
+        </section>
+      )}
+
+      {testimonios.length > 0 && (
+        <section className="ac-section ac-testimonials" id="testimonios">
+          <div className="ac-container">
+            <FadeInSection className="ac-section-head">
+              <span className="ac-eyebrow ac-uc">Testimonios</span>
+              <h2>Lo que dicen mis clientes</h2>
+            </FadeInSection>
+            <div className="ac-testimonials-grid">
+              {testimonios.map((t, i) => (
+                <FadeInSection
+                  key={`${t.nombre}-${i}`}
+                  as="article"
+                  delayMs={Math.min(i, 5) * 70}
+                  className="ac-testimonial-card"
+                >
+                  <span className="ac-testimonial-mark">&ldquo;</span>
+                  <p className="ac-testimonial-quote">{t.texto}</p>
+                  <div className="ac-testimonial-author">
+                    <span className="ac-testimonial-name">{t.nombre}</span>
+                    {t.cargo && <span className="ac-testimonial-role">{t.cargo}</span>}
+                  </div>
+                </FadeInSection>
+              ))}
             </div>
           </div>
         </section>
@@ -247,10 +316,10 @@ export function AbogadoClasicoTemplate({
 
       <section className="ac-section" id="faq">
         <div className="ac-container">
-          <div className="ac-section-head">
+          <FadeInSection className="ac-section-head">
             <span className="ac-eyebrow ac-uc">Dudas frecuentes</span>
             <h2>Preguntas Frecuentes</h2>
-          </div>
+          </FadeInSection>
           <div className="ac-faq-list">
             {FAQ.map((item) => (
               <div key={item.q} className="ac-faq-block">
@@ -267,6 +336,9 @@ export function AbogadoClasicoTemplate({
           <div className="ac-container">
             <h2>¿Tenés una consulta legal? Hablemos.</h2>
             <p>Primera consulta sin costo</p>
+            {formData.horario_atencion && (
+              <p className="ac-cta-schedule">{formData.horario_atencion}</p>
+            )}
             {waLink && (
               <a className="ac-btn ac-btn-ivory" href={waLink} target="_blank" rel="noopener">
                 Escribime por WhatsApp
@@ -303,11 +375,24 @@ export function AbogadoClasicoTemplate({
               </>
             )}
           </p>
-          {isRealUrl(formData.linkedin_url) && (
+          {formData.horario_atencion && (
+            <p className="ac-footer-line">{formData.horario_atencion}</p>
+          )}
+          {(isRealUrl(formData.linkedin_url) || isRealUrl(formData.instagram_url)) && (
             <p className="ac-footer-line">
-              <a href={formData.linkedin_url} target="_blank" rel="noopener">
-                LinkedIn
-              </a>
+              {isRealUrl(formData.linkedin_url) && (
+                <a href={formData.linkedin_url} target="_blank" rel="noopener">
+                  LinkedIn
+                </a>
+              )}
+              {isRealUrl(formData.linkedin_url) && isRealUrl(formData.instagram_url) && (
+                <span className="ac-footer-sep">—</span>
+              )}
+              {isRealUrl(formData.instagram_url) && (
+                <a href={formData.instagram_url} target="_blank" rel="noopener">
+                  Instagram
+                </a>
+              )}
             </p>
           )}
           {subdomain && (
@@ -320,14 +405,12 @@ export function AbogadoClasicoTemplate({
         </div>
       </footer>
 
-      {waLink && (
-        <a className="ac-whatsapp-float" href={waLink} target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-            <path d="M20 11.5a8 8 0 0 1-11.6 7.1L4 20l1.5-4.2A8 8 0 1 1 20 11.5Z" />
-            <path d="M8.5 9.7c.3 2.6 2.2 4.5 4.8 4.8.6.1 1-.4.9-1l-.2-.9a.6.6 0 0 0-.5-.4l-1.2-.2a.6.6 0 0 1-.4-.3l-.6-1a.6.6 0 0 1 0-.6l.4-.9a.6.6 0 0 0-.1-.6l-.7-.9a.6.6 0 0 0-.7-.2c-.9.3-1.8 1-1.7 2.2Z" />
-          </svg>
-        </a>
-      )}
+      <FloatingWhatsappButton
+        phone={formData.phone}
+        accentColor="var(--c-accent)"
+        iconColor="var(--c-primary)"
+        desktopVisible={false}
+      />
     </div>
   );
 }
@@ -356,21 +439,23 @@ const CSS = `
 
 .ac-clasico .ac-btn{
   display:inline-flex; align-items:center; justify-content:center; gap:10px;
-  padding:14px 30px; border-radius:0; font-weight:600; font-size:.86rem;
+  padding:14px 30px; border-radius:2px; font-weight:600; font-size:.86rem;
   border:1px solid var(--c-primary); cursor:pointer;
-  transition:background-color .15s ease, color .15s ease; white-space:nowrap;
+  transition:background-color .15s ease, color .15s ease, transform .15s ease, box-shadow .15s ease;
+  white-space:nowrap;
 }
-.ac-clasico .ac-btn-primary{ background:var(--c-primary); color:var(--c-bg); }
-.ac-clasico .ac-btn-primary:hover{ background:var(--c-accent); border-color:var(--c-accent); }
+.ac-clasico .ac-btn:hover{ transform:translateY(-2px); }
+.ac-clasico .ac-btn-primary{ background:var(--c-primary); color:#fff; }
+.ac-clasico .ac-btn-primary:hover{ background:var(--c-accent); border-color:var(--c-accent); color:var(--c-primary); box-shadow:0 12px 24px rgba(26,39,68,.14); }
 .ac-clasico .ac-btn-outline{ background:transparent; color:var(--c-primary); }
-.ac-clasico .ac-btn-outline:hover{ background:var(--c-primary); color:var(--c-bg); }
-.ac-clasico .ac-btn-ivory{ background:transparent; color:#FAF7F2; border:1px solid #FAF7F2; }
-.ac-clasico .ac-btn-ivory:hover{ background:#FAF7F2; color:var(--c-primary); }
+.ac-clasico .ac-btn-outline:hover{ background:var(--c-primary); color:#fff; }
+.ac-clasico .ac-btn-ivory{ background:transparent; color:#FFFFFF; border:1px solid #FFFFFF; }
+.ac-clasico .ac-btn-ivory:hover{ background:#FFFFFF; color:var(--c-primary); }
 
 .ac-clasico .ac-avatar-fallback{
   display:flex; align-items:center; justify-content:center; width:100%; height:100%;
   border-radius:50%; background:linear-gradient(135deg,var(--c-primary),var(--c-accent));
-  color:var(--c-bg); font-family: var(--font-ac-display), serif; font-weight:700;
+  color:#fff; font-family: var(--font-ac-display), serif; font-weight:700;
 }
 
 .ac-clasico .ac-nav{ position:sticky; top:0; z-index:50; background:var(--c-bg); }
@@ -382,45 +467,61 @@ const CSS = `
 .ac-clasico .ac-nav-row a:hover{ color:var(--c-accent); }
 @media (max-width:760px){ .ac-clasico .ac-nav-row{ flex-wrap:wrap; justify-content:center; gap:16px 20px; } }
 
-.ac-clasico .ac-hero{ padding-block:64px 72px; text-align:center; }
-.ac-clasico .ac-hero-photo-wrap{ width:200px; height:200px; margin-inline:auto; padding:6px; border:1px solid var(--c-accent); border-radius:50%; }
+.ac-clasico .ac-hero{
+  padding-block:72px 80px; text-align:center; position:relative;
+  background:
+    radial-gradient(900px 420px at 50% -18%, rgba(201,168,76,.14), transparent 62%),
+    linear-gradient(180deg, var(--c-bg2) 0%, var(--c-bg) 65%);
+}
+.ac-clasico .ac-hero-photo-wrap{ width:220px; height:220px; margin-inline:auto; padding:6px; border:1px solid var(--c-accent); border-radius:50%; box-shadow:0 20px 44px rgba(26,39,68,.16); }
 .ac-clasico .ac-hero-photo{ width:100%; height:100%; border-radius:50%; overflow:hidden; border:1px solid var(--c-accent); background:var(--c-bg2); }
-.ac-clasico .ac-hero-photo .ac-avatar-fallback{ font-size:3rem; }
-.ac-clasico .ac-hero-copy{ max-width:640px; margin-inline:auto; margin-top:28px; }
+.ac-clasico .ac-hero-photo .ac-avatar-fallback{ font-size:3.2rem; }
+.ac-clasico .ac-hero-copy{ max-width:640px; margin-inline:auto; margin-top:30px; }
 .ac-clasico .ac-hero-copy h1{ font-size:clamp(2rem,4.4vw,2.9rem); line-height:1.2; margin-block:14px 12px; color:var(--c-primary); overflow-wrap:anywhere; }
-.ac-clasico .ac-lead{ color:var(--c-muted); font-size:1rem; margin-bottom:28px; }
+.ac-clasico .ac-lead{ color:var(--c-muted); font-size:1.05rem; margin-bottom:30px; }
 .ac-clasico .ac-hero-actions{ display:flex; flex-wrap:wrap; justify-content:center; gap:14px; }
 
-.ac-clasico .ac-section{ padding-block:76px; }
-.ac-clasico .ac-section-head{ text-align:center; max-width:620px; margin:0 auto 44px; }
+.ac-clasico .ac-section{ padding-block:80px; }
+.ac-clasico .ac-section-head{ text-align:center; max-width:620px; margin:0 auto 48px; }
 .ac-clasico .ac-section-head h2{ font-size:clamp(1.6rem,3.2vw,2.2rem); margin-top:10px; color:var(--c-primary); }
-@media (max-width:600px){ .ac-clasico .ac-section{ padding-block:52px; } }
+@media (max-width:600px){ .ac-clasico .ac-section{ padding-block:56px; } }
 
-.ac-clasico .ac-services-list{ max-width:760px; margin-inline:auto; display:flex; flex-direction:column; }
+.ac-clasico .ac-services-list{ max-width:760px; margin-inline:auto; display:flex; flex-direction:column; gap:18px; }
 .ac-clasico .ac-service-row{
-  display:grid; grid-template-columns:56px 1fr; gap:20px; padding-block:24px;
-  border-left:2px solid var(--c-accent); padding-left:24px; border-bottom:1px solid var(--c-border);
+  display:grid; grid-template-columns:64px 1fr; gap:22px; align-items:flex-start;
+  padding:26px 26px; border:1px solid var(--c-border); border-radius:10px;
+  box-shadow:0 8px 24px rgba(26,39,68,.05); transition:transform .2s ease, box-shadow .2s ease;
 }
-.ac-clasico .ac-service-row:last-child{ border-bottom:none; }
-.ac-clasico .ac-service-numeral{ font-family: var(--font-ac-display), serif; font-weight:700; font-size:1.6rem; color:var(--c-accent); }
+.ac-clasico .ac-service-row:hover{ transform:translateY(-3px); box-shadow:0 16px 32px rgba(26,39,68,.1); }
+.ac-clasico .ac-service-medallion{
+  display:flex; align-items:center; justify-content:center; width:56px; height:56px; border-radius:50%;
+  border:1px solid var(--c-accent); background:var(--c-accent-lt); font-size:1.5rem;
+}
 .ac-clasico .ac-service-row h3{ font-size:1.2rem; color:var(--c-text); margin-bottom:6px; }
 .ac-clasico .ac-service-row p{ color:var(--c-muted); font-size:.94rem; }
-@media (max-width:600px){ .ac-clasico .ac-service-row{ grid-template-columns:40px 1fr; padding-left:16px; } }
+@media (max-width:600px){ .ac-clasico .ac-service-row{ grid-template-columns:48px 1fr; padding:20px; } }
 
-.ac-clasico .ac-process{ background:var(--c-primary); color:var(--c-bg); }
-.ac-clasico .ac-process .ac-section-head h2{ color:var(--c-bg); }
-.ac-clasico .ac-process .ac-eyebrow{ color:#D9A0A0; }
+.ac-clasico .ac-whyus-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:32px; max-width:920px; margin-inline:auto; }
+.ac-clasico .ac-whyus-item{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:14px; padding-top:24px; border-top:2px solid var(--c-accent); }
+.ac-clasico .ac-whyus-icon{ font-size:2rem; }
+.ac-clasico .ac-whyus-item p{ font-weight:600; color:var(--c-primary); font-size:.96rem; }
+@media (max-width:860px){ .ac-clasico .ac-whyus-grid{ grid-template-columns:1fr 1fr; } }
+@media (max-width:480px){ .ac-clasico .ac-whyus-grid{ grid-template-columns:1fr; } }
+
+.ac-clasico .ac-process{ background:var(--c-primary); color:#fff; }
+.ac-clasico .ac-process .ac-section-head h2{ color:#fff; }
+.ac-clasico .ac-process .ac-eyebrow{ color:#D9C089; }
 .ac-clasico .ac-timeline{ position:relative; max-width:560px; margin-inline:auto; padding-left:52px; }
-.ac-clasico .ac-timeline::before{ content:""; position:absolute; left:19px; top:6px; bottom:6px; width:1px; background:rgba(250,247,242,.3); }
+.ac-clasico .ac-timeline::before{ content:""; position:absolute; left:19px; top:6px; bottom:6px; width:1px; background:rgba(255,255,255,.3); }
 .ac-clasico .ac-timeline-step{ position:relative; padding-bottom:40px; }
 .ac-clasico .ac-timeline-step:last-child{ padding-bottom:0; }
 .ac-clasico .ac-timeline-marker{
-  position:absolute; left:-52px; top:0; width:40px; height:40px; border-radius:50%; border:1px solid #D9A0A0;
+  position:absolute; left:-52px; top:0; width:40px; height:40px; border-radius:50%; border:1px solid #D9C089;
   display:flex; align-items:center; justify-content:center; font-family: var(--font-ac-display), serif; font-weight:700;
-  color:#D9A0A0; background:var(--c-primary);
+  color:#D9C089; background:var(--c-primary);
 }
-.ac-clasico .ac-timeline-step h3{ font-size:1.1rem; color:var(--c-bg); margin-bottom:6px; }
-.ac-clasico .ac-timeline-step p{ color:rgba(250,247,242,.7); font-size:.92rem; }
+.ac-clasico .ac-timeline-step h3{ font-size:1.1rem; color:#fff; margin-bottom:6px; }
+.ac-clasico .ac-timeline-step p{ color:rgba(255,255,255,.7); font-size:.92rem; }
 
 .ac-clasico .ac-about-cols{ display:grid; grid-template-columns:1fr 1fr; gap:40px; max-width:920px; margin-inline:auto; }
 .ac-clasico .ac-about-cols p{ color:var(--c-text); font-size:.98rem; margin-bottom:16px; }
@@ -428,15 +529,30 @@ const CSS = `
   float:left; font-family: var(--font-ac-display), serif; font-weight:700; font-size:3.4rem;
   line-height:.85; color:var(--c-accent); padding-right:10px; padding-top:4px;
 }
-.ac-clasico .ac-credentials-table{ max-width:640px; margin:48px auto 0; border:1px solid var(--c-border); }
+.ac-clasico .ac-credentials-table{ max-width:640px; margin:48px auto 0; border:1px solid var(--c-border); border-radius:10px; overflow:hidden; box-shadow:0 8px 24px rgba(26,39,68,.05); }
 .ac-clasico .ac-row{ display:grid; grid-template-columns:180px 1fr; border-bottom:1px solid var(--c-border); }
 .ac-clasico .ac-row:last-child{ border-bottom:none; }
-.ac-clasico .ac-k{ padding:14px 18px; font-size:.78rem; font-weight:600; color:var(--c-muted); border-right:1px solid var(--c-border); }
+.ac-clasico .ac-k{ padding:14px 18px; font-size:.78rem; font-weight:600; color:var(--c-muted); border-right:1px solid var(--c-border); background:var(--c-bg2); }
 .ac-clasico .ac-v{ padding:14px 18px; font-size:.92rem; color:var(--c-text); }
 @media (max-width:760px){
   .ac-clasico .ac-about-cols{ grid-template-columns:1fr; }
   .ac-clasico .ac-row{ grid-template-columns:140px 1fr; }
 }
+
+.ac-clasico .ac-testimonials-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+.ac-clasico .ac-testimonial-card{
+  background:var(--c-bg2); border:1px solid var(--c-border); border-radius:10px; padding:34px 28px 28px;
+  box-shadow:0 8px 24px rgba(26,39,68,.05); display:flex; flex-direction:column; gap:14px; text-align:center;
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.ac-clasico .ac-testimonial-card:hover{ transform:translateY(-4px); box-shadow:0 16px 32px rgba(26,39,68,.1); }
+.ac-clasico .ac-testimonial-mark{ font-family: var(--font-ac-display), serif; font-size:2.6rem; color:var(--c-accent); line-height:1; }
+.ac-clasico .ac-testimonial-quote{ font-size:.98rem; color:var(--c-text); font-style:italic; line-height:1.7; }
+.ac-clasico .ac-testimonial-author{ display:flex; flex-direction:column; gap:2px; margin-top:4px; }
+.ac-clasico .ac-testimonial-name{ font-weight:700; color:var(--c-primary); font-size:.92rem; }
+.ac-clasico .ac-testimonial-role{ font-size:.82rem; color:var(--c-muted); }
+@media (max-width:920px){ .ac-clasico .ac-testimonials-grid{ grid-template-columns:1fr 1fr; } }
+@media (max-width:600px){ .ac-clasico .ac-testimonials-grid{ grid-template-columns:1fr; } }
 
 .ac-clasico .ac-faq-list{ max-width:760px; margin-inline:auto; }
 .ac-clasico .ac-faq-block{ padding-block:22px; border-bottom:1px solid var(--c-border); }
@@ -444,9 +560,10 @@ const CSS = `
 .ac-clasico .ac-faq-q{ font-weight:700; font-size:1rem; color:var(--c-primary); margin-bottom:10px; }
 .ac-clasico .ac-faq-a{ color:var(--c-muted); font-size:.94rem; }
 
-.ac-clasico .ac-cta-banner{ background:var(--c-primary); color:var(--c-bg); padding-block:64px; text-align:center; }
-.ac-clasico .ac-cta-banner h2{ color:var(--c-bg); font-size:clamp(1.6rem,3.2vw,2.2rem); margin-bottom:12px; }
-.ac-clasico .ac-cta-banner p{ color:rgba(250,247,242,.75); font-size:1rem; margin-bottom:26px; }
+.ac-clasico .ac-cta-banner{ background:var(--c-primary); color:#fff; padding-block:68px; text-align:center; }
+.ac-clasico .ac-cta-banner h2{ color:#fff; font-size:clamp(1.6rem,3.2vw,2.2rem); margin-bottom:12px; }
+.ac-clasico .ac-cta-banner p{ color:rgba(255,255,255,.75); font-size:1rem; margin-bottom:12px; }
+.ac-clasico .ac-cta-schedule{ font-size:.88rem; font-weight:600; color:#D9C089; margin-bottom:26px !important; }
 
 .ac-clasico .ac-footer{ background:var(--c-bg2); border-top:1px solid var(--c-border); padding-block:44px 26px; text-align:center; }
 .ac-clasico .ac-footer-seal{ width:56px; height:56px; margin:0 auto 16px; color:var(--c-accent); }
@@ -458,7 +575,7 @@ const CSS = `
 
 .ac-clasico .ac-whatsapp-float{
   position:fixed; right:20px; bottom:20px; z-index:60;
-  width:54px; height:54px; border-radius:50%; background:var(--c-accent); color:var(--c-bg);
+  width:54px; height:54px; border-radius:50%; background:var(--c-accent); color:#fff;
   display:flex; align-items:center; justify-content:center; border:1px solid var(--c-primary);
   transition:transform .18s ease;
 }

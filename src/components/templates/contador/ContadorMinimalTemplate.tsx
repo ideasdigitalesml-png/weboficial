@@ -1,22 +1,37 @@
-import { Inter } from "next/font/google";
+import { Playfair_Display, Inter } from "next/font/google";
 import type { SectionConfigItem } from "@/lib/landings/update-landing";
-import { serviceEntries } from "@/lib/professions/contadores";
+import {
+  deriveContadorServiceEntries,
+  DEFAULT_CONTADOR_WHY_US,
+} from "@/lib/professions/contadores";
 import { buildWaLink } from "@/lib/whatsapp";
 import { getInitials } from "@/lib/avatar-initials";
+import { FadeInSection } from "@/components/templates/shared/FadeInSection";
+import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 import type { ContadorFormData } from "./ContadorLandingTemplate";
 
 // Sober/Linear-Stripe-inspired layout: small circular photo, oversized
 // name, generous whitespace, no shadows/heavy borders, WhatsApp CTA as an
 // underlined text link rather than a loud button. Same content rule as the
 // rest of this directory: sections/fields with no data are omitted, not
-// filled with placeholder copy.
+// filled with placeholder copy. Playfair Display has no weight below 400,
+// so the once-featherlight (300) hero heading now sits at 400 -- the spare
+// feel comes from size/spacing/color instead of an ultralight cut.
+const playfairDisplay = Playfair_Display({
+  weight: ["400", "500", "600"],
+  subsets: ["latin"],
+  variable: "--font-cm-display",
+});
 const inter = Inter({
   weight: ["300", "400", "500", "600"],
   subsets: ["latin"],
   variable: "--font-cm-body",
 });
 
-const DEFAULT_PRIMARY = "#111111";
+// Definitive contador palette -- azul petróleo, not a picker. Minimal only
+// exposes a single colorPrimary (used for the avatar fallback + CTA accents
+// via var(--c-primary)); grays for muted text/backgrounds are fixed below.
+const DEFAULT_PRIMARY = "#1B4F72";
 
 const MODALIDAD_LABELS: Record<string, string> = {
   presencial: "Atención presencial",
@@ -62,23 +77,28 @@ export function ContadorMinimalTemplate({
   const showContact = visibleIds.has("contact");
 
   const name = formData.name || "";
-  const services = serviceEntries(formData.servicios ?? []);
+  const services = deriveContadorServiceEntries(formData);
   const waLink = formData.phone ? buildWaLink(formData.phone) : null;
   const year = new Date().getFullYear();
   const tituloProfesional = formData.titulo_profesional || "Contador Público";
   const hasRedes = isRealUrl(formData.linkedin_url) || isRealUrl(formData.instagram_url);
+  const whyUs =
+    formData.por_que_elegirnos && formData.por_que_elegirnos.length > 0
+      ? formData.por_que_elegirnos
+      : DEFAULT_CONTADOR_WHY_US;
+  const testimonios = formData.testimonios ?? [];
 
   return (
     <div
-      className={`${inter.variable} cm-minimal`}
+      className={`${playfairDisplay.variable} ${inter.variable} cm-minimal`}
       style={
         {
           "--c-primary": colorPrimary,
           "--c-bg": "#FFFFFF",
-          "--c-bg2": "#FAFAFA",
-          "--c-text": "#111111",
-          "--c-muted": "#7A7A7A",
-          "--c-border": "#EBEBEB",
+          "--c-bg2": "#F1F5F9",
+          "--c-text": "#1C2B36",
+          "--c-muted": "#64748B",
+          "--c-border": "#E2E8F0",
         } as React.CSSProperties
       }
     >
@@ -91,6 +111,7 @@ export function ContadorMinimalTemplate({
           <div className="cm-nav-links">
             {showServices && services.length > 0 && <a href="#servicios">Servicios</a>}
             {showAbout && <a href="#sobre-mi">Sobre mí</a>}
+            {testimonios.length > 0 && <a href="#testimonios">Testimonios</a>}
             {showContact && <a href="#contacto">Contacto</a>}
           </div>
         </div>
@@ -98,7 +119,7 @@ export function ContadorMinimalTemplate({
 
       {showHero && (
         <section className="cm-hero" id="top">
-          <div className="cm-container">
+          <FadeInSection as="div" className="cm-container">
             <span className="cm-eyebrow">
               {tituloProfesional}
               {formData.matricula ? ` · Mat. N° ${formData.matricula}` : ""}
@@ -107,12 +128,13 @@ export function ContadorMinimalTemplate({
             <h1>{name || "Tu nombre"}</h1>
             <p className="cm-lead">
               {formData.slogan ||
+                formData.description ||
                 "Contabilidad clara y a tiempo, sin vueltas ni sorpresas."}
             </p>
             <div className="cm-hero-actions">
               {waLink && (
                 <a className="cm-link-cta" href={waLink} target="_blank" rel="noopener">
-                  Escribime por WhatsApp →
+                  {formData.cta_text || "Escribime por WhatsApp"} →
                 </a>
               )}
               {showServices && services.length > 0 && (
@@ -121,23 +143,30 @@ export function ContadorMinimalTemplate({
                 </a>
               )}
             </div>
-          </div>
+          </FadeInSection>
         </section>
       )}
 
       {showServices && services.length > 0 && (
         <section className="cm-section" id="servicios">
           <div className="cm-container">
-            <div className="cm-section-head">
+            <FadeInSection as="div" className="cm-section-head">
               <h2>Servicios</h2>
-            </div>
+            </FadeInSection>
             <div className="cm-services-list">
               {services.map((s, i) => (
-                <div key={s.value} className="cm-service-row">
-                  <span className="cm-service-num">{String(i + 1).padStart(2, "0")}</span>
-                  <h3>{s.label}</h3>
-                  <p>{s.description}</p>
-                </div>
+                <FadeInSection
+                  key={i}
+                  as="div"
+                  delayMs={i * 50}
+                  className="cm-service-row"
+                >
+                  <span className="cm-service-num">
+                    {s.icono || String(i + 1).padStart(2, "0")}
+                  </span>
+                  <h3>{s.titulo}</h3>
+                  {s.descripcion && <p>{s.descripcion}</p>}
+                </FadeInSection>
               ))}
             </div>
           </div>
@@ -146,7 +175,7 @@ export function ContadorMinimalTemplate({
 
       {showAbout && (
         <section className="cm-section" id="sobre-mi">
-          <div className="cm-container cm-about-grid">
+          <FadeInSection as="div" className="cm-container cm-about-grid">
             <h2>Sobre {name || "Tu nombre"}</h2>
             <div>
               {formData.description && <p className="cm-about-text">{formData.description}</p>}
@@ -169,7 +198,57 @@ export function ContadorMinimalTemplate({
                 {formData.horario_atencion && (
                   <p className="cm-fact">{formData.horario_atencion}</p>
                 )}
+                {formData.direccion && (
+                  <p className="cm-fact">{formData.direccion}</p>
+                )}
               </div>
+            </div>
+          </FadeInSection>
+        </section>
+      )}
+
+      <section className="cm-section" id="por-que-elegirme">
+        <div className="cm-container">
+          <FadeInSection as="div" className="cm-section-head">
+            <h2>Por qué elegirme</h2>
+          </FadeInSection>
+          <div className="cm-why-list">
+            {whyUs.map((item, i) => (
+              <FadeInSection
+                key={i}
+                as="div"
+                delayMs={i * 50}
+                className="cm-why-row"
+              >
+                <span className="cm-why-icon">{item.icono}</span>
+                <p>{item.titulo}</p>
+              </FadeInSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {testimonios.length > 0 && (
+        <section className="cm-section" id="testimonios">
+          <div className="cm-container">
+            <FadeInSection as="div" className="cm-section-head">
+              <h2>Lo que dicen mis clientes</h2>
+            </FadeInSection>
+            <div className="cm-testimonial-list">
+              {testimonios.map((t, i) => (
+                <FadeInSection
+                  key={i}
+                  as="div"
+                  delayMs={i * 50}
+                  className="cm-testimonial-row"
+                >
+                  <p className="cm-testimonial-text">&ldquo;{t.texto}&rdquo;</p>
+                  <p className="cm-testimonial-name">
+                    {t.nombre}
+                    {t.cargo && <span className="cm-testimonial-role"> · {t.cargo}</span>}
+                  </p>
+                </FadeInSection>
+              ))}
             </div>
           </div>
         </section>
@@ -177,12 +256,19 @@ export function ContadorMinimalTemplate({
 
       {showContact && waLink && (
         <section className="cm-cta" id="contacto">
-          <div className="cm-container">
+          <FadeInSection as="div" className="cm-container">
             <h2>¿Hablamos de tus impuestos?</h2>
             <a className="cm-cta-phone" href={waLink} target="_blank" rel="noopener">
               {formData.phone}
             </a>
-          </div>
+            {(formData.email || formData.zona || formData.direccion) && (
+              <p className="cm-cta-extra">
+                {[formData.email, formData.zona, formData.direccion]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            )}
+          </FadeInSection>
         </section>
       )}
 
@@ -225,6 +311,8 @@ export function ContadorMinimalTemplate({
           {subdomain && <p className="cm-footer-disclaimer">{`${subdomain}.weboficial.com.ar`}</p>}
         </div>
       </footer>
+
+      <FloatingWhatsappButton phone={formData.phone} accentColor={colorPrimary} />
     </div>
   );
 }
@@ -243,7 +331,7 @@ const CSS = `
 .cm-minimal *, .cm-minimal *::before, .cm-minimal *::after{ box-sizing: border-box; }
 .cm-minimal img{ max-width:100%; display:block; }
 .cm-minimal a{ color:inherit; text-decoration:none; }
-.cm-minimal h1, .cm-minimal h2, .cm-minimal h3{ margin:0; font-weight:500; letter-spacing:-.01em; }
+.cm-minimal h1, .cm-minimal h2, .cm-minimal h3{ margin:0; font-family: var(--font-cm-display), serif; font-weight:500; letter-spacing:-.01em; }
 .cm-minimal p{ margin:0; overflow-wrap:anywhere; }
 .cm-minimal section{ min-width:0; }
 .cm-minimal .cm-container{ width:100%; max-width:840px; margin-inline:auto; padding-inline:clamp(20px,5vw,32px); }
@@ -264,7 +352,7 @@ const CSS = `
 
 .cm-minimal .cm-hero{ padding-block:88px 72px; text-align:center; }
 .cm-minimal .cm-eyebrow{ display:block; font-size:.85rem; color:var(--c-muted); margin-bottom:22px; overflow-wrap:anywhere; }
-.cm-minimal .cm-hero h1{ font-size:clamp(2.6rem,7vw,5.2rem); font-weight:300; line-height:1.02; letter-spacing:-.02em; margin-bottom:24px; overflow-wrap:anywhere; }
+.cm-minimal .cm-hero h1{ font-size:clamp(2.6rem,7vw,5.2rem); font-weight:400; line-height:1.02; letter-spacing:-.02em; margin-bottom:24px; overflow-wrap:anywhere; }
 .cm-minimal .cm-lead{ color:var(--c-muted); font-size:1.05rem; max-width:46ch; margin-inline:auto; margin-bottom:34px; }
 .cm-minimal .cm-hero-actions{ display:flex; flex-wrap:wrap; justify-content:center; gap:28px; }
 
@@ -274,8 +362,13 @@ const CSS = `
 @media (max-width:600px){ .cm-minimal .cm-section{ padding-block:48px; } }
 
 .cm-minimal .cm-services-list{ display:flex; flex-direction:column; }
-.cm-minimal .cm-service-row{ display:grid; grid-template-columns:44px 1fr; column-gap:20px; row-gap:4px; padding-block:20px; border-top:1px solid var(--c-border); }
+.cm-minimal .cm-service-row{
+  display:grid; grid-template-columns:44px 1fr; column-gap:20px; row-gap:4px; padding-block:20px 20px;
+  padding-left:0; border-top:1px solid var(--c-border);
+  transition:padding-left .18s ease, background-color .18s ease;
+}
 .cm-minimal .cm-service-row:first-child{ border-top:none; }
+.cm-minimal .cm-service-row:hover{ padding-left:10px; background:var(--c-bg2); }
 .cm-minimal .cm-service-num{ font-size:.82rem; color:var(--c-muted); padding-top:2px; }
 .cm-minimal .cm-service-row h3{ font-size:1.02rem; font-weight:500; grid-column:2; }
 .cm-minimal .cm-service-row p{ color:var(--c-muted); font-size:.9rem; grid-column:2; }
@@ -288,10 +381,24 @@ const CSS = `
 .cm-minimal .cm-fact{ font-size:.9rem; color:var(--c-muted); }
 .cm-minimal .cm-fact::before{ content:"— "; color:var(--c-text); }
 
+.cm-minimal .cm-why-list{ display:flex; flex-direction:column; }
+.cm-minimal .cm-why-row{ display:grid; grid-template-columns:32px 1fr; column-gap:16px; align-items:center; padding-block:16px; border-top:1px solid var(--c-border); }
+.cm-minimal .cm-why-row:first-child{ border-top:none; }
+.cm-minimal .cm-why-icon{ font-size:1.3rem; }
+.cm-minimal .cm-why-row p{ font-size:.96rem; color:var(--c-text); }
+
+.cm-minimal .cm-testimonial-list{ display:grid; grid-template-columns:1fr 1fr; gap:32px; }
+.cm-minimal .cm-testimonial-row{ padding:0; }
+.cm-minimal .cm-testimonial-text{ font-size:1rem; color:var(--c-text); line-height:1.6; margin-bottom:12px; font-style:italic; }
+.cm-minimal .cm-testimonial-name{ font-size:.86rem; color:var(--c-muted); font-weight:500; }
+.cm-minimal .cm-testimonial-role{ font-weight:400; }
+@media (max-width:640px){ .cm-minimal .cm-testimonial-list{ grid-template-columns:1fr; gap:28px; } }
+
 .cm-minimal .cm-cta{ text-align:center; padding-block:96px; border-top:1px solid var(--c-border); }
-.cm-minimal .cm-cta h2{ font-size:clamp(1.4rem,3vw,2rem); font-weight:300; margin-bottom:26px; }
-.cm-minimal .cm-cta-phone{ display:inline-block; max-width:100%; overflow-wrap:anywhere; font-size:clamp(1.6rem,4.6vw,2.6rem); font-weight:300; border-bottom:1px solid var(--c-text); padding-bottom:6px; }
+.cm-minimal .cm-cta h2{ font-size:clamp(1.4rem,3vw,2rem); font-weight:400; margin-bottom:26px; }
+.cm-minimal .cm-cta-phone{ display:inline-block; max-width:100%; overflow-wrap:anywhere; font-size:clamp(1.6rem,4.6vw,2.6rem); font-weight:400; border-bottom:1px solid var(--c-text); padding-bottom:6px; }
 .cm-minimal .cm-cta-phone:hover{ opacity:.55; }
+.cm-minimal .cm-cta-extra{ margin-top:20px; font-size:.88rem; color:var(--c-muted); overflow-wrap:anywhere; }
 
 .cm-minimal .cm-footer{ padding-block:32px; border-top:1px solid var(--c-border); text-align:center; }
 .cm-minimal .cm-footer-line{ font-size:.84rem; color:var(--c-muted); margin-top:8px; overflow-wrap:anywhere; }

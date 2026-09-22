@@ -6,11 +6,25 @@ export type FormFieldType =
   | "whatsapp"
   | "image"
   | "select"
-  | "checkbox-group";
+  | "checkbox-group"
+  | "repeater";
 
 export interface FormFieldOption {
   value: string;
   label: string;
+}
+
+// Describes one column of a "repeater" field's items (e.g. a service card's
+// icono/titulo/descripcion) -- not a top-level FormFieldSchema itself, since
+// items never need image/whatsapp/select/nested-repeater columns.
+export interface RepeaterItemFieldSchema {
+  key: string;
+  label: string;
+  type: "text" | "textarea" | "icon";
+  max_length?: number;
+  // Defaults to true. Set false for columns like "cargo" on a testimonio
+  // that are fine left blank.
+  required?: boolean;
 }
 
 export interface FormFieldSchema {
@@ -22,13 +36,22 @@ export interface FormFieldSchema {
   max_length?: number;
   options?: FormFieldOption[];
   min_selected?: number;
+  // "repeater" only. min_items/max_items are UI hints for FieldInput (show a
+  // "recomendamos al menos N" message, disable "add" past max) -- not
+  // enforced server-side, so a professional can always save partial
+  // progress while still building out their services/testimonios list.
+  item_fields?: RepeaterItemFieldSchema[];
+  min_items?: number;
+  max_items?: number;
 }
 
 export interface FormSchema {
   fields: FormFieldSchema[];
 }
 
-export type FormFieldValue = string | string[];
+export type RepeaterItem = Record<string, string>;
+
+export type FormFieldValue = string | string[] | RepeaterItem[];
 
 export type FormValidationResult =
   | { valid: true; data: Record<string, FormFieldValue> }
@@ -89,6 +112,16 @@ export function validateFormData(
       continue;
     }
 
+    if (field.type === "repeater") {
+      const result = validateRepeaterField(field, value);
+      if (typeof result === "string") {
+        errors[field.key] = result;
+      } else {
+        data[field.key] = result as unknown as FormFieldValue;
+      }
+      continue;
+    }
+
     if (typeof value !== "string") {
       errors[field.key] = `${field.label} debe ser texto`;
       continue;
@@ -138,6 +171,58 @@ export function validateFormData(
     return { valid: false, errors };
   }
   return { valid: true, data };
+}
+
+function validateRepeaterField(
+  field: FormFieldSchema,
+  value: unknown
+): RepeaterItem[] | string {
+  if (!Array.isArray(value)) {
+    return `${field.label} debe ser una lista`;
+  }
+
+  const itemFields = field.item_fields ?? [];
+  const allowedKeys = new Set(itemFields.map((f) => f.key));
+  const cleaned: RepeaterItem[] = [];
+
+  for (const rawItem of value) {
+    if (typeof rawItem !== "object" || rawItem === null || Array.isArray(rawItem)) {
+      return `${field.label} tiene un elemento inválido`;
+    }
+    const item = rawItem as Record<string, unknown>;
+    for (const key of Object.keys(item)) {
+      if (!allowedKeys.has(key)) {
+        return `${field.label} tiene un campo no reconocido`;
+      }
+    }
+
+    const cleanedItem: RepeaterItem = {};
+    for (const itemField of itemFields) {
+      const raw = item[itemField.key];
+      const isBlank = raw === undefined || raw === null || raw === "";
+      const itemRequired = itemField.required ?? true;
+
+      if (isBlank) {
+        if (itemRequired) {
+          return `${field.label}: "${itemField.label}" es obligatorio en cada elemento`;
+        }
+        cleanedItem[itemField.key] = "";
+        continue;
+      }
+
+      if (typeof raw !== "string") {
+        return `${field.label}: "${itemField.label}" debe ser texto`;
+      }
+      const trimmed = raw.trim();
+      if (itemField.max_length && trimmed.length > itemField.max_length) {
+        return `${field.label}: "${itemField.label}" debe tener como máximo ${itemField.max_length} caracteres`;
+      }
+      cleanedItem[itemField.key] = trimmed;
+    }
+    cleaned.push(cleanedItem);
+  }
+
+  return cleaned;
 }
 
 function validateMultiValueField(

@@ -76,6 +76,55 @@ export interface AbogadoTextTemplateData {
 
 // Single suggested-text option, same rationale as contadores.ts: keep the
 // "Sobre mí" step to one decision (sugerido vs. propio), not two.
+interface RepeaterItem {
+  [key: string]: string;
+}
+
+// Emoji stand-ins for the SVG icon keys above -- used only as a fallback
+// when a landing has no servicios_detallados yet (created before migration
+// 0018 added that field). The premium templates render icono as a literal
+// emoji/short string for every repeater field, so this keeps existing
+// landings' services grid populated without the professional having to
+// redo anything.
+const SERVICE_EMOJI: Record<string, string> = {
+  familia: "👪",
+  sucesiones: "📜",
+  civil: "⚖️",
+  laboral: "💼",
+  penal: "🛡️",
+  societario: "🏢",
+};
+
+// Prefer formData.servicios_detallados (fully professional-editable) when
+// present; otherwise derive equivalent cards from the older
+// servicios checkbox-group + the fixed catalog above, so a landing that
+// pre-dates migration 0018 still shows a real services grid instead of an
+// empty one.
+export function deriveAbogadoServiceEntries(formData: {
+  servicios_detallados?: RepeaterItem[];
+  servicios?: string[];
+}): RepeaterItem[] {
+  if (formData.servicios_detallados && formData.servicios_detallados.length > 0) {
+    return formData.servicios_detallados;
+  }
+  return serviceEntries(formData.servicios ?? []).map((s) => ({
+    icono: SERVICE_EMOJI[s.icon] ?? "⚖️",
+    titulo: s.label,
+    descripcion: s.description,
+  }));
+}
+
+// Generic value-props, not data about a specific professional -- same
+// rationale as PROCESO/FAQ in AbogadoModernoTemplate: fixed informational
+// copy is fine, fabricated specific facts (client counts, made-up years)
+// are not. Used only when a landing has no por_que_elegirnos of its own.
+export const DEFAULT_ABOGADO_WHY_US: RepeaterItem[] = [
+  { icono: "🤝", titulo: "Atención personalizada en cada caso" },
+  { icono: "⚡", titulo: "Respuesta rápida por WhatsApp" },
+  { icono: "📄", titulo: "Primera consulta sin costo" },
+  { icono: "⚖️", titulo: "Seguimiento claro en cada etapa del proceso" },
+];
+
 export function getSuggestedAbogadoText({
   nombre,
   matricula,
