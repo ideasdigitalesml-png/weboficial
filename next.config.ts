@@ -7,6 +7,15 @@ import type { NextConfig } from "next";
 const SUPABASE_ORIGIN = "https://pqkwpgojpkwcrufhfjpx.supabase.co";
 const SUPABASE_WS_ORIGIN = "wss://pqkwpgojpkwcrufhfjpx.supabase.co";
 
+// The Card Payment Brick (dashboard checkout) loads sdk.mercadopago.com,
+// which in turn pulls its own chunks/styles/card-brand icons and opens a
+// cross-origin iframe for the card number/CVV fields (PCI SAQ A pattern --
+// keeps raw card data off our page's JS), plus device-fingerprint calls to
+// the mercadolibre.com/meli.com family. Wildcarded rather than pinned to
+// exact subdomains because MP doesn't document a fixed list and we already
+// got burned once by an under-scoped CSP (see connect-src 'data:' above).
+const MP_ORIGINS = "https://*.mercadopago.com https://*.mercadolibre.com https://*.mlstatic.com https://*.meli.com";
+
 // No nonces: the GA4/Meta Pixel snippets in layout.tsx are inline <Script>
 // tags, and nonce-based CSP would force every page (including the public
 // landing pages, which should stay staticly-optimizable) into dynamic
@@ -20,11 +29,12 @@ const SUPABASE_WS_ORIGIN = "wss://pqkwpgojpkwcrufhfjpx.supabase.co";
 // isn't enforced in Node scripts/tests, which is how this went unnoticed).
 const CSP = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net;
-  style-src 'self' 'unsafe-inline';
-  img-src 'self' data: blob: ${SUPABASE_ORIGIN} https://www.facebook.com https://www.google-analytics.com;
-  font-src 'self' data:;
-  connect-src 'self' data: ${SUPABASE_ORIGIN} ${SUPABASE_WS_ORIGIN} https://www.google-analytics.com https://connect.facebook.net;
+  script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net ${MP_ORIGINS};
+  style-src 'self' 'unsafe-inline' ${MP_ORIGINS};
+  img-src 'self' data: blob: ${SUPABASE_ORIGIN} https://www.facebook.com https://www.google-analytics.com ${MP_ORIGINS};
+  font-src 'self' data: ${MP_ORIGINS};
+  connect-src 'self' data: ${SUPABASE_ORIGIN} ${SUPABASE_WS_ORIGIN} https://www.google-analytics.com https://connect.facebook.net ${MP_ORIGINS};
+  frame-src ${MP_ORIGINS};
   object-src 'none';
   base-uri 'self';
   form-action 'self';

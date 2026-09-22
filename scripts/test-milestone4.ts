@@ -124,6 +124,9 @@ async function main() {
         createPreapprovalPlan: async () => {
           throw new Error("no debería llamarse en este test");
         },
+        createAuthorizedPreapproval: async () => {
+          throw new Error("no debería llamarse en este test");
+        },
         getPreapproval: async () => {
           throw new Error("no debería llamarse: la suscripción ya existe");
         },
@@ -178,6 +181,9 @@ async function main() {
 
       const fakeMpClient: MercadoPagoClient = {
         createPreapprovalPlan: async () => {
+          throw new Error("no debería llamarse en este test");
+        },
+        createAuthorizedPreapproval: async () => {
           throw new Error("no debería llamarse en este test");
         },
         getPreapproval: async (id) => ({

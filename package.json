@@ -20,6 +20,7 @@
     "generate:previews": "node scripts/generate-previews.js"
   },
   "dependencies": {
+    "@mercadopago/sdk-react": "^1.0.7",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.116.0",
     "lucide-react": "^1.46.0",

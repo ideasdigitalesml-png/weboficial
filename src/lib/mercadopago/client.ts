@@ -23,6 +23,25 @@ export interface PreapprovalDetails {
   preapprovalPlanId: string | null;
 }
 
+export interface CreateAuthorizedPreapprovalInput {
+  cardTokenId: string;
+  payerEmail: string;
+  reason: string;
+  externalReference: string;
+  amount: number;
+  currency: string;
+  backUrl: string;
+  // The preapproval_plan a card-tokenized subscription attaches to. MP's
+  // docs for this flow still require reason/auto_recurring on the
+  // preapproval itself even when a plan is set (they aren't inherited).
+  preapprovalPlanId: string;
+}
+
+export interface CreateAuthorizedPreapprovalResult {
+  id: string;
+  status: string;
+}
+
 export interface AuthorizedPaymentDetails {
   id: string;
   status: string;
@@ -44,6 +63,9 @@ export interface AuthorizedPaymentDetails {
 // checkout, and MP creates the preapproval on their behalf.
 export interface MercadoPagoClient {
   createPreapprovalPlan(input: CreatePreapprovalPlanInput): Promise<CreatePreapprovalPlanResult>;
+  createAuthorizedPreapproval(
+    input: CreateAuthorizedPreapprovalInput
+  ): Promise<CreateAuthorizedPreapprovalResult>;
   getPreapproval(id: string): Promise<PreapprovalDetails>;
   getAuthorizedPayment(id: string): Promise<AuthorizedPaymentDetails>;
 }
@@ -88,6 +110,29 @@ export const mercadoPagoClient: MercadoPagoClient = {
     })) as { id: string; init_point: string };
 
     return { id: data.id, initPoint: data.init_point };
+  },
+
+  async createAuthorizedPreapproval(input) {
+    const data = (await mpFetch("/preapproval", {
+      method: "POST",
+      body: JSON.stringify({
+        preapproval_plan_id: input.preapprovalPlanId,
+        reason: input.reason,
+        external_reference: input.externalReference,
+        payer_email: input.payerEmail,
+        card_token_id: input.cardTokenId,
+        auto_recurring: {
+          frequency: 1,
+          frequency_type: "months",
+          transaction_amount: input.amount,
+          currency_id: input.currency,
+        },
+        back_url: input.backUrl,
+        status: "authorized",
+      }),
+    })) as { id: string | number; status: string };
+
+    return { id: String(data.id), status: data.status };
   },
 
   async getPreapproval(id) {

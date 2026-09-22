@@ -8,7 +8,7 @@ import { CONTADOR_PALETAS } from "@/lib/templates/contador-paletas";
 import { ABOGADO_PALETAS } from "@/lib/templates/abogado-paletas";
 import { WelcomeBanner } from "./WelcomeBanner";
 import { PaletteEditor } from "./PaletteEditor";
-import { SubscribeButton } from "./SubscribeButton";
+import { CardPaymentBrick } from "@/components/CardPaymentBrick";
 
 const TEMPLATE_PREVIEW_IMAGE: Record<string, string> = {
   "contadores:moderno": "/previews/contador-moderno.jpg",
@@ -59,6 +59,7 @@ export default async function DashboardPage({
     { data: template },
     { data: subscription },
     { data: profile },
+    { data: activePlan },
   ] = await Promise.all([
     supabase
       .from("professions")
@@ -78,6 +79,7 @@ export default async function DashboardPage({
       .limit(1)
       .maybeSingle(),
     supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
+    supabase.from("plans").select("amount").eq("active", true).limit(1).maybeSingle(),
   ]);
 
   // Borrador → URL provisoria por path (funciona sin subdominio ni pago)
@@ -163,7 +165,14 @@ export default async function DashboardPage({
               Ver mi página
             </a>
           </div>
-          {landing.status === "draft" && <SubscribeButton />}
+          {landing.status === "draft" && activePlan && (
+            <div className="flex flex-col gap-3 rounded-xl border border-border-subtle p-4">
+              <p className="text-sm font-medium text-navy">
+                Pagar y activar mi landing — ${Number(activePlan.amount).toLocaleString("es-AR")}/mes
+              </p>
+              <CardPaymentBrick landingId={landing.id} amount={Number(activePlan.amount)} />
+            </div>
+          )}
         </section>
 
         {/* Mi plantilla */}
