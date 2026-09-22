@@ -44,7 +44,16 @@ export interface CreateAuthorizedPreapprovalResult {
 
 export interface AuthorizedPaymentDetails {
   id: string;
+  // The authorized_payment resource's own status is about scheduling, not
+  // approval: scheduled | processed | recycling | cancelled. "processed"
+  // means "no more retries", which covers both a successful charge AND a
+  // charge that failed on its final retry -- it is NOT the same as
+  // "approved". The actual approve/reject outcome lives in the nested
+  // `payment` object below, which is only present once MP has actually
+  // attempted the charge (absent while status is still "scheduled").
   status: string;
+  paymentStatus: string | null;
+  paymentStatusDetail: string | null;
   preapprovalId: string;
   transactionAmount: number;
   currencyId: string;
@@ -157,10 +166,13 @@ export const mercadoPagoClient: MercadoPagoClient = {
       preapproval_id: string | number;
       transaction_amount: number;
       currency_id: string;
+      payment?: { status?: string; status_detail?: string } | null;
     };
     return {
       id: String(data.id),
       status: data.status,
+      paymentStatus: data.payment?.status ?? null,
+      paymentStatusDetail: data.payment?.status_detail ?? null,
       preapprovalId: String(data.preapproval_id),
       transactionAmount: data.transaction_amount,
       currencyId: data.currency_id,

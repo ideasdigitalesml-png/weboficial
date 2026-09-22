@@ -10,7 +10,15 @@ export interface WebhookEventInput {
 
 export type ProcessResult =
   | { outcome: "duplicate" }
-  | { outcome: "processed"; action: "preapproval_updated" | "payment_recorded" | "ignored_unknown_type" };
+  | {
+      outcome: "processed";
+      action:
+        | "preapproval_updated"
+        | "payment_recorded"
+        | "payment_pending" // authorized_payment webhook arrived before MP attempted the charge (status still "scheduled") -- nothing to record yet, a later webhook will carry the outcome.
+        | "landing_not_found" // resource is real and valid, but doesn't match any of our landings (external_reference and preapproval_plan_id both came up empty) -- most likely a stale/orphaned MP resource, not our bug.
+        | "ignored_unknown_type";
+    };
 
 // This is the only place (besides the two SECURITY DEFINER RPCs it calls)
 // that is allowed to move a subscription/payment/landing forward based on
@@ -43,14 +51,12 @@ export async function processMercadoPagoWebhook(
   const webhookEventId = inserted.id as string;
 
   try {
-    let action: "preapproval_updated" | "payment_recorded" | "ignored_unknown_type";
+    let action: Extract<ProcessResult, { outcome: "processed" }>["action"];
 
     if (input.eventType === "subscription_preapproval") {
-      await handlePreapprovalEvent(supabase, mpClient, input.dataId);
-      action = "preapproval_updated";
+      action = await handlePreapprovalEvent(supabase, mpClient, input.dataId);
     } else if (input.eventType === "subscription_authorized_payment") {
-      await handleAuthorizedPaymentEvent(supabase, mpClient, input.dataId);
-      action = "payment_recorded";
+      action = await handleAuthorizedPaymentEvent(supabase, mpClient, input.dataId);
     } else {
       action = "ignored_unknown_type";
     }
@@ -62,6 +68,14 @@ export async function processMercadoPagoWebhook(
 
     return { outcome: "processed", action };
   } catch (err) {
+    // Logged here (not just re-thrown to the route handler) so the message
+    // and stack show up in Vercel's runtime logs immediately, with the
+    // event context attached -- this is what makes the *next* failure
+    // diagnosable without needing retroactive log access.
+    console.error(
+      `process-mercadopago-webhook failed: eventType=${input.eventType} dataId=${input.dataId} webhookEventId=${webhookEventId}`,
+      err
+    );
     await supabase
       .from("webhook_events")
       .update({ status: "failed" })
@@ -81,15 +95,31 @@ async function getActivePlanId(supabase: SupabaseClient): Promise<string> {
   return plan.id as string;
 }
 
+// The only status values `subscriptions.status` accepts (DB CHECK
+// constraint). MP's preapproval status is normally already one of these,
+// but this is the one spot standing between an arbitrary MP response
+// string and a Postgres constraint violation -- an unrecognized status
+// (rejected, expired, anything MP adds later) is treated as "cancelled"
+// (the closest real meaning: this subscription is not collectable) instead
+// of throwing and losing the whole webhook.
+const SUBSCRIPTION_STATUSES = new Set(["pending", "authorized", "paused", "cancelled"]);
+function normalizeSubscriptionStatus(mpStatus: string): string {
+  return SUBSCRIPTION_STATUSES.has(mpStatus) ? mpStatus : "cancelled";
+}
+
 // Preapprovals created from our own /preapproval calls carry the landing id
 // as external_reference. Preapprovals created by the customer visiting a
 // plan's generic init_point don't -- MP never lets us set that field for
 // them, so those are matched instead via the plan that spawned them
-// (landings.mp_plan_id), which is unique per landing.
+// (landings.mp_plan_id), which is unique per landing. Returns null (rather
+// than throwing) when neither resolves to a landing: that's a valid,
+// expected outcome for a stale or orphaned MP resource, not a bug -- the
+// caller decides what to do with it, and the webhook still gets a 200 so
+// MP doesn't keep retrying a delivery we can never resolve.
 async function resolveLandingId(
   supabase: SupabaseClient,
   preapproval: { id: string; externalReference: string | null; preapprovalPlanId: string | null }
-): Promise<string> {
+): Promise<string | null> {
   if (preapproval.externalReference) {
     return preapproval.externalReference;
   }
@@ -103,9 +133,10 @@ async function resolveLandingId(
     if (landing) return landing.id as string;
   }
 
-  throw new Error(
-    `preapproval ${preapproval.id} has no external_reference and its preapproval_plan_id (${preapproval.preapprovalPlanId}) doesn't match any landing`
+  console.warn(
+    `preapproval ${preapproval.id} has no external_reference and its preapproval_plan_id (${preapproval.preapprovalPlanId}) doesn't match any landing -- ignoring`
   );
+  return null;
 }
 
 async function upsertSubscriptionFromPreapproval(
@@ -116,8 +147,10 @@ async function upsertSubscriptionFromPreapproval(
     externalReference: string | null;
     preapprovalPlanId: string | null;
   }
-): Promise<string> {
+): Promise<string | null> {
   const landingId = await resolveLandingId(supabase, preapproval);
+  if (!landingId) return null;
+
   const planId = await getActivePlanId(supabase);
 
   const { data: subscriptionId, error } = await supabase.rpc(
@@ -126,7 +159,7 @@ async function upsertSubscriptionFromPreapproval(
       p_mp_preapproval_id: preapproval.id,
       p_landing_id: landingId,
       p_plan_id: planId,
-      p_status: preapproval.status,
+      p_status: normalizeSubscriptionStatus(preapproval.status),
       p_init_point: null,
     }
   );
@@ -138,17 +171,26 @@ async function handlePreapprovalEvent(
   supabase: SupabaseClient,
   mpClient: MercadoPagoClient,
   preapprovalId: string
-): Promise<void> {
+): Promise<Extract<ProcessResult, { outcome: "processed" }>["action"]> {
   const preapproval = await mpClient.getPreapproval(preapprovalId);
-  await upsertSubscriptionFromPreapproval(supabase, preapproval);
+  const subscriptionId = await upsertSubscriptionFromPreapproval(supabase, preapproval);
+  return subscriptionId ? "preapproval_updated" : "landing_not_found";
 }
 
 async function handleAuthorizedPaymentEvent(
   supabase: SupabaseClient,
   mpClient: MercadoPagoClient,
   paymentId: string
-): Promise<void> {
+): Promise<Extract<ProcessResult, { outcome: "processed" }>["action"]> {
   const payment = await mpClient.getAuthorizedPayment(paymentId);
+
+  // "scheduled" means MP hasn't attempted the charge yet -- there's no
+  // approved/rejected outcome to record. A later webhook delivery (status
+  // "processed" or "recycling", with the nested `payment` object filled
+  // in) will carry the real result; this one is a no-op, not a failure.
+  if (payment.paymentStatus === null) {
+    return "payment_pending";
+  }
 
   const { data: existingSubscription } = await supabase
     .from("subscriptions")
@@ -156,7 +198,7 @@ async function handleAuthorizedPaymentEvent(
     .eq("mp_preapproval_id", payment.preapprovalId)
     .maybeSingle();
 
-  let subscriptionId: string;
+  let subscriptionId: string | null;
   if (existingSubscription) {
     subscriptionId = existingSubscription.id as string;
   } else {
@@ -167,13 +209,21 @@ async function handleAuthorizedPaymentEvent(
     subscriptionId = await upsertSubscriptionFromPreapproval(supabase, preapproval);
   }
 
+  if (!subscriptionId) {
+    return "landing_not_found";
+  }
+
+  // record_approved_payment only activates the landing when this is
+  // literally "approved" -- rejected/in_process/etc. just get recorded in
+  // `payments` for visibility (see the function body), same as before.
   const { error } = await supabase.rpc("record_approved_payment", {
     p_subscription_id: subscriptionId,
     p_mp_payment_id: payment.id,
-    p_status: payment.status,
+    p_status: payment.paymentStatus,
     p_amount: payment.transactionAmount,
     p_currency: payment.currencyId,
     p_mp_payload: payment,
   });
   if (error) throw error;
+  return "payment_recorded";
 }

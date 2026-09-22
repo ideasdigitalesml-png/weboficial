@@ -132,7 +132,9 @@ async function main() {
         },
         getAuthorizedPayment: async () => ({
           id: paymentId,
-          status: "approved",
+          status: "processed",
+          paymentStatus: "approved",
+          paymentStatusDetail: "accredited",
           preapprovalId,
           transactionAmount: 25000,
           currencyId: "ARS",
@@ -194,7 +196,9 @@ async function main() {
         }),
         getAuthorizedPayment: async () => ({
           id: paymentId,
-          status: "approved",
+          status: "processed",
+          paymentStatus: "approved",
+          paymentStatusDetail: "accredited",
           preapprovalId,
           transactionAmount: 25000,
           currencyId: "ARS",
@@ -248,6 +252,144 @@ async function main() {
       await admin.from("subscriptions").delete().eq("landing_id", landingId);
       await deleteTestUser(userId);
     }
+  });
+
+  await test("un pago rechazado por antifraude se guarda sin tirar excepción", async () => {
+    // Regression test for a real production incident: MP's own antifraude
+    // rejected a real Card Payment Brick charge (status_detail
+    // "cc_rejected_high_risk"), auto-cancelled the preapproval, and our
+    // webhook threw processing it -- caused by reading the wrong status
+    // field (authorized_payment.status, a scheduling state, instead of the
+    // nested payment.status, the actual approve/reject outcome).
+    const { userId, landingId } = await createDraftLanding(`${suffix}-rejected`);
+    try {
+      const preapprovalId = `preapproval-${suffix}-rejected`;
+      const paymentId = `payment-${suffix}-rejected`;
+
+      const fakeMpClient: MercadoPagoClient = {
+        createPreapprovalPlan: async () => {
+          throw new Error("no debería llamarse en este test");
+        },
+        createAuthorizedPreapproval: async () => {
+          throw new Error("no debería llamarse en este test");
+        },
+        getPreapproval: async (id) => ({
+          id,
+          // MP auto-cancels the preapproval after a high-risk rejection.
+          status: "cancelled",
+          externalReference: landingId,
+          preapprovalPlanId: null,
+        }),
+        getAuthorizedPayment: async () => ({
+          id: paymentId,
+          status: "processed",
+          paymentStatus: "rejected",
+          paymentStatusDetail: "cc_rejected_high_risk",
+          preapprovalId,
+          transactionAmount: 13400,
+          currencyId: "ARS",
+        }),
+      };
+
+      const result = await processMercadoPagoWebhook(admin, fakeMpClient, {
+        mpEventId: `evt-${suffix}-rejected`,
+        eventType: "subscription_authorized_payment",
+        dataId: paymentId,
+        rawPayload: {
+          id: `evt-${suffix}-rejected`,
+          type: "subscription_authorized_payment",
+          data: { id: paymentId },
+        },
+      });
+      assert(result.outcome === "processed", `se esperaba processed, se obtuvo ${result.outcome}`);
+
+      const { data: payment } = await admin
+        .from("payments")
+        .select("status")
+        .eq("mp_payment_id", paymentId)
+        .single();
+      assert(
+        payment?.status === "rejected",
+        `se esperaba payment 'rejected', se obtuvo '${payment?.status}'`
+      );
+
+      const { data: landing } = await admin
+        .from("landings")
+        .select("status")
+        .eq("id", landingId)
+        .single();
+      assert(
+        landing?.status === "draft",
+        `un pago rechazado no debe activar la landing, se obtuvo '${landing?.status}'`
+      );
+
+      const { data: webhookEvent } = await admin
+        .from("webhook_events")
+        .select("status")
+        .eq("mp_event_id", `evt-${suffix}-rejected`)
+        .single();
+      assert(
+        webhookEvent?.status === "processed",
+        `se esperaba webhook_events 'processed', se obtuvo '${webhookEvent?.status}'`
+      );
+    } finally {
+      const { data: subs } = await admin
+        .from("subscriptions")
+        .select("id")
+        .eq("landing_id", landingId);
+      for (const sub of subs ?? []) {
+        await admin.from("payments").delete().eq("subscription_id", sub.id);
+      }
+      await admin.from("subscriptions").delete().eq("landing_id", landingId);
+      await deleteTestUser(userId);
+    }
+  });
+
+  await test("un evento sin landing asociado no rompe el webhook (200, no 500)", async () => {
+    const fakeMpClient: MercadoPagoClient = {
+      createPreapprovalPlan: async () => {
+        throw new Error("no debería llamarse en este test");
+      },
+      createAuthorizedPreapproval: async () => {
+        throw new Error("no debería llamarse en este test");
+      },
+      getPreapproval: async (id) => ({
+        id,
+        status: "authorized",
+        externalReference: null,
+        preapprovalPlanId: null,
+      }),
+      getAuthorizedPayment: async () => {
+        throw new Error("no debería llamarse en este test");
+      },
+    };
+
+    const preapprovalId = `preapproval-${suffix}-orphan`;
+    const result = await processMercadoPagoWebhook(admin, fakeMpClient, {
+      mpEventId: `evt-${suffix}-orphan`,
+      eventType: "subscription_preapproval",
+      dataId: preapprovalId,
+      rawPayload: {
+        id: `evt-${suffix}-orphan`,
+        type: "subscription_preapproval",
+        data: { id: preapprovalId },
+      },
+    });
+    assert(result.outcome === "processed", `se esperaba processed, se obtuvo ${result.outcome}`);
+    assert(
+      result.action === "landing_not_found",
+      `se esperaba action 'landing_not_found', se obtuvo '${result.action}'`
+    );
+
+    const { data: webhookEvent } = await admin
+      .from("webhook_events")
+      .select("status")
+      .eq("mp_event_id", `evt-${suffix}-orphan`)
+      .single();
+    assert(
+      webhookEvent?.status === "processed",
+      `se esperaba webhook_events 'processed' (no 'failed'), se obtuvo '${webhookEvent?.status}'`
+    );
   });
 
   await test("verifyMercadoPagoSignature rechaza una firma alterada", async () => {
