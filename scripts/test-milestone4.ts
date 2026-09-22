@@ -121,7 +121,7 @@ async function main() {
       });
 
       const fakeMpClient: MercadoPagoClient = {
-        createPreapproval: async () => {
+        createPreapprovalPlan: async () => {
           throw new Error("no debería llamarse en este test");
         },
         getPreapproval: async () => {
@@ -177,13 +177,14 @@ async function main() {
       const paymentId = `payment-${suffix}-ok`;
 
       const fakeMpClient: MercadoPagoClient = {
-        createPreapproval: async () => {
+        createPreapprovalPlan: async () => {
           throw new Error("no debería llamarse en este test");
         },
         getPreapproval: async (id) => ({
           id,
           status: "authorized",
           externalReference: landingId,
+          preapprovalPlanId: null,
         }),
         getAuthorizedPayment: async () => ({
           id: paymentId,

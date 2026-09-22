@@ -3,25 +3,24 @@
 
 const MP_API_BASE = "https://api.mercadopago.com";
 
-export interface CreatePreapprovalInput {
+export interface CreatePreapprovalPlanInput {
   reason: string;
-  payerEmail: string;
+  externalReference: string;
   amount: number;
   currency: string;
   backUrl: string;
-  externalReference: string;
 }
 
-export interface CreatePreapprovalResult {
+export interface CreatePreapprovalPlanResult {
   id: string;
   initPoint: string;
-  status: string;
 }
 
 export interface PreapprovalDetails {
   id: string;
   status: string;
   externalReference: string | null;
+  preapprovalPlanId: string | null;
 }
 
 export interface AuthorizedPaymentDetails {
@@ -35,20 +34,18 @@ export interface AuthorizedPaymentDetails {
 // Injectable interface: the real implementation below calls the live MP
 // API; tests pass a fake so webhook-processing logic can be exercised
 // without depending on (or faking) a real Mercado Pago transaction.
+//
+// We use plan-based subscriptions (preapproval_plan) rather than creating
+// a preapproval per customer directly: MP's /preapproval endpoint always
+// requires a fixed payer_email and locks the checkout to that exact MP
+// account, which rejects any customer whose MP account uses a different
+// email than the one they signed up with. A plan's init_point is generic:
+// the customer picks their own MP account (or card, no account needed) at
+// checkout, and MP creates the preapproval on their behalf.
 export interface MercadoPagoClient {
-  createPreapproval(input: CreatePreapprovalInput): Promise<CreatePreapprovalResult>;
+  createPreapprovalPlan(input: CreatePreapprovalPlanInput): Promise<CreatePreapprovalPlanResult>;
   getPreapproval(id: string): Promise<PreapprovalDetails>;
   getAuthorizedPayment(id: string): Promise<AuthorizedPaymentDetails>;
-}
-
-// Mercado Pago's subscriptions checkout page 500s when init_point carries
-// `activation=true` (MP bug reported in mercadopago/sdk-nodejs#480, active
-// since 2026-09-02). Stripping the param before redirecting is the
-// confirmed workaround.
-function stripActivationParam(url: string): string {
-  const parsed = new URL(url);
-  parsed.searchParams.delete("activation");
-  return parsed.toString();
 }
 
 function accessToken(): string {
@@ -74,15 +71,13 @@ async function mpFetch(path: string, init?: RequestInit): Promise<unknown> {
 }
 
 export const mercadoPagoClient: MercadoPagoClient = {
-  async createPreapproval(input) {
-    const data = (await mpFetch("/preapproval", {
+  async createPreapprovalPlan(input) {
+    const data = (await mpFetch("/preapproval_plan", {
       method: "POST",
       body: JSON.stringify({
         reason: input.reason,
-        payer_email: input.payerEmail,
         external_reference: input.externalReference,
         back_url: input.backUrl,
-        status: "pending",
         auto_recurring: {
           frequency: 1,
           frequency_type: "months",
@@ -90,19 +85,9 @@ export const mercadoPagoClient: MercadoPagoClient = {
           currency_id: input.currency,
         },
       }),
-    })) as {
-      id: string | number;
-      init_point: string;
-      sandbox_init_point?: string;
-      status: string;
-    };
+    })) as { id: string; init_point: string };
 
-    // The Preapproval API doesn't actually return sandbox_init_point (that
-    // field only exists on Preference/Checkout Pro objects), so this always
-    // falls through to init_point.
-    const initPoint = data.sandbox_init_point ?? data.init_point;
-
-    return { id: String(data.id), initPoint: stripActivationParam(initPoint), status: data.status };
+    return { id: data.id, initPoint: data.init_point };
   },
 
   async getPreapproval(id) {
@@ -110,11 +95,13 @@ export const mercadoPagoClient: MercadoPagoClient = {
       id: string | number;
       status: string;
       external_reference: string | null;
+      preapproval_plan_id?: string | null;
     };
     return {
       id: String(data.id),
       status: data.status,
       externalReference: data.external_reference ?? null,
+      preapprovalPlanId: data.preapproval_plan_id ?? null,
     };
   },
 

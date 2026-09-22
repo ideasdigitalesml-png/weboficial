@@ -27,7 +27,7 @@ export async function createSubscriptionAction(): Promise<{
 
   const { data: landing } = await supabase
     .from("landings")
-    .select("id, slug, status")
+    .select("id, slug, status, mp_plan_id, mp_plan_init_point")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -38,6 +38,8 @@ export async function createSubscriptionAction(): Promise<{
     return { ok: false, message: "Tu landing ya no está en borrador" };
   }
 
+  // Backward compat: landings from before the switch to plan-based
+  // subscriptions may still have an ad-hoc preapproval pending/authorized.
   const { data: existing } = await supabase
     .from("subscriptions")
     .select("id, init_point")
@@ -49,6 +51,15 @@ export async function createSubscriptionAction(): Promise<{
 
   if (existing?.init_point) {
     redirect(existing.init_point);
+  }
+
+  // Each landing gets its own subscription plan in Mercado Pago instead of
+  // an ad-hoc preapproval: the plan's checkout link lets the customer pick
+  // any Mercado Pago account (or card, no account needed) rather than
+  // locking the checkout to one pre-specified payer_email. Reuse it if this
+  // landing already has one.
+  if (landing.mp_plan_init_point) {
+    redirect(landing.mp_plan_init_point);
   }
 
   const { data: plan } = await supabase
@@ -67,34 +78,27 @@ export async function createSubscriptionAction(): Promise<{
     return { ok: false, message: "NEXT_PUBLIC_APP_URL no está configurada" };
   }
 
-  // MP_TEST_PAYER_EMAIL only exists in development .env files (a sandbox
-  // "buyer" test user's email, from MP's Test Users panel). It must never
-  // be set in production, so this falls back to the real logged-in user's
-  // email there automatically -- no NODE_ENV branching, no test-mode flag.
-  const payerEmail = process.env.MP_TEST_PAYER_EMAIL || user.email!;
-
-  const preapproval = await mercadoPagoClient.createPreapproval({
+  const preapprovalPlan = await mercadoPagoClient.createPreapprovalPlan({
     reason: `Suscripción landing - ${landing.slug}`,
-    payerEmail,
+    externalReference: landing.id,
     amount: Number(plan.amount),
     currency: plan.currency,
     backUrl: `${appUrl}/dashboard/processing`,
-    externalReference: landing.id,
   });
 
-  const { error: insertError } = await supabase.from("subscriptions").insert({
-    landing_id: landing.id,
-    plan_id: plan.id,
-    mp_preapproval_id: preapproval.id,
-    status: "pending",
-    init_point: preapproval.initPoint,
-  });
+  const { error: updateError } = await supabase
+    .from("landings")
+    .update({
+      mp_plan_id: preapprovalPlan.id,
+      mp_plan_init_point: preapprovalPlan.initPoint,
+    })
+    .eq("id", landing.id);
 
-  if (insertError) {
-    return { ok: false, message: "No se pudo registrar la suscripción" };
+  if (updateError) {
+    return { ok: false, message: "No se pudo registrar el plan de suscripción" };
   }
 
-  redirect(preapproval.initPoint);
+  redirect(preapprovalPlan.initPoint);
 }
 
 export async function updateLandingFormDataAction(

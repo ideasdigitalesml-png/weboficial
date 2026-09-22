@@ -81,21 +81,50 @@ async function getActivePlanId(supabase: SupabaseClient): Promise<string> {
   return plan.id as string;
 }
 
-async function upsertSubscriptionFromPreapproval(
+// Preapprovals created from our own /preapproval calls carry the landing id
+// as external_reference. Preapprovals created by the customer visiting a
+// plan's generic init_point don't -- MP never lets us set that field for
+// them, so those are matched instead via the plan that spawned them
+// (landings.mp_plan_id), which is unique per landing.
+async function resolveLandingId(
   supabase: SupabaseClient,
-  preapproval: { id: string; status: string; externalReference: string | null }
+  preapproval: { id: string; externalReference: string | null; preapprovalPlanId: string | null }
 ): Promise<string> {
-  if (!preapproval.externalReference) {
-    throw new Error(`preapproval ${preapproval.id} has no external_reference`);
+  if (preapproval.externalReference) {
+    return preapproval.externalReference;
   }
 
+  if (preapproval.preapprovalPlanId) {
+    const { data: landing } = await supabase
+      .from("landings")
+      .select("id")
+      .eq("mp_plan_id", preapproval.preapprovalPlanId)
+      .maybeSingle();
+    if (landing) return landing.id as string;
+  }
+
+  throw new Error(
+    `preapproval ${preapproval.id} has no external_reference and its preapproval_plan_id (${preapproval.preapprovalPlanId}) doesn't match any landing`
+  );
+}
+
+async function upsertSubscriptionFromPreapproval(
+  supabase: SupabaseClient,
+  preapproval: {
+    id: string;
+    status: string;
+    externalReference: string | null;
+    preapprovalPlanId: string | null;
+  }
+): Promise<string> {
+  const landingId = await resolveLandingId(supabase, preapproval);
   const planId = await getActivePlanId(supabase);
 
   const { data: subscriptionId, error } = await supabase.rpc(
     "upsert_subscription_from_preapproval",
     {
       p_mp_preapproval_id: preapproval.id,
-      p_landing_id: preapproval.externalReference,
+      p_landing_id: landingId,
       p_plan_id: planId,
       p_status: preapproval.status,
       p_init_point: null,
