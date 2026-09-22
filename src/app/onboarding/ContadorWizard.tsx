@@ -13,6 +13,8 @@ import {
   type ContadorFormData,
 } from "@/components/templates/contador/ContadorLandingTemplate";
 import { ContadorModernoTemplate } from "@/components/templates/contador/ContadorModernoTemplate";
+import { ContadorClasicoTemplate } from "@/components/templates/contador/ContadorClasicoTemplate";
+import { ContadorMinimalTemplate } from "@/components/templates/contador/ContadorMinimalTemplate";
 import { PaletteSelector } from "@/components/templates/PaletteSelector";
 import {
   CONTADOR_PALETAS,
@@ -400,7 +402,7 @@ export function ContadorWizard({
           submitError={submitError}
           isPending={isPending}
           previewFormData={previewFormData}
-          isModerno={isModerno}
+          layout={template.config?.layout}
           colorPrimary={colorPrimary}
           colorAccent={colorAccent}
           paletteVariables={paletteVariables}
@@ -565,7 +567,7 @@ export function ContadorWizard({
               <div ref={previewContainerRef} style={{ width: "100%", overflow: "hidden" }}>
                 <div style={{ zoom: previewScale, width: "1100px", pointerEvents: "none" }}>
                   <TemplatePreview
-                    isModerno={isModerno}
+                    layout={template.config?.layout}
                     formData={previewFormData}
                     colorPrimary={colorPrimary}
                     colorAccent={colorAccent}
@@ -601,7 +603,7 @@ export function ContadorWizard({
           </div>
           <div className="flex-1 overflow-y-auto">
             <TemplatePreview
-              isModerno={isModerno}
+              layout={template.config?.layout}
               formData={previewFormData}
               colorPrimary={colorPrimary}
               colorAccent={colorAccent}
@@ -628,7 +630,7 @@ function RevisionStep({
   submitError,
   isPending,
   previewFormData,
-  isModerno,
+  layout,
   colorPrimary,
   colorAccent,
   paletteVariables,
@@ -643,7 +645,7 @@ function RevisionStep({
   submitError: string | null;
   isPending: boolean;
   previewFormData: ContadorFormData;
-  isModerno: boolean;
+  layout?: string;
   colorPrimary?: string;
   colorAccent?: string;
   paletteVariables?: Record<string, string>;
@@ -674,7 +676,7 @@ function RevisionStep({
         </h2>
         <div className="overflow-hidden rounded-2xl border border-border-subtle shadow-sm">
           <TemplatePreview
-            isModerno={isModerno}
+            layout={layout}
             formData={previewFormData}
             colorPrimary={colorPrimary}
             colorAccent={colorAccent}
@@ -702,26 +704,26 @@ function RevisionStep({
   );
 }
 
-// Same dispatch rule as PublicLandingView.tsx: templates whose config marks
-// layout "modern" get the new design, everything else keeps the original
-// (Clásico) one. Kept as one place so the three preview spots above
-// (desktop sticky, mobile modal, revision step) can't drift out of sync.
+// Same dispatch rule as PublicLandingView.tsx, keyed off the template's own
+// config.layout ("modern" / "classic" / "minimal" / legacy-undefined) so the
+// three preview spots above (desktop sticky, mobile modal, revision step)
+// and the real public page can never drift out of sync.
 function TemplatePreview({
-  isModerno,
+  layout,
   formData,
   colorPrimary,
   colorAccent,
   paletteVariables,
   subdomain,
 }: {
-  isModerno: boolean;
+  layout?: string;
   formData: ContadorFormData;
   colorPrimary?: string;
   colorAccent?: string;
   paletteVariables?: Record<string, string>;
   subdomain: string;
 }) {
-  if (isModerno) {
+  if (layout === "modern") {
     return (
       <ContadorModernoTemplate
         formData={formData}
@@ -730,6 +732,27 @@ function TemplatePreview({
         colorPrimary={colorPrimary}
         colorAccent={colorAccent}
         paletteVariables={paletteVariables}
+      />
+    );
+  }
+  if (layout === "classic") {
+    return (
+      <ContadorClasicoTemplate
+        formData={formData}
+        sectionsConfig={DEFAULT_SECTIONS_CONFIG}
+        subdomain={subdomain || undefined}
+        colorPrimary={colorPrimary}
+        colorAccent={colorAccent}
+      />
+    );
+  }
+  if (layout === "minimal") {
+    return (
+      <ContadorMinimalTemplate
+        formData={formData}
+        sectionsConfig={DEFAULT_SECTIONS_CONFIG}
+        subdomain={subdomain || undefined}
+        colorPrimary={colorPrimary}
       />
     );
   }

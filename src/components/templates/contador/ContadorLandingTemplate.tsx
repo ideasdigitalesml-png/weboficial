@@ -23,6 +23,16 @@ export interface ContadorFormData {
   modalidad?: string;
   servicios?: string[];
   description?: string;
+  // Added for the Clásico/Minimal templates -- Moderno predates these and
+  // doesn't render them, but they live on the same shared form_schema/type
+  // so every contador template can opt into whichever it has data for.
+  titulo_profesional?: string;
+  anos_experiencia?: string;
+  cantidad_clientes?: string;
+  linkedin_url?: string;
+  instagram_url?: string;
+  horario_atencion?: string;
+  slogan?: string;
 }
 
 // Default accent is the approved "Clásico" palette's emerald. Other

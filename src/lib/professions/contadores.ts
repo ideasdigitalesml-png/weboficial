@@ -56,6 +56,12 @@ export const CONTADOR_SERVICES = [
     icon: "💬",
     description: "Consultas y planificación impositiva a medida.",
   },
+  {
+    value: "auditoria",
+    label: "Auditoría",
+    icon: "🔍",
+    description: "Revisión y control de estados contables y procesos internos.",
+  },
 ] as const;
 
 export function serviceLabels(values: string[]): string[] {

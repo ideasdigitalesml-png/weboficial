@@ -6,6 +6,8 @@ import {
   type ContadorFormData,
 } from "@/components/templates/contador/ContadorLandingTemplate";
 import { ContadorModernoTemplate } from "@/components/templates/contador/ContadorModernoTemplate";
+import { ContadorClasicoTemplate } from "@/components/templates/contador/ContadorClasicoTemplate";
+import { ContadorMinimalTemplate } from "@/components/templates/contador/ContadorMinimalTemplate";
 import {
   AbogadoModernoTemplate,
   type AbogadoFormData,
@@ -142,6 +144,29 @@ export async function PublicLandingView({ slug }: { slug: string }) {
         colorPrimary={templateConfig.primaryColor}
         colorAccent={templateConfig.secondaryColor}
         paletteVariables={findContadorPaleta(landing.paleta_id).variables}
+      />
+    );
+  }
+
+  if (templateConfig?.layout === "classic") {
+    return (
+      <ContadorClasicoTemplate
+        formData={landing.form_data as ContadorFormData}
+        sectionsConfig={sectionsConfig}
+        subdomain={landing.slug}
+        colorPrimary={templateConfig.primaryColor}
+        colorAccent={templateConfig.secondaryColor}
+      />
+    );
+  }
+
+  if (templateConfig?.layout === "minimal") {
+    return (
+      <ContadorMinimalTemplate
+        formData={landing.form_data as ContadorFormData}
+        sectionsConfig={sectionsConfig}
+        subdomain={landing.slug}
+        colorPrimary={templateConfig.primaryColor}
       />
     );
   }
