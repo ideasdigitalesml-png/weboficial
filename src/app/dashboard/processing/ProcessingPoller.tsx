@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 const POLL_INTERVAL_MS = 3000;
 const SLOW_AFTER_MS = 30000;
 
-export function ProcessingPoller() {
+export function ProcessingPoller({ fromCardBrick }: { fromCardBrick?: boolean }) {
   const router = useRouter();
   const [isSlow, setIsSlow] = useState(false);
 
@@ -45,8 +45,9 @@ export function ProcessingPoller() {
     <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-12 text-center">
       <h1 className="text-xl font-semibold">Procesando tu suscripción...</h1>
       <p className="text-zinc-500">
-        Esto puede tardar unos segundos mientras confirmamos el pago con
-        Mercado Pago.
+        {fromCardBrick
+          ? "Tu suscripción fue procesada. El primer cobro puede tardar hasta 1 hora en confirmarse."
+          : "Esto puede tardar unos segundos mientras confirmamos el pago con Mercado Pago."}
       </p>
       {isSlow && (
         <p className="text-sm text-zinc-400">

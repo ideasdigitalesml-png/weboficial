@@ -170,7 +170,11 @@ export default async function DashboardPage({
               <p className="text-sm font-medium text-navy">
                 Pagar y activar mi landing — ${Number(activePlan.amount).toLocaleString("es-AR")}/mes
               </p>
-              <CardPaymentBrick landingId={landing.id} amount={Number(activePlan.amount)} />
+              <CardPaymentBrick
+                landingId={landing.id}
+                amount={Number(activePlan.amount)}
+                payerEmail={user.email ?? ""}
+              />
             </div>
           )}
         </section>

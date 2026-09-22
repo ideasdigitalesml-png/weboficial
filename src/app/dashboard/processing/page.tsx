@@ -2,7 +2,11 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ProcessingPoller } from "./ProcessingPoller";
 
-export default async function ProcessingPage() {
+export default async function ProcessingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ source?: string }>;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -12,5 +16,6 @@ export default async function ProcessingPage() {
     redirect("/login");
   }
 
-  return <ProcessingPoller />;
+  const { source } = await searchParams;
+  return <ProcessingPoller fromCardBrick={source === "brick"} />;
 }
