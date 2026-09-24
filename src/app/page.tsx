@@ -57,7 +57,7 @@ export default async function Home() {
           <Wordmark tone="white" className="text-lg" />
           <Link
             href="/login"
-            className="text-sm text-white/70 transition-colors hover:text-white"
+            className="inline-flex min-h-9 items-center justify-center rounded-full border border-sky-400/40 bg-sky-500/15 px-4 text-sm font-medium text-white transition-colors hover:bg-sky-500/25"
           >
             Iniciar sesión
           </Link>
