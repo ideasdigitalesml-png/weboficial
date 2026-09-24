@@ -24,6 +24,17 @@ const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
   cancelled: "Cancelada",
 };
 
+// Green/yellow/red at a glance, matching the same badge treatment as the
+// landing status pill above -- "none" is the no-subscription (Plan
+// Gratuito) case.
+const SUBSCRIPTION_STATUS_BADGE: Record<string, string> = {
+  authorized: "bg-emerald-100 text-emerald-700",
+  pending: "bg-amber-100 text-amber-700",
+  paused: "bg-amber-100 text-amber-700",
+  cancelled: "bg-red-100 text-red-700",
+  none: "bg-slate-100 text-slate-600",
+};
+
 const PALETAS_BY_PROFESSION: Record<string, typeof CONTADOR_PALETAS> = {
   contadores: CONTADOR_PALETAS,
   abogados: ABOGADO_PALETAS,
@@ -106,8 +117,11 @@ export default async function DashboardPage({
 
   return (
     <>
-      <DashboardHeader email={user.email ?? ""} />
-      <div className="mx-auto flex w-full max-w-[900px] flex-1 flex-col gap-8 px-6 py-10">
+      <DashboardHeader
+        email={user.email ?? ""}
+        name={typeof displayName === "string" ? displayName : undefined}
+      />
+      <div className="mx-auto flex w-full max-w-[900px] flex-1 flex-col gap-6 px-5 py-6 sm:gap-8 sm:px-6 sm:py-10">
         {bienvenida === "1" && <WelcomeBanner publicUrl={publicUrl} />}
 
         {profile?.role === "admin" && (
@@ -122,17 +136,17 @@ export default async function DashboardPage({
         )}
 
         {/* Hero card — Tu página */}
-        <section className="flex flex-col gap-4 rounded-2xl bg-navy/[.04] p-6">
+        <section className="flex flex-col gap-4 rounded-2xl bg-navy/[.04] p-5 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h1 className="text-2xl font-semibold text-navy">{displayName}</h1>
+            <div className="min-w-0">
+              <h1 className="text-xl font-semibold text-navy sm:text-2xl">{displayName}</h1>
               <p className="text-sm text-text-body">
                 {profession?.name}
                 {template?.name ? ` · Plantilla ${template.name}` : ""}
               </p>
             </div>
             <span
-              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+              className={`inline-flex shrink-0 items-center rounded-full px-3 py-1 text-xs font-semibold ${
                 isPublished
                   ? "bg-emerald-100 text-emerald-700"
                   : "bg-amber-100 text-amber-700"
@@ -145,25 +159,25 @@ export default async function DashboardPage({
             href={publicUrl}
             target="_blank"
             rel="noreferrer"
-            className="text-sm text-sky-dark underline"
+            className="truncate text-sm text-sky-dark underline"
           >
             {publicUrl}
           </a>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/dashboard/editar"
-              className="inline-flex min-h-11 items-center justify-center rounded-full bg-sky px-5 text-sm font-semibold text-white transition-colors hover:bg-sky-dark"
-            >
-              Editar mi página
-            </Link>
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <a
               href={publicUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-11 items-center justify-center rounded-full border border-border-subtle px-5 text-sm font-medium text-navy transition-colors hover:border-navy/40"
+              className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-sky px-5 text-base font-semibold text-white transition-colors hover:bg-sky-dark sm:flex-none"
             >
               Ver mi página
             </a>
+            <Link
+              href="/dashboard/editar"
+              className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-border-subtle px-5 text-base font-medium text-navy transition-colors hover:border-navy/40 sm:flex-none"
+            >
+              Editar mi página
+            </Link>
           </div>
           {landing.status === "draft" && activePlan && (
             <div className="flex flex-col gap-3 rounded-xl border border-border-subtle p-4">
@@ -228,24 +242,28 @@ export default async function DashboardPage({
         {/* Mi suscripción */}
         <section className="flex flex-col gap-3">
           <h2 className="text-lg font-semibold text-navy">Mi suscripción</h2>
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border-subtle p-4">
-            <p className="text-sm text-text-body">
+          <div className="flex flex-col gap-3 rounded-xl border border-border-subtle p-4 sm:flex-row sm:items-center sm:justify-between">
+            <span
+              className={`inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                SUBSCRIPTION_STATUS_BADGE[subscription?.status ?? "none"]
+              }`}
+            >
               {subscription
                 ? (SUBSCRIPTION_STATUS_LABELS[subscription.status] ??
                   subscription.status)
                 : "Plan Gratuito"}
-            </p>
-            <div className="flex gap-3">
+            </span>
+            <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/dashboard/plan"
-                className="rounded-full border border-border-subtle px-4 py-1.5 text-sm font-medium text-navy transition-colors hover:border-navy/40"
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-border-subtle px-4 text-sm font-medium text-navy transition-colors hover:border-navy/40"
               >
                 Actualizar plan
               </Link>
               {subscription && (
                 <Link
                   href="/dashboard/cancelar"
-                  className="rounded-full px-4 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
                 >
                   Cancelar suscripción
                 </Link>
