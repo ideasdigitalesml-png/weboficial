@@ -97,6 +97,21 @@ export default function LoginPage() {
         >
           ← Volver al inicio
         </Link>
+
+        <ul className="flex flex-col items-center gap-2 text-sm text-white/50">
+          <li className="flex items-center gap-2">
+            <span className="text-emerald-400">✓</span>
+            Tu página lista en menos de 10 minutos
+          </li>
+          <li className="flex items-center gap-2">
+            <span className="text-emerald-400">✓</span>
+            Sin conocimientos técnicos
+          </li>
+          <li className="flex items-center gap-2">
+            <span className="text-emerald-400">✓</span>
+            Cancelá cuando quieras
+          </li>
+        </ul>
       </div>
     </div>
   );
