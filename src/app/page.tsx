@@ -2,6 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Wordmark } from "@/components/landing/Wordmark";
 import { Hero } from "@/components/landing/Hero";
+import { TemplatesShowcase } from "@/components/landing/TemplatesShowcase";
+import { SocialProof } from "@/components/landing/SocialProof";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { FAQ } from "@/components/landing/FAQ";
@@ -62,6 +64,8 @@ export default async function Home() {
         </div>
       </header>
       <Hero />
+      <TemplatesShowcase />
+      <SocialProof />
       <HowItWorks />
       <PricingSection />
       <FAQ />

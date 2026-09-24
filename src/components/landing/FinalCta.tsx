@@ -7,6 +7,9 @@ export function FinalCta() {
         <h2 className="text-3xl font-bold text-navy sm:text-4xl">
           Empezá hoy mismo
         </h2>
+        <p className="text-base text-text-body sm:text-lg">
+          Listo en menos de 10 minutos.
+        </p>
         <CtaButton />
       </div>
     </section>
