@@ -220,28 +220,24 @@ export function OnboardingWizard({
           />
         )
       ) : (
-        <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-16 px-8 py-16">
-          {(step === "form" || step === "slug") && <Steps current={step} />}
+        <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-5 py-6 sm:gap-16 sm:px-8 sm:py-16">
+          <div className="sticky top-14 z-20 -mx-5 bg-[#f8fafc]/95 px-5 pt-1 pb-3 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
+            <Steps current={step} />
+          </div>
 
           {step === "profession" && (
-            <section className="flex flex-col gap-8">
+            <section className="flex flex-col gap-6 sm:gap-8">
               <div className="flex flex-col gap-2">
-                <h2 className="text-3xl font-bold text-navy">
+                <h2 className="text-2xl font-bold text-navy sm:text-3xl">
                   Elegí tu profesión
                 </h2>
-                <p className="text-base text-gray-500">
+                <p className="text-base text-gray-600">
                   Seleccioná tu área profesional para ver las plantillas
                   disponibles.
                 </p>
               </div>
 
-              <div className="flex justify-center">
-                <div className="w-full max-w-sm">
-                  <Steps current="profession" subtle />
-                </div>
-              </div>
-
-              <div className="grid gap-6 sm:grid-cols-3">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6">
                 {professions.map((p) => {
                   const previewImage = PROFESSION_PREVIEW_IMAGE[p.slug];
                   const gradient =
@@ -259,16 +255,21 @@ export function OnboardingWizard({
                         setTemplateId(null);
                         setStep("template");
                       }}
-                      className="group relative flex flex-col overflow-hidden rounded-2xl bg-white text-left shadow-sm ring-1 ring-black/5 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+                      className={`group relative flex flex-col overflow-hidden rounded-2xl bg-white text-left shadow-sm ring-1 ring-black/5 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${
+                        professions.length % 3 === 1 &&
+                        professions.indexOf(p) === professions.length - 1
+                          ? "col-span-2 sm:col-span-1"
+                          : ""
+                      }`}
                     >
-                      {/* imagen fija — siempre 220 px, recortada desde arriba */}
-                      <div className="relative h-[220px] w-full shrink-0 overflow-hidden">
+                      {/* imagen: compacta en mobile, 220px desde sm */}
+                      <div className="relative h-24 w-full shrink-0 overflow-hidden sm:h-[220px]">
                         {previewImage ? (
                           <Image
                             src={previewImage}
                             alt={`Vista previa de páginas de ${p.name}`}
                             fill
-                            sizes="(min-width: 640px) 33vw, 100vw"
+                            sizes="(min-width: 640px) 33vw, 50vw"
                             className="object-cover object-top"
                           />
                         ) : (
@@ -276,7 +277,7 @@ export function OnboardingWizard({
                             className="flex h-full w-full items-center justify-center"
                             style={{ background: gradient }}
                           >
-                            <span className="text-sm font-medium text-white/90">
+                            <span className="px-2 text-center text-xs font-medium text-white/90 sm:text-sm">
                               Moderno · Clásico · Minimal
                             </span>
                           </div>
@@ -284,16 +285,16 @@ export function OnboardingWizard({
                       </div>
 
                       {/* info — altura fija para que todas las cards sean iguales */}
-                      <div className="flex min-h-[88px] flex-col justify-center gap-1 px-5 py-4">
-                        <span className="text-lg font-semibold text-gray-900 leading-snug">
+                      <div className="flex flex-col justify-center gap-1 px-3 py-3 sm:min-h-[88px] sm:px-5 sm:py-4">
+                        <span className="text-sm font-semibold text-gray-900 leading-snug sm:text-lg">
                           {p.name}
                         </span>
-                        <span className="text-xs text-gray-400 leading-relaxed">
+                        <span className="hidden text-xs text-gray-500 leading-relaxed sm:block">
                           {subtitle}
                         </span>
                       </div>
 
-                      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-11 items-center justify-center bg-navy text-sm font-medium text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-11 items-center justify-center bg-navy text-sm font-medium text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 sm:flex">
                         Comenzar →
                       </div>
                     </button>
@@ -313,38 +314,33 @@ export function OnboardingWizard({
           )}
 
           {step === "template" && profession && (
-            <section className="flex flex-col gap-8">
+            <section className="flex flex-col gap-6 sm:gap-8">
               <div className="flex flex-col gap-1">
-                <h2 className="text-3xl font-bold text-navy">Elegí tu diseño</h2>
-                <p className="text-base text-gray-500">
+                <h2 className="text-2xl font-bold text-navy sm:text-3xl">Elegí tu diseño</h2>
+                <p className="text-base text-gray-600">
                   Todos los diseños incluyen las mismas secciones. Podés cambiar el estilo después.
                 </p>
               </div>
 
-              <div className="flex justify-center">
-                <div className="w-full max-w-sm">
-                  <Steps current="template" subtle />
-                </div>
-              </div>
-
-              <div className="grid gap-6 sm:grid-cols-3">
+              <div className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0">
                 {professionTemplates.map((t) => (
-                  <TemplateCard
-                    key={t.id}
-                    template={t}
-                    professionSlug={profession.slug}
-                    selected={templateId === t.id}
-                    onSelect={() => {
-                      setTemplateId(t.id);
-                      setStep("form");
-                    }}
-                  />
+                  <div key={t.id} className="w-[72vw] shrink-0 snap-center sm:w-auto">
+                    <TemplateCard
+                      template={t}
+                      professionSlug={profession.slug}
+                      selected={templateId === t.id}
+                      onSelect={() => {
+                        setTemplateId(t.id);
+                        setStep("form");
+                      }}
+                    />
+                  </div>
                 ))}
               </div>
 
               <button
                 onClick={() => setStep("profession")}
-                className="self-start text-sm text-gray-400 hover:text-navy hover:underline"
+                className="self-start text-sm text-gray-500 hover:text-navy hover:underline"
               >
                 ← Volver a profesiones
               </button>
@@ -371,13 +367,16 @@ export function OnboardingWizard({
                 />
               ))}
               {formErrors._form && (
-                <p className="text-sm text-red-600">{formErrors._form}</p>
+                <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+                  {formErrors._form}
+                </p>
               )}
-              <div className="flex gap-3">
+              <div className="h-20 sm:hidden" aria-hidden />
+              <div className="fixed inset-x-0 bottom-0 z-30 flex gap-3 border-t border-border-subtle bg-white/95 px-5 py-3 backdrop-blur sm:static sm:z-auto sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
                 <button onClick={() => setStep("template")} className={SECONDARY_BUTTON}>
                   Volver
                 </button>
-                <button onClick={() => setStep("slug")} className={PRIMARY_BUTTON}>
+                <button onClick={() => setStep("slug")} className={`${PRIMARY_BUTTON} flex-1 sm:flex-none`}>
                   Continuar
                 </button>
               </div>
@@ -404,17 +403,20 @@ export function OnboardingWizard({
               )}
 
               {submitError && (
-                <p className="text-sm text-red-600">{submitError}</p>
+                <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+                  {submitError}
+                </p>
               )}
 
-              <div className="flex gap-3">
+              <div className="h-20 sm:hidden" aria-hidden />
+              <div className="fixed inset-x-0 bottom-0 z-30 flex gap-3 border-t border-border-subtle bg-white/95 px-5 py-3 backdrop-blur sm:static sm:z-auto sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
                 <button onClick={() => setStep("form")} className={SECONDARY_BUTTON}>
                   Volver
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={isPending || slugStatus?.state !== "available"}
-                  className={PRIMARY_BUTTON}
+                  className={`${PRIMARY_BUTTON} flex-1 sm:flex-none`}
                 >
                   {isPending ? "Creando..." : "Crear landing"}
                 </button>
@@ -423,7 +425,7 @@ export function OnboardingWizard({
           )}
         </div>
       )}
-      <footer className="mt-auto border-t border-gray-100 px-6 py-5 text-center text-xs text-gray-400">
+      <footer className="mt-auto border-t border-gray-100 px-5 py-5 text-center text-xs text-gray-500 sm:px-6">
         <span>© {new Date().getFullYear()} weboficial</span>
         {" · "}
         <a href="/terminos" className="hover:text-gray-600 hover:underline">Términos</a>
@@ -438,7 +440,7 @@ export function OnboardingWizard({
 
 function WizardHeader() {
   return (
-    <header className="border-b border-border-subtle px-6 py-4">
+    <header className="sticky top-0 z-30 border-b border-border-subtle bg-white/95 px-5 py-4 backdrop-blur sm:px-6">
       <Wordmark className="text-lg" />
     </header>
   );

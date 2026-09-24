@@ -348,17 +348,19 @@ export function AbogadoWizard({
   const colorAccent = template.config?.secondaryColor;
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-12">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-navy">
-          Paso {stepIndex + 1} de {STEP_ORDER.length} — {STEP_LABELS[step]}
-        </p>
-      </div>
-      <div className="h-1 w-full overflow-hidden rounded-full bg-border-subtle">
-        <div
-          className="h-full bg-sky transition-all"
-          style={{ width: `${((stepIndex + 1) / STEP_ORDER.length) * 100}%` }}
-        />
+    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-5 py-6 sm:px-6 sm:py-12">
+      <div className="sticky top-0 z-30 -mx-5 bg-white/95 px-5 pt-2 pb-3 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium text-navy">
+            Paso {stepIndex + 1} de {STEP_ORDER.length} — {STEP_LABELS[step]}
+          </p>
+        </div>
+        <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-border-subtle sm:mt-0">
+          <div
+            className="h-full bg-sky transition-all"
+            style={{ width: `${((stepIndex + 1) / STEP_ORDER.length) * 100}%` }}
+          />
+        </div>
       </div>
 
       {step === "revision" ? (
@@ -524,11 +526,12 @@ export function AbogadoWizard({
               </div>
             )}
 
-            <div className="flex gap-3">
+            <div className="h-20 sm:hidden" aria-hidden />
+            <div className="fixed inset-x-0 bottom-0 z-30 flex gap-3 border-t border-border-subtle bg-white/95 px-5 py-3 backdrop-blur sm:static sm:z-auto sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
               <button onClick={goBack} className={SECONDARY_BUTTON}>
                 Volver
               </button>
-              <button onClick={goNext} disabled={!canContinue()} className={PRIMARY_BUTTON}>
+              <button onClick={goNext} disabled={!canContinue()} className={`${PRIMARY_BUTTON} flex-1 sm:flex-none`}>
                 Continuar
               </button>
             </div>
@@ -556,7 +559,7 @@ export function AbogadoWizard({
       {step !== "revision" && (
         <button
           onClick={() => setMobilePreviewOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex h-14 items-center gap-2 rounded-full bg-navy px-5 text-sm font-medium text-white shadow-lg lg:hidden"
+          className="fixed bottom-24 right-5 z-40 flex h-14 items-center gap-2 rounded-full bg-navy px-5 text-sm font-medium text-white shadow-lg sm:bottom-6 sm:right-6 lg:hidden"
         >
           Ver mi página 👁️
         </button>
@@ -650,13 +653,18 @@ function RevisionStep({
         </div>
       </div>
 
-      {submitError && <p className="text-sm text-red-600">{submitError}</p>}
+      {submitError && (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+          {submitError}
+        </p>
+      )}
 
-      <div className="flex gap-3">
+      <div className="h-20 sm:hidden" aria-hidden />
+      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-3 border-t border-border-subtle bg-white/95 px-5 py-3 backdrop-blur sm:static sm:z-auto sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
         <button onClick={onBack} className={SECONDARY_BUTTON}>
           Volver
         </button>
-        <button onClick={onSubmit} disabled={isPending || !canSubmit} className={PRIMARY_BUTTON}>
+        <button onClick={onSubmit} disabled={isPending || !canSubmit} className={`${PRIMARY_BUTTON} flex-1 sm:flex-none`}>
           {isPending ? "Publicando..." : "Publicar mi página"}
         </button>
       </div>

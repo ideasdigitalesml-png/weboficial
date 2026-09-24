@@ -31,6 +31,8 @@ const INPUT_CLASS =
   "min-h-12 rounded-lg border border-border-subtle bg-white px-3 py-2 text-navy placeholder:text-text-body/50 focus:border-sky focus:outline-none focus:ring-2 focus:ring-sky/30";
 const TOGGLE_ACTIVE_CLASS = "font-semibold text-navy underline decoration-sky decoration-2 underline-offset-4";
 const TOGGLE_INACTIVE_CLASS = "text-text-body";
+const ERROR_CLASS =
+  "rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700";
 
 export function FieldInput({
   field,
@@ -84,7 +86,7 @@ export function FieldInput({
             </option>
           ))}
         </select>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className={ERROR_CLASS}>{error}</p>}
       </div>
     );
   }
@@ -139,7 +141,7 @@ export function FieldInput({
             );
           })}
         </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className={ERROR_CLASS}>{error}</p>}
       </div>
     );
   }
@@ -163,7 +165,7 @@ export function FieldInput({
           className={INPUT_CLASS}
         />
       )}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className={ERROR_CLASS}>{error}</p>}
     </div>
   );
 }
@@ -244,8 +246,8 @@ function ImageFieldInput({
           className="hidden"
         />
       </div>
-      {readError && <p className="text-sm text-red-600">{readError}</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {readError && <p className={ERROR_CLASS}>{readError}</p>}
+      {error && <p className={ERROR_CLASS}>{error}</p>}
     </div>
   );
 }
@@ -372,7 +374,7 @@ function RepeaterFieldInput({
       >
         + Agregar
       </button>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className={ERROR_CLASS}>{error}</p>}
     </div>
   );
 }
@@ -428,7 +430,7 @@ function WhatsappFieldInput({
           className={`${INPUT_CLASS} flex-1`}
         />
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className={ERROR_CLASS}>{error}</p>}
     </div>
   );
 }
