@@ -9,6 +9,9 @@ const TEMPLATES = [
   {
     profession: "Contador",
     name: "Bosque",
+    initials: "MG",
+    fictionalName: "Martín García",
+    title: "Contador Público",
     primary: "#0B2545",
     accent: "#1A6B4A",
     accentLt: "#EAF4EF",
@@ -16,6 +19,9 @@ const TEMPLATES = [
   {
     profession: "Abogado",
     name: "Dorado",
+    initials: "LS",
+    fictionalName: "Laura Sosa",
+    title: "Abogada",
     primary: "#1C1C2E",
     accent: "#C9A84C",
     accentLt: "#FDF6E3",
@@ -23,44 +29,59 @@ const TEMPLATES = [
   {
     profession: "Psicólogo",
     name: "Sereno",
-    primary: "#6b7f6b",
-    accent: "#6b7f6b",
+    initials: "AB",
+    fictionalName: "Ana Beltrán",
+    title: "Psicóloga",
+    primary: "#5b6b5b",
+    accent: "#8a9a8a",
     accentLt: "#E9EEE7",
   },
 ] as const;
 
-function TemplateCard({ profession, name, primary, accent, accentLt }: (typeof TEMPLATES)[number]) {
+function TemplateCard({
+  profession,
+  name,
+  initials,
+  fictionalName,
+  title,
+  primary,
+  accent,
+  accentLt,
+}: (typeof TEMPLATES)[number]) {
   return (
-    <div className="w-64 shrink-0 snap-center overflow-hidden rounded-2xl border border-border-subtle bg-white shadow-lg shadow-navy/10">
+    <div className="relative w-64 shrink-0 snap-center overflow-hidden rounded-2xl border border-border-subtle bg-white shadow-lg shadow-navy/10">
+      <span
+        className="absolute top-3 right-3 z-10 rounded-full px-2.5 py-1 text-[10px] font-semibold shadow-sm"
+        style={{ backgroundColor: accentLt, color: primary }}
+      >
+        {profession}
+      </span>
+
       <div
-        className="flex flex-col gap-2 px-4 py-5"
+        className="flex items-center gap-3 px-4 py-5"
         style={{ backgroundColor: primary }}
       >
         <span
-          className="h-9 w-9 rounded-full"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ring-2 ring-white/15"
           style={{ background: `linear-gradient(135deg, ${accent}, ${primary})` }}
-        />
-        <span className="h-2 w-2/3 rounded-full bg-white/80" />
-        <span className="h-1.5 w-1/2 rounded-full" style={{ backgroundColor: accent }} />
-        <div className="mt-1 flex gap-1.5">
-          <span
-            className="rounded-full px-2 py-0.5 text-[9px] font-medium"
-            style={{ backgroundColor: accentLt, color: primary }}
-          >
-            Servicio
-          </span>
-          <span
-            className="rounded-full px-2 py-0.5 text-[9px] font-medium"
-            style={{ backgroundColor: accentLt, color: primary }}
-          >
-            Servicio
+        >
+          {initials}
+        </span>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-semibold text-white">{fictionalName}</span>
+          <span className="text-[11px] font-medium" style={{ color: accent }}>
+            {title}
           </span>
         </div>
       </div>
-      <div className="flex items-center justify-between px-4 py-3">
-        <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-semibold text-navy">
-          {profession}
-        </span>
+
+      <div className="flex flex-col gap-2 px-4 py-4">
+        <span className="h-2 w-full rounded-full bg-slate-200" />
+        <span className="h-2 w-5/6 rounded-full bg-slate-200" />
+        <span className="h-2 w-3/5 rounded-full bg-slate-200" />
+      </div>
+
+      <div className="flex items-center justify-between border-t border-border-subtle px-4 py-3">
         <span className="text-sm font-medium text-text-body">{name}</span>
       </div>
     </div>
