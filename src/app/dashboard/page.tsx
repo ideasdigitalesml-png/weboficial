@@ -7,6 +7,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { CONTADOR_PALETAS } from "@/lib/templates/contador-paletas";
 import { ABOGADO_PALETAS } from "@/lib/templates/abogado-paletas";
 import { WelcomeBanner } from "./WelcomeBanner";
+import { CopyLinkButton } from "./CopyLinkButton";
 import { PaletteEditor } from "./PaletteEditor";
 import { CardPaymentBrick } from "@/components/CardPaymentBrick";
 
@@ -93,12 +94,14 @@ export default async function DashboardPage({
     supabase.from("plans").select("amount").eq("active", true).limit(1).maybeSingle(),
   ]);
 
-  // Borrador → URL provisoria por path (funciona sin subdominio ni pago)
-  // Activa  → URL real con subdominio (estudioferrario.weboficial.com.ar)
+  // Wildcard DNS + the *.weboficial.com.ar domain on Vercel are both live
+  // now, so every landing with a slug gets its real subdomain -- draft
+  // landings render fine there too (see PUBLICLY_VISIBLE_STATUSES in
+  // PublicLandingView.tsx), this isn't gated on payment.
   const isPublished = landing.status === "active";
-  const publicUrl = isPublished
+  const publicUrl = landing.slug
     ? `https://${landing.slug}.${ROOT_DOMAIN}`
-    : `https://${ROOT_DOMAIN}/${landing.slug}`;
+    : null;
   const professionalName =
     (landing.form_data as Record<string, unknown>)?.name;
   const displayName =
@@ -122,7 +125,7 @@ export default async function DashboardPage({
         name={typeof displayName === "string" ? displayName : undefined}
       />
       <div className="mx-auto flex w-full max-w-[900px] flex-1 flex-col gap-6 px-5 py-6 sm:gap-8 sm:px-6 sm:py-10">
-        {bienvenida === "1" && <WelcomeBanner publicUrl={publicUrl} />}
+        {bienvenida === "1" && publicUrl && <WelcomeBanner publicUrl={publicUrl} />}
 
         {profile?.role === "admin" && (
           <div className="flex justify-end">
@@ -155,20 +158,34 @@ export default async function DashboardPage({
               {isPublished ? "Publicada ✓" : "Borrador"}
             </span>
           </div>
-          <a
-            href={publicUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="truncate text-sm text-sky-dark underline"
-          >
-            {publicUrl}
-          </a>
+          {publicUrl ? (
+            <div className="flex items-center gap-2">
+              <a
+                href={publicUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="truncate text-sm text-sky-dark underline"
+              >
+                {publicUrl}
+              </a>
+              <CopyLinkButton url={publicUrl} />
+            </div>
+          ) : (
+            <p className="text-sm font-medium text-amber-700">
+              Configurá tu sitio para obtener tu URL.
+            </p>
+          )}
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <a
-              href={publicUrl}
+              href={publicUrl ?? undefined}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-sky px-5 text-base font-semibold text-white transition-colors hover:bg-sky-dark sm:flex-none"
+              aria-disabled={!publicUrl}
+              className={`inline-flex min-h-[52px] items-center justify-center rounded-full px-5 text-base font-semibold text-white transition-colors sm:flex-none ${
+                publicUrl
+                  ? "bg-sky hover:bg-sky-dark"
+                  : "pointer-events-none bg-sky/40"
+              }`}
             >
               Ver mi página
             </a>
