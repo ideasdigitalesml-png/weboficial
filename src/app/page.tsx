@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Wordmark } from "@/components/landing/Wordmark";
 import { Hero } from "@/components/landing/Hero";
@@ -16,38 +17,12 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let hasLanding = false;
+  // A logged-in visitor gets no value from a marketing home page --
+  // /dashboard itself handles routing onward (it redirects on to
+  // /onboarding for a user with no landing yet, or /reseller/dashboard for
+  // an active reseller), so this is the single redirect point.
   if (user) {
-    const { data } = await supabase
-      .from("landings")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    hasLanding = Boolean(data);
-  }
-
-  if (user) {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-6 bg-zinc-50 dark:bg-black">
-        <p className="text-lg text-black dark:text-zinc-50">
-          Sesión iniciada como <strong>{user.email}</strong>
-        </p>
-        <Link
-          href={hasLanding ? "/dashboard" : "/onboarding"}
-          className="rounded-full bg-foreground px-6 py-3 text-base font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
-        >
-          {hasLanding ? "Ver mi landing" : "Crear mi landing"}
-        </Link>
-        <form action="/auth/signout" method="post">
-          <button
-            type="submit"
-            className="rounded-full border border-solid border-black/[.08] px-5 py-2 text-base font-medium transition-colors hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a]"
-          >
-            Cerrar sesión
-          </button>
-        </form>
-      </div>
-    );
+    redirect("/dashboard");
   }
 
   return (
