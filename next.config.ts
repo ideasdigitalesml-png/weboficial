@@ -60,6 +60,11 @@ const CSP = `
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
+  // Drops the `X-Powered-By: Next.js` response header -- minor info
+  // disclosure (names the exact framework to anyone probing the site),
+  // flagged during a security-header audit alongside CSP/HSTS/etc, all of
+  // which were already correctly set below.
+  poweredByHeader: false,
   // Only set by scripts/generate-component-previews.js's spawned `next dev`
   // -- hides the dev-mode route indicator badge so it doesn't show up in
   // the screenshotted template thumbnails. Never set otherwise, so this has

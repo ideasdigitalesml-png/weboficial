@@ -39,6 +39,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es" className={`${spaceGrotesk.variable} h-full antialiased`} data-theme="light">
       <head>
+        {/* Warms up the connection to the 3rd-party origins GA4/Meta Pixel
+            actually send tracking requests to (not the script-host origins,
+            which load later via next/script anyway), so those requests
+            don't each pay DNS+TCP+TLS setup on top of the round trip --
+            exactly the 3 origins Lighthouse's network-dependency-tree audit
+            flagged as preconnect candidates (~250-315ms est. LCP savings). */}
+        <link rel="preconnect" href="https://www.facebook.com" />
+        <link rel="preconnect" href="https://www.google-analytics.com" />
+        <link rel="preconnect" href="https://connect.facebook.net" />
         {process.env.NODE_ENV === "production" && (
           <>
             {/* GA4 */}
@@ -80,7 +89,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col">
         <ReferralCapture />
-        {children}
+        {/* `contents` keeps this invisible to layout (every page already
+            supplies its own flex/width classes on its own root element) --
+            it exists purely to give the document exactly one <main>
+            landmark, which Lighthouse's accessibility audit flagged as
+            missing. */}
+        <main className="contents">{children}</main>
       </body>
     </html>
   );

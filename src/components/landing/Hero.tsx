@@ -162,7 +162,11 @@ export function Hero({
 
           <Link
             href="/onboarding"
-            className="group inline-flex items-center gap-2 rounded-xl bg-sky px-8 py-4 text-base font-semibold text-white shadow-lg shadow-sky-500/25 transition-all hover:-translate-y-0.5 hover:bg-sky-600"
+            // bg-sky-dark (not bg-sky): white-on-#0284c7 only hits 4.09:1,
+            // just under WCAG AA's 4.5:1 for this text size -- Lighthouse's
+            // color-contrast audit flagged it. sky-dark (#0369a1) clears
+            // 5.93:1.
+            className="group inline-flex items-center gap-2 rounded-xl bg-sky-dark px-8 py-4 text-base font-semibold text-white shadow-lg shadow-sky-500/25 transition-all hover:-translate-y-0.5 hover:bg-sky-800"
             style={{ animation: "fadeInUp 0.6s ease both", animationDelay: "0.5s" }}
           >
             Creá tu página

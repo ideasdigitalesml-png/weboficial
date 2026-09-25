@@ -5,6 +5,17 @@ import Link from "next/link";
 // palette (see src/lib/templates/*-paletas.ts and the psicologo template's
 // DEFAULT_PRIMARY/ACCENT) so a visitor recognizes the same look once they
 // land on the real onboarding preview.
+//
+// `titleColor` is deliberately separate from `accent`: accent also tints the
+// avatar gradient (accent -> primary) behind white initials text, so it has
+// to stay light enough there without going so light it breaks *that*
+// contrast. The title text underneath sits directly on a flat `primary`
+// background instead, which is a different, independently-checkable contrast
+// pair -- accent alone didn't clear WCAG AA (4.5:1) against primary for
+// contador (2.38:1) or psicologo (1.91:1); Lighthouse's color-contrast audit
+// caught the contador one, and the psicologo one turned out to be exactly
+// the same bug scanning the whole file for `accent` turned up. Abogado's
+// gold was already well clear (7.32:1), so its titleColor is just accent.
 const TEMPLATES = [
   {
     profession: "Contador",
@@ -15,6 +26,7 @@ const TEMPLATES = [
     primary: "#0B2545",
     accent: "#1A6B4A",
     accentLt: "#EAF4EF",
+    titleColor: "#3CB88A",
   },
   {
     profession: "Abogado",
@@ -25,6 +37,7 @@ const TEMPLATES = [
     primary: "#1C1C2E",
     accent: "#C9A84C",
     accentLt: "#FDF6E3",
+    titleColor: "#C9A84C",
   },
   {
     profession: "Psicólogo",
@@ -35,6 +48,7 @@ const TEMPLATES = [
     primary: "#5b6b5b",
     accent: "#8a9a8a",
     accentLt: "#E9EEE7",
+    titleColor: "#EAF0EA",
   },
 ] as const;
 
@@ -47,6 +61,7 @@ function TemplateCard({
   primary,
   accent,
   accentLt,
+  titleColor,
 }: (typeof TEMPLATES)[number]) {
   return (
     <div className="relative w-64 shrink-0 snap-center overflow-hidden rounded-2xl border border-border-subtle bg-white shadow-lg shadow-navy/10">
@@ -69,7 +84,7 @@ function TemplateCard({
         </span>
         <div className="flex flex-col gap-0.5">
           <span className="text-sm font-semibold text-white">{fictionalName}</span>
-          <span className="text-[11px] font-medium" style={{ color: accent }}>
+          <span className="text-[11px] font-medium" style={{ color: titleColor }}>
             {title}
           </span>
         </div>
