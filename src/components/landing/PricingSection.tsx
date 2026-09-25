@@ -11,10 +11,20 @@ export function PricingSection() {
           $13.400
           <span className="text-xl font-medium text-text-body"> /mes</span>
         </p>
-        <p className="text-lg text-text-body">
-          Incluye tu URL propia en weboficial.com.ar, hosting y todas las
-          ediciones que necesites.
-        </p>
+        <ul className="flex list-none flex-col gap-2 text-left">
+          {[
+            "URL propia en weboficial.com.ar",
+            "Hosting y SSL incluidos",
+            "Ediciones ilimitadas",
+            "Compatible con todos los dispositivos",
+            "Soporte por email",
+          ].map((item) => (
+            <li key={item} className="flex items-center gap-2">
+              <span className="font-bold text-sky">✓</span>
+              <span className="text-base text-text-body">{item}</span>
+            </li>
+          ))}
+        </ul>
         <div className="flex flex-col items-center gap-2">
           <span className="text-lg font-semibold text-navy">Pagás con</span>
           <MercadoPagoBadge />

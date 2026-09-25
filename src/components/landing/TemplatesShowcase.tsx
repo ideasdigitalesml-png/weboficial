@@ -105,7 +105,7 @@ export function TemplatesShowcase() {
             href="/onboarding"
             className="inline-flex items-center gap-1.5 text-base font-semibold text-sky transition-colors hover:text-sky-dark"
           >
-            Ver todos los diseños
+            Empezá a crear tu página
             <span aria-hidden>→</span>
           </Link>
         </div>

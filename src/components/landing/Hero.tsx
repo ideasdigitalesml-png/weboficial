@@ -129,7 +129,7 @@ export function Hero({
             className="text-xs font-semibold tracking-[0.2em] text-sky-400 uppercase"
             style={{ animation: "fadeInUp 0.6s ease both", animationDelay: "0.1s" }}
           >
-            Para contadores y abogados
+            Para contadores, abogados y psicólogos
           </span>
           <h1
             className="text-3xl leading-tight font-bold text-white sm:text-4xl md:text-5xl"

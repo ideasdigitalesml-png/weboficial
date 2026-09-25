@@ -30,16 +30,24 @@ export default function NotFound() {
             Esta página no existe
           </h1>
           <p className="text-sm text-white/60">
-            El enlace puede estar vencido o ser incorrecto.
+            El subdominio que buscás no está disponible o fue dado de baja.
           </p>
         </div>
 
-        <Link
-          href="/"
-          className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full bg-sky px-8 text-base font-semibold text-white transition-colors hover:bg-sky-dark"
-        >
-          Volver al inicio
-        </Link>
+        <div className="flex w-full flex-col gap-3 sm:flex-row">
+          <Link
+            href="/"
+            className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-full bg-sky px-8 text-base font-semibold text-white transition-colors hover:bg-sky-dark"
+          >
+            Volver al inicio
+          </Link>
+          <Link
+            href="/onboarding"
+            className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-full border border-white/25 bg-white/5 px-8 text-base font-semibold text-white transition-colors hover:bg-white/10"
+          >
+            Crear mi página
+          </Link>
+        </div>
       </div>
     </div>
   );
