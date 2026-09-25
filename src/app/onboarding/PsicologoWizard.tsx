@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { FormSchema, FormFieldValue, RepeaterItem } from "@/lib/forms/validate-form-data";
 import { WHATSAPP_VALUE_RE } from "@/lib/whatsapp";
 import { getSuggestedPsicologoText } from "@/lib/professions/psicologos";
+import type { Genero } from "@/lib/gendered-title";
 import { DEFAULT_SECTIONS_CONFIG } from "@/lib/landings/create-landing";
 import { ROOT_DOMAIN } from "@/lib/root-domain";
 import { FieldInput, type StockImage } from "@/components/forms/FieldInput";
@@ -54,6 +55,7 @@ const FIELD_STEP: Record<string, PsicologoStep> = {
   name: "datos",
   titulo_profesional: "datos",
   matricula_numero: "datos",
+  genero: "datos",
   profile_image: "datos",
   phone: "contacto",
   email: "contacto",
@@ -177,6 +179,7 @@ export function PsicologoWizard({
     .map((e) => (e.titulo ?? "").trim())
     .filter(Boolean);
   const obrasSociales = asRepeaterItems(values.obras_sociales);
+  const genero = asString(values.genero) as Genero;
   const suggestedBio =
     nombre && tituloProfesional && matriculaNumero
       ? getSuggestedPsicologoText({
@@ -185,6 +188,7 @@ export function PsicologoWizard({
           matricula: matriculaNumero,
           enfoque: enfoqueTerapeutico || undefined,
           especialidades: especialidadTitulos,
+          genero,
         })
       : "";
   const descripcion = bioMode === "suggested" ? suggestedBio : asString(values.descripcion);
@@ -418,6 +422,12 @@ export function PsicologoWizard({
                   onChange={(v) => updateValue("matricula_numero", v)}
                 />
                 <FieldInput
+                  field={fieldByKey("genero")}
+                  value={values.genero ?? ""}
+                  error={formErrors.genero}
+                  onChange={(v) => updateValue("genero", v)}
+                />
+                <FieldInput
                   field={fieldByKey("profile_image")}
                   value={values.profile_image ?? ""}
                   error={formErrors.profile_image}
@@ -520,6 +530,7 @@ export function PsicologoWizard({
                         enfoque: enfoqueTerapeutico || undefined,
                         especialidades:
                           especialidadTitulos.length > 0 ? especialidadTitulos : ["ansiedad"],
+                        genero,
                       })}
                       className="rounded-lg border border-border-subtle bg-white px-3 py-2 text-sm text-navy placeholder:text-text-body/50 focus:border-sky focus:outline-none focus:ring-2 focus:ring-sky/30"
                     />

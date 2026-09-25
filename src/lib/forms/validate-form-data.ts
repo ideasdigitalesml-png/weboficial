@@ -32,6 +32,10 @@ export interface FormFieldSchema {
   label: string;
   type: FormFieldType;
   required: boolean;
+  // UI hint only (shown via FieldInput's `placeholder` attribute), never
+  // validated server-side -- e.g. "Ej: 12.847" on a matricula field so a
+  // professional sees a real-looking example instead of a blank box.
+  placeholder?: string;
   min_length?: number;
   max_length?: number;
   options?: FormFieldOption[];

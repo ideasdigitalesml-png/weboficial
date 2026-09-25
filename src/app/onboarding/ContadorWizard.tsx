@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { FormSchema, FormFieldValue } from "@/lib/forms/validate-form-data";
 import { WHATSAPP_VALUE_RE } from "@/lib/whatsapp";
 import { getSuggestedContadorText } from "@/lib/professions/contadores";
+import type { Genero } from "@/lib/gendered-title";
 import { DEFAULT_SECTIONS_CONFIG } from "@/lib/landings/create-landing";
 import { ROOT_DOMAIN } from "@/lib/root-domain";
 import { FieldInput, type StockImage } from "@/components/forms/FieldInput";
@@ -80,6 +81,7 @@ const FIELD_STEP: Record<string, ContadorStep> = {
   name: "datos",
   matricula: "datos",
   jurisdiccion: "datos",
+  genero: "datos",
   profile_image: "datos",
   phone: "contacto",
   email: "contacto",
@@ -199,9 +201,10 @@ export function ContadorWizard({
   const matricula = asString(values.matricula);
   const jurisdiccion = asString(values.jurisdiccion);
   const servicios = asStringArray(values.servicios);
+  const genero = asString(values.genero) as Genero;
   const suggestedDescription =
     nombre && matricula && jurisdiccion && servicios.length > 0
-      ? getSuggestedContadorText({ nombre, matricula, jurisdiccion, servicios })
+      ? getSuggestedContadorText({ nombre, matricula, jurisdiccion, servicios, genero })
       : "";
   const description =
     quienesMode === "suggested" ? suggestedDescription : asString(values.description);
@@ -439,6 +442,12 @@ export function ContadorWizard({
                   onChange={(v) => updateValue("jurisdiccion", v)}
                 />
                 <FieldInput
+                  field={fieldByKey("genero")}
+                  value={values.genero ?? ""}
+                  error={formErrors.genero}
+                  onChange={(v) => updateValue("genero", v)}
+                />
+                <FieldInput
                   field={fieldByKey("profile_image")}
                   value={values.profile_image ?? ""}
                   error={formErrors.profile_image}
@@ -526,6 +535,7 @@ export function ContadorWizard({
                       matricula: matricula || "12345",
                       jurisdiccion: jurisdiccion || "tu jurisdicción",
                       servicios: servicios.length > 0 ? servicios : ["monotributo"],
+                      genero,
                     })}
                     className="rounded-lg border border-border-subtle bg-white px-3 py-2 text-sm text-navy placeholder:text-text-body/50 focus:border-sky focus:outline-none focus:ring-2 focus:ring-sky/30"
                   />

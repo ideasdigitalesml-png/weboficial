@@ -1,4 +1,5 @@
 import { formatListWithAnd } from "@/lib/format-list";
+import { abogadoTitle, type Genero } from "@/lib/gendered-title";
 
 // Mirrors the "servicios" checkbox-group options in the abogados
 // form_schema migration exactly (same value/label pairs) -- this copy is
@@ -72,6 +73,7 @@ export interface AbogadoTextTemplateData {
   matricula: string;
   colegio: string;
   servicios: string[];
+  genero?: Genero;
 }
 
 // Single suggested-text option, same rationale as contadores.ts: keep the
@@ -130,8 +132,9 @@ export function getSuggestedAbogadoText({
   matricula,
   colegio,
   servicios,
+  genero,
 }: AbogadoTextTemplateData): string {
-  return `Soy ${nombre}, abogado/a matriculado/a (matrícula ${matricula}, ${colegio}). Me especializo en ${formatListWithAnd(
+  return `Soy ${nombre}, ${abogadoTitle(genero)} (matrícula ${matricula}, ${colegio}). Me especializo en ${formatListWithAnd(
     serviceLabels(servicios)
   )}. Te acompaño con un asesoramiento claro y cercano en cada etapa de tu caso.`;
 }

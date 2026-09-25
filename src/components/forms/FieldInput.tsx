@@ -155,6 +155,7 @@ export function FieldInput({
           onChange={(e) => onChange(e.target.value)}
           rows={4}
           maxLength={field.max_length}
+          placeholder={field.placeholder}
           className={INPUT_CLASS}
         />
       ) : (
@@ -162,6 +163,7 @@ export function FieldInput({
           value={stringValue}
           onChange={(e) => onChange(e.target.value)}
           type={field.type === "email" ? "email" : "text"}
+          placeholder={field.placeholder}
           className={INPUT_CLASS}
         />
       )}

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { FormSchema, FormFieldValue } from "@/lib/forms/validate-form-data";
 import { WHATSAPP_VALUE_RE } from "@/lib/whatsapp";
 import { getSuggestedAbogadoText } from "@/lib/professions/abogados";
+import type { Genero } from "@/lib/gendered-title";
 import { DEFAULT_SECTIONS_CONFIG } from "@/lib/landings/create-landing";
 import { ROOT_DOMAIN } from "@/lib/root-domain";
 import { FieldInput, type StockImage } from "@/components/forms/FieldInput";
@@ -54,6 +55,7 @@ const FIELD_STEP: Record<string, AbogadoStep> = {
   name: "datos",
   matricula_numero: "datos",
   matricula_colegio: "datos",
+  genero: "datos",
   profile_image: "datos",
   phone: "contacto",
   email: "contacto",
@@ -164,6 +166,7 @@ export function AbogadoWizard({
   const matriculaNumero = asString(values.matricula_numero);
   const matriculaColegio = asString(values.matricula_colegio);
   const servicios = asStringArray(values.servicios);
+  const genero = asString(values.genero) as Genero;
   const suggestedBio =
     nombre && matriculaNumero && matriculaColegio && servicios.length > 0
       ? getSuggestedAbogadoText({
@@ -171,6 +174,7 @@ export function AbogadoWizard({
           matricula: matriculaNumero,
           colegio: matriculaColegio,
           servicios,
+          genero,
         })
       : "";
   const descripcionCorta =
@@ -403,6 +407,12 @@ export function AbogadoWizard({
                   onChange={(v) => updateValue("matricula_colegio", v)}
                 />
                 <FieldInput
+                  field={fieldByKey("genero")}
+                  value={values.genero ?? ""}
+                  error={formErrors.genero}
+                  onChange={(v) => updateValue("genero", v)}
+                />
+                <FieldInput
                   field={fieldByKey("profile_image")}
                   value={values.profile_image ?? ""}
                   error={formErrors.profile_image}
@@ -497,6 +507,7 @@ export function AbogadoWizard({
                         matricula: matriculaNumero || "12345",
                         colegio: matriculaColegio || "tu colegio",
                         servicios: servicios.length > 0 ? servicios : ["familia"],
+                        genero,
                       })}
                       className="rounded-lg border border-border-subtle bg-white px-3 py-2 text-sm text-navy placeholder:text-text-body/50 focus:border-sky focus:outline-none focus:ring-2 focus:ring-sky/30"
                     />

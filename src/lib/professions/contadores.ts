@@ -1,4 +1,5 @@
 import { formatListWithAnd } from "@/lib/format-list";
+import { contadorTitle, type Genero } from "@/lib/gendered-title";
 
 // Mirrors the "servicios" checkbox-group options in the 0008 migration's
 // form_schema exactly (same value/label pairs) -- this copy is what the
@@ -127,6 +128,7 @@ export interface TextTemplateData {
   matricula: string;
   jurisdiccion: string;
   servicios: string[];
+  genero?: Genero;
 }
 
 export interface TextTemplate {
@@ -149,8 +151,8 @@ export function buildContadorTextTemplate(professionId: string): TextTemplate {
       {
         id: "cercano",
         label: "Cercano y directo",
-        template: ({ nombre, matricula, jurisdiccion, servicios }) =>
-          `Soy ${nombre}, Contador Público matriculado (matrícula ${matricula}, ${jurisdiccion}). Me especializo en ${formatListWithAnd(
+        template: ({ nombre, matricula, jurisdiccion, servicios, genero }) =>
+          `Soy ${nombre}, ${contadorTitle(genero)} (matrícula ${matricula}, ${jurisdiccion}). Me especializo en ${formatListWithAnd(
             serviceLabels(servicios)
           )}. Te ayudo a ordenar tus impuestos y tu contabilidad sin vueltas ni complicaciones, con respuestas claras y a tiempo.`,
       },
