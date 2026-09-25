@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import type { SectionConfigItem } from "@/lib/landings/update-landing";
 import { updateLandingSectionsConfigAction } from "./actions";
 
@@ -33,7 +32,6 @@ export function SectionsEditor({
   onDirtyChange?: (dirty: boolean) => void;
   onSaved?: () => void;
 }) {
-  const router = useRouter();
   const initialSorted = sortedByOrder(initialSections);
   const [sections, setSections] = useState<SectionConfigItem[]>(initialSorted);
   const [error, setError] = useState<string | null>(null);
@@ -74,11 +72,13 @@ export function SectionsEditor({
         sections
       );
       if (result.ok) {
+        // No router.refresh() -- see EditLandingForm.tsx's handleSubmit for
+        // why: it only risked re-running this page's redirect() guards for
+        // no benefit, since sections state already lives here.
         setSections(sortedByOrder(result.sectionsConfig));
         setSavedAt(Date.now());
         onDirtyChange?.(false);
         onSaved?.();
-        router.refresh();
         return;
       }
       setError(

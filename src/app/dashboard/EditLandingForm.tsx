@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import type { FormSchema, FormFieldValue } from "@/lib/forms/validate-form-data";
 import { FieldInput, type StockImage } from "@/components/forms/FieldInput";
 import { createClient } from "@/lib/supabase/client";
@@ -23,7 +22,6 @@ export function EditLandingForm({
   onDirtyChange?: (dirty: boolean) => void;
   onSaved?: () => void;
 }) {
-  const router = useRouter();
   const [values, setValues] = useState<Record<string, FormFieldValue>>(
     initialValues
   );
@@ -58,11 +56,18 @@ export function EditLandingForm({
 
       const result = await updateLandingFormDataAction(landingId, formData);
       if (result.ok) {
+        // Deliberately no router.refresh() here: this page's server
+        // component (dashboard/editar/page.tsx) re-runs its own
+        // auth/landing/profession redirect() guards on every refresh, and
+        // none of them gate on anything this save could change -- so a
+        // refresh here only added a chance of bouncing the user out of the
+        // editor (e.g. on a transient auth.getUser() hiccup) for zero
+        // benefit, since the edited values already live in this component's
+        // own state.
         setValues(result.formData);
         setSavedAt(Date.now());
         onDirtyChange?.(false);
         onSaved?.();
-        router.refresh();
         return;
       }
       if (result.reason === "invalid_form_data") {
