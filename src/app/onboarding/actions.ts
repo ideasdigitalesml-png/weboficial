@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import {
   createLandingForUser,
@@ -7,6 +8,7 @@ import {
   type CreateLandingResult,
   type SlugCheckResult,
 } from "@/lib/landings/create-landing";
+import { REFERRAL_COOKIE_NAME } from "@/lib/resellers/referral-cookie";
 
 // No auth required: checking whether a slug is taken isn't sensitive, and
 // the wizard is reachable by anonymous visitors now (they only need a
@@ -25,6 +27,12 @@ export async function createLandingAction(input: {
   formData: Record<string, unknown>;
   desiredSlug: string;
   paletaId?: string;
+  // Fallback for when the weboficial_ref cookie didn't make it (blocked
+  // cookies, cross-subdomain hiccups): the caller reads its own localStorage
+  // copy (see getStoredReferralCode) and passes it here. The cookie, read
+  // directly below, always takes priority when both are present since it's
+  // the primary, tamper-resistant channel ReferralCapture.tsx writes to.
+  referralCode?: string;
 }): Promise<CreateLandingResult> {
   const supabase = await createClient();
   const {
@@ -35,5 +43,9 @@ export async function createLandingAction(input: {
     return { ok: false, reason: "not_authenticated" };
   }
 
-  return createLandingForUser(supabase, user.id, input);
+  const cookieStore = await cookies();
+  const referralCode =
+    cookieStore.get(REFERRAL_COOKIE_NAME)?.value ?? input.referralCode;
+
+  return createLandingForUser(supabase, user.id, { ...input, referralCode });
 }

@@ -5,6 +5,7 @@ import { createLandingAction } from "./actions";
 import { createSubscriptionAction } from "@/app/dashboard/actions";
 import { loadDraftPage, clearDraftPage } from "./draft-storage";
 import { uploadPendingPhotos } from "./photo-upload";
+import { getStoredReferralCode } from "@/lib/resellers/get-stored-referral-code";
 
 export type PublishOutcome =
   | { status: "no_draft" }
@@ -71,6 +72,7 @@ export async function publishDraftPage(): Promise<PublishOutcome> {
     formData,
     desiredSlug: draft.desiredSlug,
     paletaId: draft.paletaId,
+    referralCode: getStoredReferralCode() ?? undefined,
   });
 
   if (!result.ok) {

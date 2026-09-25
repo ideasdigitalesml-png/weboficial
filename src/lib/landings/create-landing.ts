@@ -32,6 +32,12 @@ export interface CreateLandingInput {
   // profession's known paletas -- falls back to that profession's default
   // rather than rejecting the whole submission over a cosmetic choice.
   paletaId?: string;
+  // First-touch referral code captured by ReferralCapture.tsx (cookie, with
+  // a localStorage fallback threaded in by the caller -- see
+  // createLandingAction). Resolved server-side against
+  // resolve_active_reseller_id rather than trusted as-is: an invalid,
+  // unknown, or inactive code is silently ignored, same as a missing one.
+  referralCode?: string;
 }
 
 export type CreateLandingResult =
@@ -113,6 +119,14 @@ export async function createLandingForUser(
       ? input.paletaId
       : paletaConfig?.defaultId;
 
+  let resellerId: string | null = null;
+  if (input.referralCode) {
+    const { data } = await supabase.rpc("resolve_active_reseller_id", {
+      p_referral_code: input.referralCode,
+    });
+    resellerId = (data as string | null) ?? null;
+  }
+
   const { data: inserted, error: insertError } = await supabase
     .from("landings")
     .insert({
@@ -126,6 +140,9 @@ export async function createLandingForUser(
       form_data: validation.data,
       sections_config: DEFAULT_SECTIONS_CONFIG,
       ...(paletaId ? { paleta_id: paletaId } : {}),
+      ...(resellerId
+        ? { reseller_id: resellerId, referral_code: input.referralCode!.toUpperCase() }
+        : {}),
     })
     .select("id, slug")
     .single();

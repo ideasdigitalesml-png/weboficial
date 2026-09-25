@@ -12,6 +12,7 @@ import { PaletteEditor } from "./PaletteEditor";
 import { DomainSection, type ExistingCustomDomain } from "./DomainSection";
 import { CardPaymentBrick } from "@/components/CardPaymentBrick";
 import { reconcileLandingIfStuck } from "@/lib/landings/reconcile-payment-status";
+import { findActiveResellerForUser } from "@/lib/resellers/require-reseller";
 
 const TEMPLATE_PREVIEW_IMAGE: Record<string, string> = {
   "contadores:moderno": "/previews/contador-moderno.jpg",
@@ -56,6 +57,14 @@ export default async function DashboardPage({
 
   if (!user) {
     redirect("/login");
+  }
+
+  // Active resellers land here after login like any other user (there's no
+  // separate login route) but get their own panel instead of the customer
+  // dashboard. Inactive resellers fall through unchanged -- they may still
+  // be a regular paying customer with their own landing.
+  if (await findActiveResellerForUser(supabase, user.id)) {
+    redirect("/reseller/dashboard");
   }
 
   const { data: landing } = await supabase

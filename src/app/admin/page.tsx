@@ -24,7 +24,12 @@ export default async function AdminPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-6 py-12">
-      <h1 className="text-2xl font-semibold">Panel de administración</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Panel de administración</h1>
+        <Link href="/admin/resellers" className="text-sm text-blue-600 underline dark:text-blue-400">
+          Revendedores
+        </Link>
+      </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <MetricTile label="Total de altas" value={metrics.totalSignups} />
