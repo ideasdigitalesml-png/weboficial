@@ -55,12 +55,21 @@ export default async function Home() {
       <header className="absolute inset-x-0 top-0 z-20">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
           <Wordmark tone="white" className="text-lg" />
-          <Link
-            href="/login"
-            className="inline-flex min-h-9 items-center justify-center rounded-full border border-sky-400/40 bg-sky-500/15 px-4 text-sm font-medium text-white transition-colors hover:bg-sky-500/25"
-          >
-            Iniciar sesión
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/login"
+              className="inline-flex min-h-9 items-center justify-center rounded-full border border-sky-400/40 bg-sky-500/15 px-4 text-sm font-medium text-white transition-colors hover:bg-sky-500/25"
+            >
+              Iniciar sesión
+            </Link>
+            <Link
+              href="/onboarding"
+              className="hidden items-center justify-center gap-1.5 rounded-full bg-sky px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-sky-dark sm:inline-flex"
+            >
+              Creá tu página
+              <span aria-hidden>→</span>
+            </Link>
+          </div>
         </div>
       </header>
       <Hero />
