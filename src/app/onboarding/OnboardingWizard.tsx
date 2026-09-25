@@ -111,6 +111,7 @@ export function OnboardingWizard({
   const [step, setStep] = useState<Step>("profession");
   const [professionId, setProfessionId] = useState<string | null>(null);
   const [templateId, setTemplateId] = useState<string | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
   const [imageMode, setImageMode] = useState<"stock" | "manual">("stock");
   const [slugInput, setSlugInput] = useState("");
@@ -307,8 +308,7 @@ export function OnboardingWizard({
                 href="/"
                 className="pt-2 text-center text-sm text-sky hover:underline"
               >
-                También podés ver ejemplos de páginas terminadas antes de
-                empezar →
+                ← Volver al inicio
               </Link>
             </section>
           )}
@@ -333,6 +333,7 @@ export function OnboardingWizard({
                         setTemplateId(t.id);
                         setStep("form");
                       }}
+                      onPreview={() => setPreviewTemplate(t)}
                     />
                   </div>
                 ))}
@@ -434,6 +435,81 @@ export function OnboardingWizard({
         {" · "}
         <a href="mailto:ideasdigitalesml@gmail.com" className="hover:text-gray-600 hover:underline">Contacto</a>
       </footer>
+
+      {previewTemplate && (
+        <TemplatePreviewModal
+          template={previewTemplate}
+          professionSlug={profession?.slug ?? ""}
+          onClose={() => setPreviewTemplate(null)}
+          onSelect={() => {
+            setTemplateId(previewTemplate.id);
+            setPreviewTemplate(null);
+            setStep("form");
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function TemplatePreviewModal({
+  template,
+  professionSlug,
+  onClose,
+  onSelect,
+}: {
+  template: Template;
+  professionSlug: string;
+  onClose: () => void;
+  onSelect: () => void;
+}) {
+  const previewImage =
+    TEMPLATE_PREVIEW_IMAGE[`${professionSlug}:${template.slug}`] ?? template.preview_image_url;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-black/70 p-4 sm:items-center sm:justify-center sm:p-8"
+      onClick={onClose}
+    >
+      <div
+        className="mx-auto flex w-full max-w-2xl flex-1 flex-col overflow-hidden rounded-2xl bg-white sm:flex-none"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
+          <span className="text-sm font-semibold text-navy">{template.name}</span>
+          <button
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-surface-muted hover:text-navy"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto bg-surface-muted">
+          {previewImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={previewImage}
+              alt={`Vista ampliada del diseño ${template.name}`}
+              className="block w-full h-auto"
+            />
+          ) : (
+            <div className="flex h-64 items-center justify-center text-sm font-medium text-gray-400">
+              {template.name}
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-3 border-t border-border-subtle px-4 py-3">
+          <button onClick={onClose} className={SECONDARY_BUTTON}>
+            Cerrar
+          </button>
+          <button onClick={onSelect} className={PRIMARY_BUTTON}>
+            Elegir este diseño
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -494,11 +570,13 @@ function TemplateCard({
   professionSlug,
   selected,
   onSelect,
+  onPreview,
 }: {
   template: Template;
   professionSlug: string;
   selected: boolean;
   onSelect: () => void;
+  onPreview: () => void;
 }) {
   const previewImage = TEMPLATE_PREVIEW_IMAGE[`${professionSlug}:${template.slug}`];
 
@@ -548,10 +626,20 @@ function TemplateCard({
         )}
 
         {/* overlay hover */}
-        <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-navy/70 via-transparent to-transparent pb-5 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+        <div className="absolute inset-0 flex flex-col items-center justify-end gap-2 bg-gradient-to-t from-navy/70 via-transparent to-transparent pb-5 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
           <span className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-navy shadow-sm">
             Elegir este diseño
           </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPreview();
+            }}
+            className="rounded-full border border-white/70 px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-white/10"
+          >
+            Ver en grande
+          </button>
         </div>
 
         {/* check si está seleccionado */}
