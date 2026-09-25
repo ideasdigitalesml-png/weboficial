@@ -61,9 +61,17 @@ const EMPTY_CONTACT: ContactFormState = {
 export function DomainSection({
   existingDomain,
   hasRegistrantContact,
+  purchaseEnabled,
+  currentUrl,
 }: {
   existingDomain: ExistingCustomDomain | null;
   hasRegistrantContact: boolean;
+  // DOMAIN_PURCHASE_ENABLED env var (see dashboard/page.tsx) -- the API
+  // routes and all the logic below stay intact regardless, this only gates
+  // the UI. A user who already has a domain (any status) still sees it
+  // normally; this only affects visitors with no domain yet.
+  purchaseEnabled: boolean;
+  currentUrl: string | null;
 }) {
   const [query, setQuery] = useState("");
   const [checking, setChecking] = useState(false);
@@ -100,6 +108,37 @@ export function DomainSection({
           >
             {STATUS_LABELS[existingDomain.status]}
           </span>
+        </div>
+      </section>
+    );
+  }
+
+  if (!purchaseEnabled) {
+    return (
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold text-navy">Mi dominio</h2>
+        <div className="flex flex-col gap-4 rounded-xl border border-border-subtle p-4">
+          <div className="rounded-lg border border-sky/30 bg-sky/5 px-3 py-2 text-sm text-navy">
+            <span className="font-semibold">Próximamente:</span> pronto vas a poder conectar tu
+            dominio propio (.com).
+            {currentUrl && (
+              <>
+                {" "}Por ahora tu sitio está disponible en{" "}
+                <span className="font-medium">{currentUrl.replace(/^https?:\/\//, "")}</span>.
+              </>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row" aria-disabled>
+            <input
+              disabled
+              placeholder="tuempresa"
+              className={`${INPUT_CLASS} flex-1 disabled:bg-surface-muted disabled:text-text-body/50`}
+            />
+            <button disabled className={SECONDARY_BUTTON}>
+              Verificar disponibilidad
+            </button>
+          </div>
         </div>
       </section>
     );

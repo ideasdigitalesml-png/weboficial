@@ -311,6 +311,8 @@ export default async function DashboardPage({
               : null
           }
           hasRegistrantContact={Boolean(registrantContact)}
+          purchaseEnabled={process.env.DOMAIN_PURCHASE_ENABLED === "true"}
+          currentUrl={publicUrl}
         />
       </div>
     </>
