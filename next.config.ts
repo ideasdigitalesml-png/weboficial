@@ -1,4 +1,14 @@
 import type { NextConfig } from "next";
+import bundleAnalyzer from "@next/bundle-analyzer";
+
+// Only active when explicitly requested (`ANALYZE=true npm run build`) --
+// writes static HTML reports to .next/analyze/{client,nodejs,edge}.html
+// instead of opening a browser, so it also works headless. No effect on a
+// normal build/dev run.
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+  openAnalyzer: false,
+});
 
 // Kept in one place because both the CSP and Permissions-Policy below need
 // to reason about the exact same set of third-party origins this app talks
@@ -102,4 +112,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

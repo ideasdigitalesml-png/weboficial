@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { ROOT_DOMAIN } from "@/lib/root-domain";
 import {
   REFERRAL_COOKIE_NAME,
@@ -16,6 +15,16 @@ import {
 // 30-day, cross-subdomain path, localStorage as a same-origin fallback for
 // whenever cookies fail. Never overwrites an existing value: the first
 // reseller a visitor ever came through keeps the commission for life.
+//
+// The Supabase client is imported dynamically (below), not at module scope,
+// because this component mounts on every single page including the public
+// marketing ones -- a static import pulled the entire @supabase/supabase-js
+// graph (auth-js, realtime-js, storage-js, postgrest-js, ~250 KiB) into the
+// shared bundle every visitor downloads, even the ~100% of them with no
+// `?ref=` param who never reach the code below that actually needs it. A
+// bundle analysis (`next experimental-analyze`) is what surfaced this as the
+// single largest chunk on the home page; Lighthouse's unused-javascript
+// audit had already flagged its production equivalent at 95% unused.
 export function ReferralCapture() {
   useEffect(() => {
     const code = new URLSearchParams(window.location.search).get("ref");
@@ -34,20 +43,22 @@ export function ReferralCapture() {
     if (existingCookie || existingStorage) return;
 
     let cancelled = false;
-    createClient()
-      .rpc("resolve_active_reseller_id", { p_referral_code: code })
-      .then(({ data }) => {
-        if (cancelled || !data) return;
+    import("@/lib/supabase/client").then(({ createClient }) =>
+      createClient()
+        .rpc("resolve_active_reseller_id", { p_referral_code: code })
+        .then(({ data }) => {
+          if (cancelled || !data) return;
 
-        const normalized = code.toUpperCase();
-        const domainAttr = ROOT_DOMAIN ? `; domain=.${ROOT_DOMAIN}` : "";
-        document.cookie = `${REFERRAL_COOKIE_NAME}=${encodeURIComponent(normalized)}; max-age=${REFERRAL_COOKIE_MAX_AGE_SECONDS}; path=/${domainAttr}; samesite=lax`;
-        try {
-          window.localStorage.setItem(REFERRAL_STORAGE_KEY, normalized);
-        } catch {
-          // Best-effort fallback only -- the cookie above is the real store.
-        }
-      });
+          const normalized = code.toUpperCase();
+          const domainAttr = ROOT_DOMAIN ? `; domain=.${ROOT_DOMAIN}` : "";
+          document.cookie = `${REFERRAL_COOKIE_NAME}=${encodeURIComponent(normalized)}; max-age=${REFERRAL_COOKIE_MAX_AGE_SECONDS}; path=/${domainAttr}; samesite=lax`;
+          try {
+            window.localStorage.setItem(REFERRAL_STORAGE_KEY, normalized);
+          } catch {
+            // Best-effort fallback only -- the cookie above is the real store.
+          }
+        })
+    );
 
     return () => {
       cancelled = true;
