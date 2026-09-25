@@ -106,6 +106,25 @@ const nextConfig: NextConfig = {
             value:
               "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()",
           },
+          // Both flagged by a ZAP baseline scan. Safe to set unconditionally:
+          // the Google OAuth login (login/page.tsx, AuthModal.tsx) is a
+          // full-page redirect, not a window.open() popup, so COOP's
+          // same-origin isolation has no opener relationship to break; the
+          // Mercado Pago Card Payment Brick embeds an iframe (governed by
+          // frame-src in the CSP above), which COOP/CORP don't touch --
+          // only Cross-Origin-Embedder-Policy would, which is deliberately
+          // NOT set here (see below).
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+          // Cross-Origin-Embedder-Policy: require-corp was also flagged, but
+          // deliberately left unset -- it would make the browser block any
+          // cross-origin resource (script, iframe) that doesn't send back
+          // its own CORP/CORS opt-in, and we don't control whether GA4,
+          // Meta Pixel, or -- critically -- Mercado Pago's Card Payment
+          // Brick iframe (sdk.mercadopago.com) send one. Enabling it blind
+          // risks silently breaking checkout, the one flow this app can't
+          // afford to break, with no safe way to verify short of a live
+          // payment test.
         ],
       },
     ];
