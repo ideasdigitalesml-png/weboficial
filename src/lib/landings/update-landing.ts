@@ -83,10 +83,10 @@ export type UpdateSectionsConfigResult =
 const INVALID_SECTIONS_MESSAGE =
   "sections_config solo puede reordenar y mostrar/ocultar las secciones existentes, no agregar ni quitar ninguna.";
 
-// The template (and therefore its set of section ids) is fixed forever once
-// a landing is created, so the only legal edits to sections_config are
-// reordering and toggling `visible` on the exact same set of ids the landing
-// already has -- never adding, removing, or renaming a section.
+// Every template within a profession shares the same section id set (see
+// updateLandingTemplate below), so the only legal edits to sections_config
+// are reordering and toggling `visible` on the exact same set of ids the
+// landing already has -- never adding, removing, or renaming a section.
 function isValidSectionsConfig(
   current: unknown,
   input: unknown
@@ -214,4 +214,60 @@ export async function updateLandingPaleta(
   }
 
   return { ok: true, paletaId };
+}
+
+export type UpdateLandingTemplateResult =
+  | { ok: true; templateId: string }
+  | { ok: false; reason: "not_found" }
+  | { ok: false; reason: "invalid_template" };
+
+// Switches to another template of the SAME profession -- protect_landing_
+// immutable_fields (0030_allow_template_change_same_profession.sql) enforces
+// this same "same profession only" constraint at the DB level too; the check
+// here is just the friendlier, typed error path before ever hitting that
+// trigger. Deliberately only ever writes `template_id`: every template
+// within a profession renders the exact same section id set from the exact
+// same form_schema, so form_data and sections_config never need to change
+// alongside it.
+export async function updateLandingTemplate(
+  supabase: SupabaseClient,
+  userId: string,
+  landingId: string,
+  templateId: string
+): Promise<UpdateLandingTemplateResult> {
+  const { data: landing } = await supabase
+    .from("landings")
+    .select("id, profession_id")
+    .eq("id", landingId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (!landing) {
+    return { ok: false, reason: "not_found" };
+  }
+
+  const { data: template } = await supabase
+    .from("templates")
+    .select("id")
+    .eq("id", templateId)
+    .eq("profession_id", landing.profession_id)
+    .maybeSingle();
+
+  if (!template) {
+    return { ok: false, reason: "invalid_template" };
+  }
+
+  const { data: updated } = await supabase
+    .from("landings")
+    .update({ template_id: templateId })
+    .eq("id", landingId)
+    .eq("user_id", userId)
+    .select("id")
+    .maybeSingle();
+
+  if (!updated) {
+    return { ok: false, reason: "not_found" };
+  }
+
+  return { ok: true, templateId };
 }

@@ -8,9 +8,11 @@ import {
   updateLandingFormData,
   updateLandingSectionsConfig,
   updateLandingPaleta,
+  updateLandingTemplate,
   type UpdateFormDataResult,
   type UpdateSectionsConfigResult,
   type UpdateLandingPaletaResult,
+  type UpdateLandingTemplateResult,
 } from "@/lib/landings/update-landing";
 
 const ACTIVE_PLAN_COLUMNS = "id, amount, currency" as const;
@@ -362,4 +364,20 @@ export async function updateLandingPaletaAction(
   }
 
   return updateLandingPaleta(supabase, user.id, landingId, paletaId);
+}
+
+export async function updateLandingTemplateAction(
+  landingId: string,
+  templateId: string
+): Promise<UpdateLandingTemplateResult | { ok: false; reason: "not_authenticated" }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false, reason: "not_authenticated" };
+  }
+
+  return updateLandingTemplate(supabase, user.id, landingId, templateId);
 }

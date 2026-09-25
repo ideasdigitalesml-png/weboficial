@@ -47,9 +47,9 @@ const PALETAS_BY_PROFESSION: Record<string, typeof CONTADOR_PALETAS> = {
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ bienvenida?: string }>;
+  searchParams: Promise<{ bienvenida?: string; plantilla?: string }>;
 }) {
-  const { bienvenida } = await searchParams;
+  const { bienvenida, plantilla } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -157,6 +157,12 @@ export default async function DashboardPage({
       <div className="mx-auto flex w-full max-w-[900px] flex-1 flex-col gap-6 px-5 py-6 sm:gap-8 sm:px-6 sm:py-10">
         {bienvenida === "1" && publicUrl && <WelcomeBanner publicUrl={publicUrl} />}
 
+        {plantilla === "1" && (
+          <div className="rounded-xl border border-sky/30 bg-sky/5 px-5 py-4 text-sm font-medium text-navy">
+            ¡Plantilla actualizada! Tu página ya muestra el nuevo diseño.
+          </div>
+        )}
+
         {profile?.role === "admin" && (
           <div className="flex justify-end">
             <Link
@@ -258,13 +264,13 @@ export default async function DashboardPage({
             )}
             <div className="flex flex-1 flex-col gap-2">
               <p className="text-sm font-medium text-navy">{template?.name ?? "—"}</p>
-              <p className="text-sm text-text-body">
-                Tu plantilla activa. Podés{" "}
-                <Link href="/dashboard/cambiar-plantilla" className="text-sky underline hover:text-sky-dark">
-                  cambiarla
-                </Link>{" "}
-                cuando quieras.
-              </p>
+              <p className="text-sm text-text-body">Tu plantilla activa.</p>
+              <Link
+                href="/dashboard/cambiar-plantilla"
+                className="inline-flex w-fit items-center justify-center rounded-full border border-border-subtle px-4 py-2 text-sm font-medium text-navy transition-colors hover:border-navy/40"
+              >
+                Cambiar plantilla
+              </Link>
             </div>
           </div>
         </section>
