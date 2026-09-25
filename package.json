@@ -17,7 +17,8 @@
     "test:contador-moderno": "tsx scripts/test-contador-moderno.ts",
     "test:abogado-wizard": "tsx scripts/test-abogado-wizard.ts",
     "test:public-onboarding": "tsx scripts/test-public-onboarding.ts",
-    "generate:previews": "node scripts/generate-previews.js"
+    "generate:previews": "node scripts/generate-previews.js",
+    "generate:previews:psicologo": "node scripts/generate-component-previews.js"
   },
   "dependencies": {
     "@mercadopago/sdk-react": "^1.0.7",

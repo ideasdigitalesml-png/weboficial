@@ -27,9 +27,22 @@ const MP_ORIGINS = "https://*.mercadopago.com https://*.mercadolibre.com https:/
 // <img src="data:..."> which only needs img-src. Without it, every
 // profile-photo upload throws "Failed to fetch" in the browser only (CSP
 // isn't enforced in Node scripts/tests, which is how this went unnoticed).
+// React's dev mode (Fast Refresh, component-stack reconstruction) needs
+// eval(), which this CSP otherwise blocks -- normally harmless (it only
+// shows up as a console warning), but scripts/generate-component-previews.js
+// screenshots real pages served by a real `next dev`, and Next's dev
+// overlay surfaces that warning as a visible "1 Issue" badge baked into the
+// thumbnail. Loosened only when that script sets HIDE_DEV_INDICATOR --
+// gated on NODE_ENV !== "production" too, belt-and-suspenders, so a stray
+// env var could never relax script-src on an actual deployment.
+const DEV_SCRIPT_SRC =
+  process.env.HIDE_DEV_INDICATOR && process.env.NODE_ENV !== "production"
+    ? " 'unsafe-eval'"
+    : "";
+
 const CSP = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net ${MP_ORIGINS};
+  script-src 'self' 'unsafe-inline'${DEV_SCRIPT_SRC} https://www.googletagmanager.com https://connect.facebook.net ${MP_ORIGINS};
   style-src 'self' 'unsafe-inline' ${MP_ORIGINS};
   img-src 'self' data: blob: ${SUPABASE_ORIGIN} https://www.facebook.com https://www.google-analytics.com ${MP_ORIGINS};
   font-src 'self' data: ${MP_ORIGINS};
@@ -47,6 +60,11 @@ const CSP = `
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
+  // Only set by scripts/generate-component-previews.js's spawned `next dev`
+  // -- hides the dev-mode route indicator badge so it doesn't show up in
+  // the screenshotted template thumbnails. Never set otherwise, so this has
+  // no effect on normal `npm run dev`.
+  ...(process.env.HIDE_DEV_INDICATOR ? { devIndicators: false } : {}),
   // Next's dev server blocks cross-origin requests by default (HMR, RSC
   // payloads, etc.). Needed so the app works when browsed through the
   // ngrok tunnel used to test the Mercado Pago webhook, not just localhost.

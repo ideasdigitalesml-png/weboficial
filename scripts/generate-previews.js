@@ -6,6 +6,14 @@
 //
 // Re-run this whenever a template's HTML/CSS changes:
 //   npm run generate:previews
+//
+// Only covers templates with a raw-HTML source under /templates/ (abogado's
+// three + contador's moderno). Templates that only exist as React
+// components -- contador's clasico/minimal, and all of psicologos -- use
+// scripts/generate-component-previews.js instead, which screenshots a real
+// `next dev` render instead of a filled-in HTML string, since those
+// components use next/font and Tailwind (neither renders correctly through
+// this script's page.setContent() approach).
 const { chromium } = require("playwright");
 const fs = require("node:fs");
 const path = require("node:path");
