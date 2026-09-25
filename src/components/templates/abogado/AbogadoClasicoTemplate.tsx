@@ -6,6 +6,8 @@ import {
 } from "@/lib/professions/abogados";
 import { buildWaLink } from "@/lib/whatsapp";
 import { getInitials } from "@/lib/avatar-initials";
+import { capitalizeName } from "@/lib/capitalize-name";
+import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 import type { AbogadoFormData } from "./AbogadoModernoTemplate";
@@ -84,7 +86,8 @@ export function AbogadoClasicoTemplate({
   const showAbout = visibleIds.has("about");
   const showContact = visibleIds.has("contact");
 
-  const name = formData.name || "";
+  const name = capitalizeName(formData.name || "");
+  const matriculaNumero = isValidMatricula(formData.matricula_numero) ? formData.matricula_numero : undefined;
   const services = deriveAbogadoServiceEntries(formData);
   const especialidadPrincipal = services[0]?.titulo ?? "";
   const waLink = formData.phone ? buildWaLink(formData.phone) : null;
@@ -150,8 +153,8 @@ export function AbogadoClasicoTemplate({
             <div className="ac-hero-copy">
               <span className="ac-eyebrow ac-uc">
                 {especialidadPrincipal}
-                {especialidadPrincipal && formData.matricula_numero ? " · " : ""}
-                {formData.matricula_numero ? `Mat. Nº ${formData.matricula_numero}` : ""}
+                {especialidadPrincipal && matriculaNumero ? " · " : ""}
+                {matriculaNumero ? `Mat. Nº ${matriculaNumero}` : ""}
               </span>
               <h1>{name || "Tu nombre"}</h1>
               {heroTagline && <p className="ac-lead">{heroTagline}</p>}
@@ -266,11 +269,11 @@ export function AbogadoClasicoTemplate({
                   </span>
                 </div>
               )}
-              {formData.matricula_numero && (
+              {matriculaNumero && (
                 <div className="ac-row">
                   <span className="ac-k ac-uc">Matrícula</span>
                   <span className="ac-v">
-                    Nº {formData.matricula_numero}
+                    Nº {matriculaNumero}
                     {formData.matricula_colegio ? ` — ${formData.matricula_colegio}` : ""}
                   </span>
                 </div>
@@ -356,11 +359,11 @@ export function AbogadoClasicoTemplate({
             <path d="M24 8v4M24 36v4M8 24h4M36 24h4M12.9 12.9l2.8 2.8M32.3 32.3l2.8 2.8M12.9 35.1l2.8-2.8M32.3 15.7l2.8-2.8" />
           </svg>
           <p className="ac-footer-name">{name || "Tu nombre"}</p>
-          {(especialidadPrincipal || formData.matricula_numero) && (
+          {(especialidadPrincipal || matriculaNumero) && (
             <p className="ac-footer-line">
               {especialidadPrincipal}
               {especialidadPrincipal ? <span className="ac-footer-sep">—</span> : null}
-              {formData.matricula_numero ? `Mat. Nº ${formData.matricula_numero}` : ""}
+              {matriculaNumero ? `Mat. Nº ${matriculaNumero}` : ""}
               {formData.matricula_colegio ? ` — ${formData.matricula_colegio}` : ""}
             </p>
           )}

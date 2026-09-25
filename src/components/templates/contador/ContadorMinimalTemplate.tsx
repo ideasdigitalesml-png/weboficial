@@ -6,6 +6,8 @@ import {
 } from "@/lib/professions/contadores";
 import { buildWaLink } from "@/lib/whatsapp";
 import { getInitials } from "@/lib/avatar-initials";
+import { capitalizeName } from "@/lib/capitalize-name";
+import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 import type { ContadorFormData } from "./ContadorLandingTemplate";
@@ -76,7 +78,8 @@ export function ContadorMinimalTemplate({
   const showAbout = visibleIds.has("about");
   const showContact = visibleIds.has("contact");
 
-  const name = formData.name || "";
+  const name = capitalizeName(formData.name || "");
+  const matricula = isValidMatricula(formData.matricula) ? formData.matricula : undefined;
   const services = deriveContadorServiceEntries(formData);
   const waLink = formData.phone ? buildWaLink(formData.phone) : null;
   const year = new Date().getFullYear();
@@ -122,7 +125,7 @@ export function ContadorMinimalTemplate({
           <FadeInSection as="div" className="cm-container">
             <span className="cm-eyebrow">
               {tituloProfesional}
-              {formData.matricula ? ` · Mat. N° ${formData.matricula}` : ""}
+              {matricula ? ` · Mat. N° ${matricula}` : ""}
               {formData.zona ? ` · ${formData.zona}` : ""}
             </span>
             <h1>{name || "Tu nombre"}</h1>
@@ -180,9 +183,9 @@ export function ContadorMinimalTemplate({
             <div>
               {formData.description && <p className="cm-about-text">{formData.description}</p>}
               <div className="cm-facts">
-                {formData.matricula && (
+                {matricula && (
                   <p className="cm-fact">
-                    Matrícula N° {formData.matricula}
+                    Matrícula N° {matricula}
                     {formData.jurisdiccion ? ` — ${formData.jurisdiccion}` : ""}
                   </p>
                 )}

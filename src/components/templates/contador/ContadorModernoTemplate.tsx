@@ -6,6 +6,8 @@ import {
 } from "@/lib/professions/contadores";
 import { buildWaLink } from "@/lib/whatsapp";
 import { getInitials } from "@/lib/avatar-initials";
+import { capitalizeName } from "@/lib/capitalize-name";
+import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 import type { ContadorFormData } from "./ContadorLandingTemplate";
@@ -87,7 +89,8 @@ export function ContadorModernoTemplate({
   const showAbout = visibleIds.has("about");
   const showContact = visibleIds.has("contact");
 
-  const name = formData.name || "";
+  const name = capitalizeName(formData.name || "");
+  const matricula = isValidMatricula(formData.matricula) ? formData.matricula : undefined;
   const services = deriveContadorServiceEntries(formData);
   const specialties = services.map((s) => s.titulo).filter(Boolean);
   const waLink = formData.phone ? buildWaLink(formData.phone) : null;
@@ -309,9 +312,9 @@ export function ContadorModernoTemplate({
                   ? ` · ${MODALIDAD_LABELS[formData.modalidad] ?? formData.modalidad}`
                   : ""}
               </p>
-              {formData.matricula && (
+              {matricula && (
                 <span className="cf-profile-matricula">
-                  Matrícula N° {formData.matricula}
+                  Matrícula N° {matricula}
                   {formData.jurisdiccion ? ` — ${formData.jurisdiccion}` : ""}
                 </span>
               )}
@@ -401,7 +404,7 @@ export function ContadorModernoTemplate({
                   {formData.phone}
                 </a>
               )}
-              {formData.matricula && <span>Matrícula N° {formData.matricula}</span>}
+              {matricula && <span>Matrícula N° {matricula}</span>}
               {formData.direccion && <span>{formData.direccion}</span>}
               {formData.horario_atencion && (
                 <span>{formData.horario_atencion}</span>
@@ -441,7 +444,7 @@ export function ContadorModernoTemplate({
           <div className="cf-footer-bottom">
             <span>
               {tituloProfesional}
-              {formData.matricula ? ` · Matrícula N° ${formData.matricula}` : ""}
+              {matricula ? ` · Matrícula N° ${matricula}` : ""}
             </span>
             <span>
               © {year} {name || "Tu nombre"}

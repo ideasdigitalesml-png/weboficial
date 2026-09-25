@@ -2,6 +2,8 @@ import { Playfair_Display, Inter } from "next/font/google";
 import type { SectionConfigItem } from "@/lib/landings/update-landing";
 import { buildWaLink } from "@/lib/whatsapp";
 import { getInitials } from "@/lib/avatar-initials";
+import { capitalizeName } from "@/lib/capitalize-name";
+import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 import type { PsicologoFormData } from "./PsicologoModernoTemplate";
@@ -87,7 +89,8 @@ export function PsicologoClasicoTemplate({
   const showAbout = visibleIds.has("about");
   const showContact = visibleIds.has("contact");
 
-  const name = formData.name || "";
+  const name = capitalizeName(formData.name || "");
+  const matriculaNumero = isValidMatricula(formData.matricula_numero) ? formData.matricula_numero : undefined;
   const waLink = formData.phone ? buildWaLink(formData.phone) : null;
   const year = new Date().getFullYear();
   const ctaText = formData.cta_text || "Reservá tu turno";
@@ -154,8 +157,8 @@ export function PsicologoClasicoTemplate({
             <div className="pc-hero-copy">
               <span className="pc-eyebrow pc-uc">
                 {formData.titulo_profesional}
-                {formData.titulo_profesional && formData.matricula_numero ? " · " : ""}
-                {formData.matricula_numero ? `Mat. Nº ${formData.matricula_numero}` : ""}
+                {formData.titulo_profesional && matriculaNumero ? " · " : ""}
+                {matriculaNumero ? `Mat. Nº ${matriculaNumero}` : ""}
               </span>
               <h1>{name || "Tu nombre"}</h1>
               <p className="pc-lead">{heroLead}</p>
@@ -195,10 +198,10 @@ export function PsicologoClasicoTemplate({
                   <span className="pc-v">{formData.titulo_profesional}</span>
                 </div>
               )}
-              {formData.matricula_numero && (
+              {matriculaNumero && (
                 <div className="pc-row">
                   <span className="pc-k pc-uc">Matrícula</span>
-                  <span className="pc-v">Nº {formData.matricula_numero}</span>
+                  <span className="pc-v">Nº {matriculaNumero}</span>
                 </div>
               )}
               {formData.enfoque_terapeutico && (
@@ -347,11 +350,11 @@ export function PsicologoClasicoTemplate({
             <path d="M24 8v4M24 36v4M8 24h4M36 24h4M12.9 12.9l2.8 2.8M32.3 32.3l2.8 2.8M12.9 35.1l2.8-2.8M32.3 15.7l2.8-2.8" />
           </svg>
           <p className="pc-footer-name">{name || "Tu nombre"}</p>
-          {(formData.titulo_profesional || formData.matricula_numero) && (
+          {(formData.titulo_profesional || matriculaNumero) && (
             <p className="pc-footer-line">
               {formData.titulo_profesional}
               {formData.titulo_profesional ? <span className="pc-footer-sep">—</span> : null}
-              {formData.matricula_numero ? `Mat. Nº ${formData.matricula_numero}` : ""}
+              {matriculaNumero ? `Mat. Nº ${matriculaNumero}` : ""}
             </p>
           )}
           <p className="pc-footer-line">

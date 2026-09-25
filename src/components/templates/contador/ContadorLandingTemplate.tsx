@@ -6,6 +6,8 @@ import {
 } from "@/lib/professions/contadores";
 import { buildWaLink } from "@/lib/whatsapp";
 import { getInitials } from "@/lib/avatar-initials";
+import { capitalizeName } from "@/lib/capitalize-name";
+import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 
@@ -212,7 +214,10 @@ const SECTIONS: Record<
   string,
   (data: ContadorFormData) => React.ReactNode
 > = {
-  hero: (data) => (
+  hero: (data) => {
+    const name = capitalizeName(data.name ?? "");
+    const matricula = isValidMatricula(data.matricula) ? data.matricula : undefined;
+    return (
     <FadeInSection
       as="section"
       className="flex flex-col items-center gap-4 bg-gradient-to-b from-[var(--cf-accent-soft)] to-[var(--cf-surface)] px-6 py-16 text-center"
@@ -221,28 +226,28 @@ const SECTIONS: Record<
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={data.profile_image}
-          alt={data.name ?? ""}
+          alt={name}
           className="h-36 w-36 rounded-full border-4 border-white object-cover shadow-[0_8px_24px_rgba(27,79,114,.18)]"
         />
       ) : (
         <span className="flex h-36 w-36 items-center justify-center rounded-full border-4 border-white bg-[var(--cf-accent)] text-3xl font-semibold text-white shadow-[0_8px_24px_rgba(27,79,114,.18)]">
-          {getInitials(data.name ?? "")}
+          {getInitials(name)}
         </span>
       )}
       <h1
         className={`${playfairDisplay.className} text-3xl font-semibold text-[var(--cf-ink)] sm:text-4xl`}
       >
-        {data.name || "Tu nombre"}
+        {name || "Tu nombre"}
       </h1>
       <p className="text-sm font-semibold uppercase tracking-wide text-[var(--cf-accent)]">
         {data.titulo_profesional ||
-          (data.matricula
+          (matricula
             ? `Contador Público matriculado${data.jurisdiccion ? ` · ${data.jurisdiccion}` : ""}`
             : "Contador Público")}
       </p>
-      {data.matricula && (
+      {matricula && (
         <p className="text-xs text-[var(--cf-body)]">
-          Matrícula {data.matricula}
+          Matrícula {matricula}
           {data.jurisdiccion ? ` · ${data.jurisdiccion}` : ""}
         </p>
       )}
@@ -262,12 +267,14 @@ const SECTIONS: Record<
         </a>
       )}
     </FadeInSection>
-  ),
-  about: (data) =>
-    data.description ||
+    );
+  },
+  about: (data) => {
+    const matricula = isValidMatricula(data.matricula) ? data.matricula : undefined;
+    return data.description ||
     data.anos_experiencia ||
     data.cantidad_clientes ||
-    data.matricula ? (
+    matricula ? (
       <FadeInSection
         as="section"
         className="border-t border-[var(--cf-border)] bg-[var(--cf-surface-muted)] px-6 py-14"
@@ -304,12 +311,12 @@ const SECTIONS: Record<
                 <p>Clientes atendidos</p>
               </div>
             )}
-            {data.matricula && (
+            {matricula && (
               <div>
                 <p
                   className={`${playfairDisplay.className} text-2xl font-semibold text-[var(--cf-ink)]`}
                 >
-                  Mat. {data.matricula}
+                  Mat. {matricula}
                 </p>
                 <p>{data.jurisdiccion || "Matrícula"}</p>
               </div>
@@ -317,7 +324,8 @@ const SECTIONS: Record<
           </div>
         </div>
       </FadeInSection>
-    ) : null,
+    ) : null;
+  },
   services: (data) => {
     const services = deriveContadorServiceEntries(data);
     if (services.length === 0) return null;

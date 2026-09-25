@@ -6,6 +6,8 @@ import {
 } from "@/lib/professions/contadores";
 import { buildWaLink } from "@/lib/whatsapp";
 import { getInitials } from "@/lib/avatar-initials";
+import { capitalizeName } from "@/lib/capitalize-name";
+import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 import type { ContadorFormData } from "./ContadorLandingTemplate";
@@ -83,7 +85,8 @@ export function ContadorClasicoTemplate({
   const showAbout = visibleIds.has("about");
   const showContact = visibleIds.has("contact");
 
-  const name = formData.name || "";
+  const name = capitalizeName(formData.name || "");
+  const matricula = isValidMatricula(formData.matricula) ? formData.matricula : undefined;
   const services = deriveContadorServiceEntries(formData);
   const waLink = formData.phone ? buildWaLink(formData.phone) : null;
   const year = new Date().getFullYear();
@@ -226,11 +229,11 @@ export function ContadorClasicoTemplate({
                 <span className="cc-k">Título</span>
                 <span className="cc-v">{tituloProfesional}</span>
               </div>
-              {formData.matricula && (
+              {matricula && (
                 <div className="cc-row">
                   <span className="cc-k">Matrícula</span>
                   <span className="cc-v">
-                    N° {formData.matricula}
+                    N° {matricula}
                     {formData.jurisdiccion ? ` — ${formData.jurisdiccion}` : ""}
                   </span>
                 </div>
@@ -348,7 +351,7 @@ export function ContadorClasicoTemplate({
           <p className="cc-footer-name">{name || "Tu nombre"}</p>
           <p className="cc-footer-line">
             {tituloProfesional}
-            {formData.matricula ? ` · Matrícula N° ${formData.matricula}` : ""}
+            {matricula ? ` · Matrícula N° ${matricula}` : ""}
           </p>
           {subdomain && <p className="cc-footer-line">{`${subdomain}.weboficial.com.ar`}</p>}
           <p className="cc-footer-bottom">{`© ${year} ${name || "Tu nombre"}. Todos los derechos reservados.`}</p>

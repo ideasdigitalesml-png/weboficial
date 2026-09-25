@@ -2,6 +2,8 @@ import { Playfair_Display, Inter } from "next/font/google";
 import type { SectionConfigItem } from "@/lib/landings/update-landing";
 import { buildWaLink } from "@/lib/whatsapp";
 import { getInitials } from "@/lib/avatar-initials";
+import { capitalizeName } from "@/lib/capitalize-name";
+import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 import type { PsicologoFormData } from "./PsicologoModernoTemplate";
@@ -87,7 +89,8 @@ export function PsicologoMinimalTemplate({
   const showAbout = visibleIds.has("about");
   const showContact = visibleIds.has("contact");
 
-  const name = formData.name || "";
+  const name = capitalizeName(formData.name || "");
+  const matriculaNumero = isValidMatricula(formData.matricula_numero) ? formData.matricula_numero : undefined;
   const waLink = formData.phone ? buildWaLink(formData.phone) : null;
   const year = new Date().getFullYear();
   const ctaText = formData.cta_text || "Reservá tu turno";
@@ -133,8 +136,8 @@ export function PsicologoMinimalTemplate({
             <div className="pm-hero-copy pm-container">
               <span className="pm-hero-eyebrow pm-uc">
                 {formData.titulo_profesional}
-                {formData.titulo_profesional && formData.matricula_numero ? " · " : ""}
-                {formData.matricula_numero ? `Mat. Nº ${formData.matricula_numero}` : ""}
+                {formData.titulo_profesional && matriculaNumero ? " · " : ""}
+                {matriculaNumero ? `Mat. Nº ${matriculaNumero}` : ""}
               </span>
               <h1>{name || "Tu nombre"}</h1>
               <p className="pm-lead">{heroLead}</p>
@@ -242,8 +245,8 @@ export function PsicologoMinimalTemplate({
                 {formData.titulo_profesional && (
                   <p className="pm-credential-line">{formData.titulo_profesional}</p>
                 )}
-                {formData.matricula_numero && (
-                  <p className="pm-credential-line">Matrícula Nº {formData.matricula_numero}</p>
+                {matriculaNumero && (
+                  <p className="pm-credential-line">Matrícula Nº {matriculaNumero}</p>
                 )}
                 {formData.horario_atencion && (
                   <p className="pm-credential-line">{formData.horario_atencion}</p>
@@ -299,10 +302,10 @@ export function PsicologoMinimalTemplate({
         <div className="pm-container">
           <p className="pm-footer-line">
             {name || "Tu nombre"}
-            {formData.matricula_numero && (
+            {matriculaNumero && (
               <>
                 <span className="pm-sep">·</span>
-                {`Mat. Nº ${formData.matricula_numero}`}
+                {`Mat. Nº ${matriculaNumero}`}
               </>
             )}
             {formData.email && (

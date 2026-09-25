@@ -6,6 +6,8 @@ import {
 } from "@/lib/professions/abogados";
 import { buildWaLink } from "@/lib/whatsapp";
 import { getInitials } from "@/lib/avatar-initials";
+import { capitalizeName } from "@/lib/capitalize-name";
+import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 
@@ -124,7 +126,8 @@ export function AbogadoModernoTemplate({
   const showAbout = visibleIds.has("about");
   const showContact = visibleIds.has("contact");
 
-  const name = formData.name || "";
+  const name = capitalizeName(formData.name || "");
+  const matriculaNumero = isValidMatricula(formData.matricula_numero) ? formData.matricula_numero : undefined;
   const services = deriveAbogadoServiceEntries(formData);
   const especialidadPrincipal = services[0]?.titulo ?? "";
   const waLink = formData.phone ? buildWaLink(formData.phone) : null;
@@ -186,8 +189,8 @@ export function AbogadoModernoTemplate({
             <div className="aw-hero-copy">
               <span className="aw-eyebrow">
                 {especialidadPrincipal}
-                {especialidadPrincipal && formData.matricula_numero ? " · " : ""}
-                {formData.matricula_numero ? `Mat. Nº ${formData.matricula_numero}` : ""}
+                {especialidadPrincipal && matriculaNumero ? " · " : ""}
+                {matriculaNumero ? `Mat. Nº ${matriculaNumero}` : ""}
               </span>
               <h1>{name || "Tu nombre"}</h1>
               {heroTagline && <p className="aw-lead">{heroTagline}</p>}
@@ -296,11 +299,11 @@ export function AbogadoModernoTemplate({
                   </span>
                 </div>
               )}
-              {formData.matricula_numero && (
+              {matriculaNumero && (
                 <div className="aw-credential-line">
                   <span className="aw-glyph">⚖️</span>
                   <span>
-                    Matrícula Nº {formData.matricula_numero}
+                    Matrícula Nº {matriculaNumero}
                     {formData.matricula_colegio ? ` — ${formData.matricula_colegio}` : ""}
                   </span>
                 </div>
@@ -388,9 +391,9 @@ export function AbogadoModernoTemplate({
             <div className="aw-footer-brand">
               <strong>{name || "Tu nombre"}</strong>
               {especialidadPrincipal && <p>{especialidadPrincipal}</p>}
-              {formData.matricula_numero && (
+              {matriculaNumero && (
                 <p>
-                  Mat. Nº {formData.matricula_numero}
+                  Mat. Nº {matriculaNumero}
                   {formData.matricula_colegio ? ` — ${formData.matricula_colegio}` : ""}
                 </p>
               )}

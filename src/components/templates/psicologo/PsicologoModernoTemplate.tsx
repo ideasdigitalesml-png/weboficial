@@ -2,6 +2,8 @@ import { Playfair_Display, Inter } from "next/font/google";
 import type { SectionConfigItem } from "@/lib/landings/update-landing";
 import { buildWaLink } from "@/lib/whatsapp";
 import { getInitials } from "@/lib/avatar-initials";
+import { capitalizeName } from "@/lib/capitalize-name";
+import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 
@@ -121,7 +123,8 @@ export function PsicologoModernoTemplate({
   const showAbout = visibleIds.has("about");
   const showContact = visibleIds.has("contact");
 
-  const name = formData.name || "";
+  const name = capitalizeName(formData.name || "");
+  const matriculaNumero = isValidMatricula(formData.matricula_numero) ? formData.matricula_numero : undefined;
   const waLink = formData.phone ? buildWaLink(formData.phone) : null;
   const year = new Date().getFullYear();
   const ctaText = formData.cta_text || "Reservá tu turno";
@@ -185,8 +188,8 @@ export function PsicologoModernoTemplate({
             <div className="pw-hero-copy">
               <span className="pw-eyebrow">
                 {formData.titulo_profesional}
-                {formData.titulo_profesional && formData.matricula_numero ? " · " : ""}
-                {formData.matricula_numero ? `Mat. Nº ${formData.matricula_numero}` : ""}
+                {formData.titulo_profesional && matriculaNumero ? " · " : ""}
+                {matriculaNumero ? `Mat. Nº ${matriculaNumero}` : ""}
               </span>
               <h1>{name || "Tu nombre"}</h1>
               <p className="pw-lead">{heroLead}</p>
@@ -298,10 +301,10 @@ export function PsicologoModernoTemplate({
                   <span>{formData.titulo_profesional}</span>
                 </div>
               )}
-              {formData.matricula_numero && (
+              {matriculaNumero && (
                 <div className="pw-credential-line">
                   <span className="pw-glyph">🪪</span>
-                  <span>Matrícula Nº {formData.matricula_numero}</span>
+                  <span>Matrícula Nº {matriculaNumero}</span>
                 </div>
               )}
               {formData.horario_atencion && (
@@ -366,7 +369,7 @@ export function PsicologoModernoTemplate({
             <div className="pw-footer-brand">
               <strong>{name || "Tu nombre"}</strong>
               {formData.titulo_profesional && <p>{formData.titulo_profesional}</p>}
-              {formData.matricula_numero && <p>Matrícula Nº {formData.matricula_numero}</p>}
+              {matriculaNumero && <p>Matrícula Nº {matriculaNumero}</p>}
               {subdomain && <p className="pw-footer-domain">{`${subdomain}.weboficial.com.ar`}</p>}
             </div>
             <div className="pw-footer-contact">

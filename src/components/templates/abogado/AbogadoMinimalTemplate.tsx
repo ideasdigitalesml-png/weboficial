@@ -6,6 +6,8 @@ import {
 } from "@/lib/professions/abogados";
 import { buildWaLink } from "@/lib/whatsapp";
 import { getInitials } from "@/lib/avatar-initials";
+import { capitalizeName } from "@/lib/capitalize-name";
+import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 import type { AbogadoFormData } from "./AbogadoModernoTemplate";
@@ -84,7 +86,8 @@ export function AbogadoMinimalTemplate({
   const showAbout = visibleIds.has("about");
   const showContact = visibleIds.has("contact");
 
-  const name = formData.name || "";
+  const name = capitalizeName(formData.name || "");
+  const matriculaNumero = isValidMatricula(formData.matricula_numero) ? formData.matricula_numero : undefined;
   const services = deriveAbogadoServiceEntries(formData);
   const especialidadPrincipal = services[0]?.titulo ?? "";
   const waLink = formData.phone ? buildWaLink(formData.phone) : null;
@@ -130,8 +133,8 @@ export function AbogadoMinimalTemplate({
             <div className="am-hero-copy am-container">
               <span className="am-hero-eyebrow am-uc">
                 {especialidadPrincipal}
-                {especialidadPrincipal && formData.matricula_numero ? " · " : ""}
-                {formData.matricula_numero ? `Mat. Nº ${formData.matricula_numero}` : ""}
+                {especialidadPrincipal && matriculaNumero ? " · " : ""}
+                {matriculaNumero ? `Mat. Nº ${matriculaNumero}` : ""}
               </span>
               <h1>{name || "Tu nombre"}</h1>
               {heroTagline && <p className="am-lead">{heroTagline}</p>}
@@ -236,9 +239,9 @@ export function AbogadoMinimalTemplate({
                     {formData.año_graduacion}
                   </p>
                 )}
-                {formData.matricula_numero && (
+                {matriculaNumero && (
                   <p className="am-credential-line">
-                    Matrícula Nº {formData.matricula_numero}
+                    Matrícula Nº {matriculaNumero}
                     {formData.matricula_colegio ? ` — ${formData.matricula_colegio}` : ""}
                   </p>
                 )}
@@ -314,10 +317,10 @@ export function AbogadoMinimalTemplate({
         <div className="am-container">
           <p className="am-footer-line">
             {name || "Tu nombre"}
-            {formData.matricula_numero && (
+            {matriculaNumero && (
               <>
                 <span className="am-sep">·</span>
-                {`Mat. Nº ${formData.matricula_numero}`}
+                {`Mat. Nº ${matriculaNumero}`}
               </>
             )}
             {formData.email && (
