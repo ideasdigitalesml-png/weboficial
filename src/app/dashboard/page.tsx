@@ -265,12 +265,22 @@ export default async function DashboardPage({
             <div className="flex flex-1 flex-col gap-2">
               <p className="text-sm font-medium text-navy">{template?.name ?? "—"}</p>
               <p className="text-sm text-text-body">Tu plantilla activa.</p>
-              <Link
-                href="/dashboard/cambiar-plantilla"
-                className="inline-flex w-fit items-center justify-center rounded-full border border-border-subtle px-4 py-2 text-sm font-medium text-navy transition-colors hover:border-navy/40"
-              >
-                Cambiar plantilla
-              </Link>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href="/dashboard/cambiar-plantilla"
+                  className="inline-flex w-fit items-center justify-center rounded-full border border-border-subtle px-4 py-2 text-sm font-medium text-navy transition-colors hover:border-navy/40"
+                >
+                  Cambiar plantilla
+                </Link>
+                <a
+                  href="/dashboard/preview"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex w-fit items-center justify-center gap-1.5 rounded-full border border-border-subtle px-4 py-2 text-sm font-medium text-navy transition-colors hover:border-navy/40"
+                >
+                  👁️ Ver mi página
+                </a>
+              </div>
             </div>
           </div>
         </section>

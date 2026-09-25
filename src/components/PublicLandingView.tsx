@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { SectionConfigItem } from "@/lib/landings/update-landing";
+import { oneRelation } from "@/lib/supabase/normalize-relation";
 import {
   ContadorLandingTemplate,
   type ContadorFormData,
@@ -34,7 +35,7 @@ import { PsicologoMinimalTemplate } from "@/components/templates/psicologo/Psico
 // silently relying on RLS to make the mismatch harmless.
 const PUBLICLY_VISIBLE_STATUSES = new Set(["active"]);
 
-interface TemplateConfig {
+export interface TemplateConfig {
   primaryColor?: string;
   secondaryColor?: string;
   layout?: string;
@@ -67,15 +68,160 @@ export async function getPublicLandingMeta(
   return { name: formData.name, description: formData.description };
 }
 
+export interface LandingRenderData {
+  slug: string;
+  formData: unknown;
+  sectionsConfig: SectionConfigItem[];
+  paletaId: string | null;
+}
+
+// Picks and renders the right per-profession, per-template-layout component
+// for already-fetched landing data. Deliberately does no fetching and no
+// status/ownership gating of its own -- every caller decides who's allowed
+// to see what: PublicLandingView below enforces `status === 'active'` for
+// anonymous visitors (site/[slug], /[slug]); /dashboard/preview instead
+// checks the caller owns the row (via RLS) and allows any status, since
+// previewing a still-unpaid draft is the whole point of that route.
+//
+// Returns null for a profession with no template component wired up yet
+// (never happens today -- all three professions in the DB are handled below
+// -- but kept as an explicit "nothing to render" signal rather than a thrown
+// error, since only PublicLandingView's notFound() semantics are correct
+// for the anonymous-visitor case; /dashboard/preview reacts to null with
+// its own message instead).
+export function renderLandingByTemplate(
+  landing: LandingRenderData,
+  professionSlug: string | undefined,
+  templateConfig: TemplateConfig | undefined
+) {
+  if (professionSlug === "abogados") {
+    const formData = landing.formData as AbogadoFormData;
+    if (templateConfig?.layout === "clasico") {
+      return (
+        <AbogadoClasicoTemplate
+          formData={formData}
+          sectionsConfig={landing.sectionsConfig}
+          subdomain={landing.slug}
+          colorPrimary={templateConfig.primaryColor}
+          colorAccent={templateConfig.secondaryColor}
+        />
+      );
+    }
+    if (templateConfig?.layout === "modern") {
+      return (
+        <AbogadoModernoTemplate
+          formData={formData}
+          sectionsConfig={landing.sectionsConfig}
+          subdomain={landing.slug}
+          colorPrimary={templateConfig.primaryColor}
+          colorAccent={templateConfig.secondaryColor}
+          paletteVariables={findAbogadoPaleta(landing.paletaId).variables}
+        />
+      );
+    }
+    return (
+      <AbogadoMinimalTemplate
+        formData={formData}
+        sectionsConfig={landing.sectionsConfig}
+        subdomain={landing.slug}
+        colorPrimary={templateConfig?.primaryColor}
+      />
+    );
+  }
+
+  if (professionSlug === "psicologos") {
+    const formData = landing.formData as PsicologoFormData;
+    if (templateConfig?.layout === "clasico") {
+      return (
+        <PsicologoClasicoTemplate
+          formData={formData}
+          sectionsConfig={landing.sectionsConfig}
+          subdomain={landing.slug}
+          colorPrimary={templateConfig.primaryColor}
+          colorAccent={templateConfig.secondaryColor}
+        />
+      );
+    }
+    if (templateConfig?.layout === "minimal") {
+      return (
+        <PsicologoMinimalTemplate
+          formData={formData}
+          sectionsConfig={landing.sectionsConfig}
+          subdomain={landing.slug}
+          colorPrimary={templateConfig?.primaryColor}
+        />
+      );
+    }
+    return (
+      <PsicologoModernoTemplate
+        formData={formData}
+        sectionsConfig={landing.sectionsConfig}
+        subdomain={landing.slug}
+        colorPrimary={templateConfig?.primaryColor}
+        colorAccent={templateConfig?.secondaryColor}
+      />
+    );
+  }
+
+  if (professionSlug !== "contadores") {
+    return null;
+  }
+
+  if (templateConfig?.layout === "modern") {
+    return (
+      <ContadorModernoTemplate
+        formData={landing.formData as ContadorFormData}
+        sectionsConfig={landing.sectionsConfig}
+        subdomain={landing.slug}
+        colorPrimary={templateConfig.primaryColor}
+        colorAccent={templateConfig.secondaryColor}
+        paletteVariables={findContadorPaleta(landing.paletaId).variables}
+      />
+    );
+  }
+
+  if (templateConfig?.layout === "classic") {
+    return (
+      <ContadorClasicoTemplate
+        formData={landing.formData as ContadorFormData}
+        sectionsConfig={landing.sectionsConfig}
+        subdomain={landing.slug}
+        colorPrimary={templateConfig.primaryColor}
+        colorAccent={templateConfig.secondaryColor}
+      />
+    );
+  }
+
+  if (templateConfig?.layout === "minimal") {
+    return (
+      <ContadorMinimalTemplate
+        formData={landing.formData as ContadorFormData}
+        sectionsConfig={landing.sectionsConfig}
+        subdomain={landing.slug}
+        colorPrimary={templateConfig.primaryColor}
+      />
+    );
+  }
+
+  return (
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
+      <ContadorLandingTemplate
+        formData={landing.formData as ContadorFormData}
+        sectionsConfig={landing.sectionsConfig}
+        accentColor={templateConfig?.primaryColor}
+      />
+    </div>
+  );
+}
+
 // Shared by both public-landing routes: the subdomain one (site/[slug],
 // reached via the proxy rewrite in proxy.ts) and the temporary path-based
 // one (/[slug], used while the project doesn't have Vercel Pro's wildcard
 // subdomain support yet). Both resolve a landing the same way and must stay
-// in sync, so the fetch + render logic lives here once.
-//
-// Rendering itself is delegated to a per-profession, per-template-layout
-// component so the exact same markup/palette is used here and in each
-// profession's onboarding wizard live preview.
+// in sync, so the fetch + status gate lives here once; the actual per-
+// template rendering is delegated to renderLandingByTemplate above so
+// /dashboard/preview can reuse it under a completely different gate (owns
+// the row vs. status === 'active').
 export async function PublicLandingView({ slug }: { slug: string }) {
   const supabase = await createClient();
 
@@ -91,142 +237,30 @@ export async function PublicLandingView({ slug }: { slug: string }) {
     notFound();
   }
 
-  // The Supabase client here has no generated Database types, so its
-  // inference for embedded to-one relations (professions/templates, joined
-  // via landings.profession_id/template_id) is unreliable about whether it
-  // comes back as an object or a single-element array -- normalize both.
-  function one<T>(rel: T | T[] | null): T | null {
-    return Array.isArray(rel) ? (rel[0] ?? null) : rel;
-  }
-
-  const professionSlug = one(
+  const professionSlug = oneRelation(
     landing.professions as { slug: string } | { slug: string }[] | null
   )?.slug;
-  const templateRow = one(
+  const templateConfig = oneRelation(
     landing.templates as
       | { config?: TemplateConfig }
       | { config?: TemplateConfig }[]
       | null
+  )?.config;
+
+  const rendered = renderLandingByTemplate(
+    {
+      slug: landing.slug,
+      formData: landing.form_data,
+      sectionsConfig: landing.sections_config as SectionConfigItem[],
+      paletaId: landing.paleta_id,
+    },
+    professionSlug,
+    templateConfig
   );
-  const templateConfig = templateRow?.config;
-  const sectionsConfig = landing.sections_config as SectionConfigItem[];
 
-  if (professionSlug === "abogados") {
-    const formData = landing.form_data as AbogadoFormData;
-    if (templateConfig?.layout === "clasico") {
-      return (
-        <AbogadoClasicoTemplate
-          formData={formData}
-          sectionsConfig={sectionsConfig}
-          subdomain={landing.slug}
-          colorPrimary={templateConfig.primaryColor}
-          colorAccent={templateConfig.secondaryColor}
-        />
-      );
-    }
-    if (templateConfig?.layout === "modern") {
-      return (
-        <AbogadoModernoTemplate
-          formData={formData}
-          sectionsConfig={sectionsConfig}
-          subdomain={landing.slug}
-          colorPrimary={templateConfig.primaryColor}
-          colorAccent={templateConfig.secondaryColor}
-          paletteVariables={findAbogadoPaleta(landing.paleta_id).variables}
-        />
-      );
-    }
-    return (
-      <AbogadoMinimalTemplate
-        formData={formData}
-        sectionsConfig={sectionsConfig}
-        subdomain={landing.slug}
-        colorPrimary={templateConfig?.primaryColor}
-      />
-    );
-  }
-
-  if (professionSlug === "psicologos") {
-    const formData = landing.form_data as PsicologoFormData;
-    if (templateConfig?.layout === "clasico") {
-      return (
-        <PsicologoClasicoTemplate
-          formData={formData}
-          sectionsConfig={sectionsConfig}
-          subdomain={landing.slug}
-          colorPrimary={templateConfig.primaryColor}
-          colorAccent={templateConfig.secondaryColor}
-        />
-      );
-    }
-    if (templateConfig?.layout === "minimal") {
-      return (
-        <PsicologoMinimalTemplate
-          formData={formData}
-          sectionsConfig={sectionsConfig}
-          subdomain={landing.slug}
-          colorPrimary={templateConfig?.primaryColor}
-        />
-      );
-    }
-    return (
-      <PsicologoModernoTemplate
-        formData={formData}
-        sectionsConfig={sectionsConfig}
-        subdomain={landing.slug}
-        colorPrimary={templateConfig?.primaryColor}
-        colorAccent={templateConfig?.secondaryColor}
-      />
-    );
-  }
-
-  if (professionSlug !== "contadores") {
+  if (!rendered) {
     notFound();
   }
 
-  if (templateConfig?.layout === "modern") {
-    return (
-      <ContadorModernoTemplate
-        formData={landing.form_data as ContadorFormData}
-        sectionsConfig={sectionsConfig}
-        subdomain={landing.slug}
-        colorPrimary={templateConfig.primaryColor}
-        colorAccent={templateConfig.secondaryColor}
-        paletteVariables={findContadorPaleta(landing.paleta_id).variables}
-      />
-    );
-  }
-
-  if (templateConfig?.layout === "classic") {
-    return (
-      <ContadorClasicoTemplate
-        formData={landing.form_data as ContadorFormData}
-        sectionsConfig={sectionsConfig}
-        subdomain={landing.slug}
-        colorPrimary={templateConfig.primaryColor}
-        colorAccent={templateConfig.secondaryColor}
-      />
-    );
-  }
-
-  if (templateConfig?.layout === "minimal") {
-    return (
-      <ContadorMinimalTemplate
-        formData={landing.form_data as ContadorFormData}
-        sectionsConfig={sectionsConfig}
-        subdomain={landing.slug}
-        colorPrimary={templateConfig.primaryColor}
-      />
-    );
-  }
-
-  return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
-      <ContadorLandingTemplate
-        formData={landing.form_data as ContadorFormData}
-        sectionsConfig={sectionsConfig}
-        accentColor={templateConfig?.primaryColor}
-      />
-    </div>
-  );
+  return rendered;
 }
