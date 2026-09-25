@@ -14,11 +14,19 @@ import { CardPaymentBrick } from "@/components/CardPaymentBrick";
 import { reconcileLandingIfStuck } from "@/lib/landings/reconcile-payment-status";
 import { findActiveResellerForUser } from "@/lib/resellers/require-reseller";
 
+// Kept in sync with OnboardingWizard.tsx's map of the same name --
+// psicologos reuses abogados' screenshots as a placeholder until real
+// psicologo-*.jpg captures exist (see that file's comment).
 const TEMPLATE_PREVIEW_IMAGE: Record<string, string> = {
   "contadores:moderno": "/previews/contador-moderno.jpg",
+  "contadores:clasico": "/previews/contador-clasico.jpg",
+  "contadores:minimal": "/previews/contador-minimal.jpg",
   "abogados:moderno": "/previews/abogado-moderno.jpg",
   "abogados:clasico": "/previews/abogado-clasico.jpg",
   "abogados:minimal": "/previews/abogado-minimal.jpg",
+  "psicologos:moderno": "/previews/abogado-moderno.jpg",
+  "psicologos:clasico": "/previews/abogado-clasico.jpg",
+  "psicologos:minimal": "/previews/abogado-minimal.jpg",
 };
 
 const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {

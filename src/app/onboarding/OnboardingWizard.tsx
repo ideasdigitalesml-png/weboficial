@@ -65,6 +65,11 @@ const DEDICATED_WIZARD_PROFESSIONS = new Set(["contadores", "abogados", "psicolo
 // data) since they have no separate static-HTML source under /templates/ --
 // see the one-off script this shipped with. Templates without an entry
 // here fall back to a plain name-only card.
+//
+// psicologos has no rendered screenshots of its own yet (generate-previews.js
+// doesn't know about that profession) -- reusing abogados' as a stand-in
+// keeps the "Elegí tu diseño" step from looking broken in the meantime.
+// Swap these three for real psicologo-*.jpg captures once they exist.
 const TEMPLATE_PREVIEW_IMAGE: Record<string, string> = {
   "contadores:moderno": "/previews/contador-moderno.jpg",
   "contadores:clasico": "/previews/contador-clasico.jpg",
@@ -72,15 +77,20 @@ const TEMPLATE_PREVIEW_IMAGE: Record<string, string> = {
   "abogados:moderno": "/previews/abogado-moderno.jpg",
   "abogados:clasico": "/previews/abogado-clasico.jpg",
   "abogados:minimal": "/previews/abogado-minimal.jpg",
+  "psicologos:moderno": "/previews/abogado-moderno.jpg",
+  "psicologos:clasico": "/previews/abogado-clasico.jpg",
+  "psicologos:minimal": "/previews/abogado-minimal.jpg",
 };
 
 // For the "profession" step card, one representative screenshot per
 // profession (its flagship "Moderno" template) rather than a generic
 // icon -- reuses the same real Playwright-rendered images above instead
-// of a placeholder gradient, for the professions that have one.
+// of a placeholder gradient, for the professions that have one. psicologos
+// reuses abogados' moderno shot for the same reason as the map above.
 const PROFESSION_PREVIEW_IMAGE: Record<string, string> = {
   contadores: "/previews/contador-moderno.jpg",
   abogados: "/previews/abogado-moderno.jpg",
+  psicologos: "/previews/abogado-moderno.jpg",
 };
 
 // Fallback for a profession with no rendered preview yet.
