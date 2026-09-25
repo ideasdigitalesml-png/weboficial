@@ -139,6 +139,12 @@ async function main() {
           transactionAmount: 25000,
           currencyId: "ARS",
         }),
+        createPreference: async () => {
+          throw new Error("no debería llamarse en este test");
+        },
+        getPayment: async () => {
+          throw new Error("no debería llamarse en este test");
+        },
       };
 
       const input = {
@@ -194,6 +200,12 @@ async function main() {
           externalReference: landingId,
           preapprovalPlanId: null,
         }),
+        createPreference: async () => {
+          throw new Error("no debería llamarse en este test");
+        },
+        getPayment: async () => {
+          throw new Error("no debería llamarse en este test");
+        },
         getAuthorizedPayment: async () => ({
           id: paymentId,
           status: "processed",
@@ -280,6 +292,12 @@ async function main() {
           externalReference: landingId,
           preapprovalPlanId: null,
         }),
+        createPreference: async () => {
+          throw new Error("no debería llamarse en este test");
+        },
+        getPayment: async () => {
+          throw new Error("no debería llamarse en este test");
+        },
         getAuthorizedPayment: async () => ({
           id: paymentId,
           status: "processed",
@@ -360,6 +378,12 @@ async function main() {
         preapprovalPlanId: null,
       }),
       getAuthorizedPayment: async () => {
+        throw new Error("no debería llamarse en este test");
+      },
+      createPreference: async () => {
+        throw new Error("no debería llamarse en este test");
+      },
+      getPayment: async () => {
         throw new Error("no debería llamarse en este test");
       },
     };

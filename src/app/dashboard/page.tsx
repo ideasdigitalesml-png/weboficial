@@ -9,6 +9,7 @@ import { ABOGADO_PALETAS } from "@/lib/templates/abogado-paletas";
 import { WelcomeBanner } from "./WelcomeBanner";
 import { CopyLinkButton } from "./CopyLinkButton";
 import { PaletteEditor } from "./PaletteEditor";
+import { DomainSection, type ExistingCustomDomain } from "./DomainSection";
 import { CardPaymentBrick } from "@/components/CardPaymentBrick";
 
 const TEMPLATE_PREVIEW_IMAGE: Record<string, string> = {
@@ -72,6 +73,8 @@ export default async function DashboardPage({
     { data: subscription },
     { data: profile },
     { data: activePlan },
+    { data: customDomain },
+    { data: registrantContact },
   ] = await Promise.all([
     supabase
       .from("professions")
@@ -92,6 +95,14 @@ export default async function DashboardPage({
       .maybeSingle(),
     supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
     supabase.from("plans").select("amount").eq("active", true).limit(1).maybeSingle(),
+    supabase
+      .from("custom_domains")
+      .select("domain, status, failure_reason")
+      .eq("landing_id", landing.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase.from("registrant_contacts").select("user_id").eq("user_id", user.id).maybeSingle(),
   ]);
 
   // Wildcard DNS + the *.weboficial.com.ar domain on Vercel are both live
@@ -288,6 +299,19 @@ export default async function DashboardPage({
             </div>
           </div>
         </section>
+
+        <DomainSection
+          existingDomain={
+            customDomain
+              ? {
+                  domain: customDomain.domain,
+                  status: customDomain.status as ExistingCustomDomain["status"],
+                  failureReason: customDomain.failure_reason,
+                }
+              : null
+          }
+          hasRegistrantContact={Boolean(registrantContact)}
+        />
       </div>
     </>
   );

@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { MercadoPagoClient } from "../mercadopago/client";
+import { ensureCustomer, ensureContact, registerDomain } from "../resellerclub/client";
+import { addProjectDomain, VERCEL_NAMESERVERS } from "../vercel/client";
 
 export interface WebhookEventInput {
   mpEventId: string;
@@ -17,6 +19,10 @@ export type ProcessResult =
         | "payment_recorded"
         | "payment_pending" // authorized_payment webhook arrived before MP attempted the charge (status still "scheduled") -- nothing to record yet, a later webhook will carry the outcome.
         | "landing_not_found" // resource is real and valid, but doesn't match any of our landings (external_reference and preapproval_plan_id both came up empty) -- most likely a stale/orphaned MP resource, not our bug.
+        | "domain_payment_pending" // one-time "payment" event for a custom_domains purchase, but MP's status isn't "approved" yet (pending/in_process/rejected) -- nothing to register.
+        | "domain_not_found" // payment's external_reference doesn't match any custom_domains row -- stale/orphaned MP resource, not our bug.
+        | "domain_registered" // payment approved, ResellerClub registration + Vercel domain-add both succeeded.
+        | "domain_registration_failed" // payment approved and recorded, but registration/DNS wiring failed after -- see custom_domains.failure_reason.
         | "ignored_unknown_type";
     };
 
@@ -57,6 +63,8 @@ export async function processMercadoPagoWebhook(
       action = await handlePreapprovalEvent(supabase, mpClient, input.dataId);
     } else if (input.eventType === "subscription_authorized_payment") {
       action = await handleAuthorizedPaymentEvent(supabase, mpClient, input.dataId);
+    } else if (input.eventType === "payment") {
+      action = await handleDomainPaymentEvent(supabase, mpClient, input.dataId);
     } else {
       action = "ignored_unknown_type";
     }
@@ -226,4 +234,135 @@ async function handleAuthorizedPaymentEvent(
   });
   if (error) throw error;
   return "payment_recorded";
+}
+
+// Custom-domain purchases are one-time Checkout Pro payments (see
+// createPreference in mercadopago/client.ts), not preapprovals -- MP sends
+// these as a plain "payment" webhook event, external_reference = the
+// custom_domains.id created by /api/domains/purchase.
+async function handleDomainPaymentEvent(
+  supabase: SupabaseClient,
+  mpClient: MercadoPagoClient,
+  paymentId: string
+): Promise<Extract<ProcessResult, { outcome: "processed" }>["action"]> {
+  const payment = await mpClient.getPayment(paymentId);
+  const customDomainId = payment.externalReference;
+  if (!customDomainId) {
+    console.warn(`payment ${paymentId} has no external_reference -- not a domain purchase, ignoring`);
+    return "domain_not_found";
+  }
+
+  const { data: customDomain } = await supabase
+    .from("custom_domains")
+    .select("id, domain, tld, landing_id")
+    .eq("id", customDomainId)
+    .maybeSingle();
+
+  if (!customDomain) {
+    console.warn(
+      `payment ${paymentId} external_reference ${customDomainId} doesn't match any custom_domains row -- ignoring`
+    );
+    return "domain_not_found";
+  }
+
+  if (payment.status !== "approved") {
+    return "domain_payment_pending";
+  }
+
+  const { error: activateError } = await supabase.rpc("activate_domain_payment", {
+    p_custom_domain_id: customDomain.id,
+    p_mp_payment_id: payment.id,
+  });
+  if (activateError) throw activateError;
+
+  // From here on, the payment already succeeded -- any failure below must
+  // be recorded via mark_domain_registration_failed (not thrown/left
+  // stuck in pending_registration), since the customer already paid.
+  try {
+    const { data: landing } = await supabase
+      .from("landings")
+      .select("user_id")
+      .eq("id", customDomain.landing_id)
+      .single();
+    if (!landing) throw new Error(`landing ${customDomain.landing_id} not found`);
+
+    const { data: contact } = await supabase
+      .from("registrant_contacts")
+      .select("*")
+      .eq("user_id", landing.user_id)
+      .single();
+    if (!contact) throw new Error(`registrant_contacts not found for user ${landing.user_id}`);
+
+    const customerId = await ensureCustomer(
+      {
+        fullName: contact.full_name,
+        email: contact.email,
+        phoneCountryCode: contact.phone_country_code,
+        phoneNumber: contact.phone_number,
+        addressLine1: contact.address_line1,
+        city: contact.city,
+        state: contact.state,
+        countryCode: contact.country_code,
+        zipcode: contact.zipcode,
+        companyName: contact.company_name,
+      },
+      contact.resellerclub_customer_id
+    );
+    const contactId = await ensureContact(
+      {
+        fullName: contact.full_name,
+        email: contact.email,
+        phoneCountryCode: contact.phone_country_code,
+        phoneNumber: contact.phone_number,
+        addressLine1: contact.address_line1,
+        city: contact.city,
+        state: contact.state,
+        countryCode: contact.country_code,
+        zipcode: contact.zipcode,
+        companyName: contact.company_name,
+      },
+      customerId,
+      contact.resellerclub_contact_id
+    );
+
+    if (
+      customerId !== contact.resellerclub_customer_id ||
+      contactId !== contact.resellerclub_contact_id
+    ) {
+      await supabase
+        .from("registrant_contacts")
+        .update({ resellerclub_customer_id: customerId, resellerclub_contact_id: contactId })
+        .eq("user_id", landing.user_id);
+    }
+
+    const registration = await registerDomain({
+      domain: customDomain.domain,
+      years: 1,
+      customerId,
+      contactId,
+      nameservers: VERCEL_NAMESERVERS,
+    });
+
+    await addProjectDomain(customDomain.domain);
+
+    const { error: finalizeError } = await supabase.rpc("finalize_domain_registration", {
+      p_custom_domain_id: customDomain.id,
+      p_resellerclub_order_id: registration.orderId,
+      p_expires_at: registration.expiresAt,
+    });
+    if (finalizeError) throw finalizeError;
+
+    return "domain_registered";
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(
+      `domain registration failed after payment for custom_domains.id=${customDomain.id} (${customDomain.domain})`,
+      err
+    );
+    await supabase.rpc("mark_domain_registration_failed", {
+      p_custom_domain_id: customDomain.id,
+      p_reason: message,
+    });
+    return "domain_registration_failed";
+  }
 }

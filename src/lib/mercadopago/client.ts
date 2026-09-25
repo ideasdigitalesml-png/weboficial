@@ -42,6 +42,31 @@ export interface CreateAuthorizedPreapprovalResult {
   status: string;
 }
 
+// One-time payment (Checkout Pro), used by the custom-domain purchase flow
+// -- unlike every method above, this isn't a recurring subscription charge.
+export interface CreatePreferenceInput {
+  title: string;
+  externalReference: string;
+  amount: number;
+  currency: string;
+  backUrls: { success: string; failure: string; pending: string };
+  notificationUrl: string;
+}
+
+export interface CreatePreferenceResult {
+  id: string;
+  initPoint: string;
+}
+
+export interface PaymentDetails {
+  id: string;
+  status: string;
+  statusDetail: string | null;
+  externalReference: string | null;
+  transactionAmount: number;
+  currencyId: string;
+}
+
 export interface AuthorizedPaymentDetails {
   id: string;
   // The authorized_payment resource's own status is about scheduling, not
@@ -77,6 +102,8 @@ export interface MercadoPagoClient {
   ): Promise<CreateAuthorizedPreapprovalResult>;
   getPreapproval(id: string): Promise<PreapprovalDetails>;
   getAuthorizedPayment(id: string): Promise<AuthorizedPaymentDetails>;
+  createPreference(input: CreatePreferenceInput): Promise<CreatePreferenceResult>;
+  getPayment(id: string): Promise<PaymentDetails>;
 }
 
 function accessToken(): string {
@@ -174,6 +201,51 @@ export const mercadoPagoClient: MercadoPagoClient = {
       paymentStatus: data.payment?.status ?? null,
       paymentStatusDetail: data.payment?.status_detail ?? null,
       preapprovalId: String(data.preapproval_id),
+      transactionAmount: data.transaction_amount,
+      currencyId: data.currency_id,
+    };
+  },
+
+  async createPreference(input) {
+    const data = (await mpFetch("/checkout/preferences", {
+      method: "POST",
+      body: JSON.stringify({
+        items: [
+          {
+            title: input.title,
+            quantity: 1,
+            unit_price: input.amount,
+            currency_id: input.currency,
+          },
+        ],
+        external_reference: input.externalReference,
+        back_urls: {
+          success: input.backUrls.success,
+          failure: input.backUrls.failure,
+          pending: input.backUrls.pending,
+        },
+        auto_return: "approved",
+        notification_url: input.notificationUrl,
+      }),
+    })) as { id: string; init_point: string };
+
+    return { id: data.id, initPoint: data.init_point };
+  },
+
+  async getPayment(id) {
+    const data = (await mpFetch(`/v1/payments/${id}`)) as {
+      id: string | number;
+      status: string;
+      status_detail?: string | null;
+      external_reference: string | null;
+      transaction_amount: number;
+      currency_id: string;
+    };
+    return {
+      id: String(data.id),
+      status: data.status,
+      statusDetail: data.status_detail ?? null,
+      externalReference: data.external_reference ?? null,
       transactionAmount: data.transaction_amount,
       currencyId: data.currency_id,
     };

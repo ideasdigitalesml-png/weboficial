@@ -276,6 +276,78 @@ export async function cancelSubscriptionAction(): Promise<{
   };
 }
 
+export interface SaveRegistrantContactInput {
+  fullName: string;
+  email: string;
+  phoneCountryCode: string;
+  phoneNumber: string;
+  addressLine1: string;
+  city: string;
+  state: string;
+  countryCode: string;
+  zipcode: string;
+  companyName?: string;
+}
+
+export type SaveRegistrantContactResult =
+  | { ok: true }
+  | { ok: false; reason: "not_authenticated" | "invalid_input" };
+
+// Registrant WHOIS contact for custom-domain purchases (see
+// src/lib/resellerclub/client.ts) -- collected once, reused for every
+// future domain purchase by this user. Deliberately whitelists only the
+// personal-data fields: resellerclub_customer_id/resellerclub_contact_id
+// are never accepted from the client, only ever written by the webhook
+// once it actually creates those records at ResellerClub.
+export async function saveRegistrantContactAction(
+  input: SaveRegistrantContactInput
+): Promise<SaveRegistrantContactResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false, reason: "not_authenticated" };
+  }
+
+  const required = [
+    input.fullName,
+    input.email,
+    input.phoneCountryCode,
+    input.phoneNumber,
+    input.addressLine1,
+    input.city,
+    input.state,
+    input.countryCode,
+    input.zipcode,
+  ];
+  if (required.some((v) => !v || !v.trim())) {
+    return { ok: false, reason: "invalid_input" };
+  }
+
+  const { error } = await supabase.from("registrant_contacts").upsert({
+    user_id: user.id,
+    full_name: input.fullName.trim(),
+    email: input.email.trim(),
+    phone_country_code: input.phoneCountryCode.trim(),
+    phone_number: input.phoneNumber.trim(),
+    address_line1: input.addressLine1.trim(),
+    city: input.city.trim(),
+    state: input.state.trim(),
+    country_code: input.countryCode.trim().toUpperCase(),
+    zipcode: input.zipcode.trim(),
+    company_name: input.companyName?.trim() || null,
+  });
+
+  if (error) {
+    console.error("saveRegistrantContactAction failed", error);
+    return { ok: false, reason: "invalid_input" };
+  }
+
+  return { ok: true };
+}
+
 export async function updateLandingPaletaAction(
   landingId: string,
   paletaId: string
