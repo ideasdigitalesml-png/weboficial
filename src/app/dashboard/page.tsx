@@ -11,6 +11,7 @@ import { CopyLinkButton } from "./CopyLinkButton";
 import { PaletteEditor } from "./PaletteEditor";
 import { DomainSection, type ExistingCustomDomain } from "./DomainSection";
 import { CardPaymentBrick } from "@/components/CardPaymentBrick";
+import { reconcileLandingIfStuck } from "@/lib/landings/reconcile-payment-status";
 
 const TEMPLATE_PREVIEW_IMAGE: Record<string, string> = {
   "contadores:moderno": "/previews/contador-moderno.jpg",
@@ -67,6 +68,13 @@ export default async function DashboardPage({
     redirect("/onboarding");
   }
 
+  // Self-heals the "Mercado Pago authorized the subscription but the
+  // approved-payment webhook never arrived" gap -- see
+  // reconcileLandingIfStuck's own comment. A no-op on every normal visit;
+  // only does anything for a landing stuck in draft with an authorized
+  // subscription and no recorded approved payment.
+  landing.status = await reconcileLandingIfStuck(supabase, landing);
+
   const [
     { data: profession },
     { data: template },
@@ -105,12 +113,14 @@ export default async function DashboardPage({
     supabase.from("registrant_contacts").select("user_id").eq("user_id", user.id).maybeSingle(),
   ]);
 
-  // Wildcard DNS + the *.weboficial.com.ar domain on Vercel are both live
-  // now, so every landing with a slug gets its real subdomain -- draft
-  // landings render fine there too (see PUBLICLY_VISIBLE_STATUSES in
-  // PublicLandingView.tsx), this isn't gated on payment.
+  // Only an active landing has a working public URL: landings' public SELECT
+  // RLS policy is `status = 'active'` only (0007_remove_temporary_draft_public_read.sql,
+  // deliberate -- a draft shouldn't be readable by just anyone before its
+  // owner has paid). Linking a draft's subdomain here would show "No
+  // disponible" the moment they click it, so it's gated on payment same as
+  // the badge below.
   const isPublished = landing.status === "active";
-  const publicUrl = landing.slug
+  const publicUrl = isPublished && landing.slug
     ? `https://${landing.slug}.${ROOT_DOMAIN}`
     : null;
   const professionalName =
@@ -183,7 +193,9 @@ export default async function DashboardPage({
             </div>
           ) : (
             <p className="text-sm font-medium text-amber-700">
-              Configurá tu sitio para obtener tu URL.
+              {landing.slug
+                ? "Tu página se publica en cuanto actives tu plan."
+                : "Configurá tu sitio para obtener tu URL."}
             </p>
           )}
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">

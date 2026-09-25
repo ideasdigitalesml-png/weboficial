@@ -145,6 +145,9 @@ async function main() {
         getPayment: async () => {
           throw new Error("no debería llamarse en este test");
         },
+        searchAuthorizedPayments: async () => {
+          throw new Error("no debería llamarse en este test");
+        },
       };
 
       const input = {
@@ -204,6 +207,9 @@ async function main() {
           throw new Error("no debería llamarse en este test");
         },
         getPayment: async () => {
+          throw new Error("no debería llamarse en este test");
+        },
+        searchAuthorizedPayments: async () => {
           throw new Error("no debería llamarse en este test");
         },
         getAuthorizedPayment: async () => ({
@@ -298,6 +304,9 @@ async function main() {
         getPayment: async () => {
           throw new Error("no debería llamarse en este test");
         },
+        searchAuthorizedPayments: async () => {
+          throw new Error("no debería llamarse en este test");
+        },
         getAuthorizedPayment: async () => ({
           id: paymentId,
           status: "processed",
@@ -384,6 +393,9 @@ async function main() {
         throw new Error("no debería llamarse en este test");
       },
       getPayment: async () => {
+        throw new Error("no debería llamarse en este test");
+      },
+      searchAuthorizedPayments: async () => {
         throw new Error("no debería llamarse en este test");
       },
     };

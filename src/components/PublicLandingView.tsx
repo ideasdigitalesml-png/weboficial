@@ -23,7 +23,16 @@ import {
 import { PsicologoClasicoTemplate } from "@/components/templates/psicologo/PsicologoClasicoTemplate";
 import { PsicologoMinimalTemplate } from "@/components/templates/psicologo/PsicologoMinimalTemplate";
 
-const PUBLICLY_VISIBLE_STATUSES = new Set(["active", "draft"]);
+// Only 'active' -- this used to also include 'draft' (a pre-payment
+// preview, no login required), but 0007_remove_temporary_draft_public_read.sql
+// locked landings' public SELECT RLS policy down to `status = 'active'`
+// only, deliberately, to close a hole where any signed-in user could read
+// any other user's still-unpaid landing. That migration was never
+// backported here, so 'draft' in this set was dead code: the RLS policy
+// already returns zero rows for a draft landing before this file ever runs,
+// regardless of what's in this Set. Kept in sync with the DB now instead of
+// silently relying on RLS to make the mismatch harmless.
+const PUBLICLY_VISIBLE_STATUSES = new Set(["active"]);
 
 interface TemplateConfig {
   primaryColor?: string;

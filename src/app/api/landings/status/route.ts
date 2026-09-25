@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { reconcileLandingIfStuck } from "@/lib/landings/reconcile-payment-status";
 
 export async function GET() {
   const supabase = await createClient();
@@ -21,14 +22,16 @@ export async function GET() {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 
+  const status = await reconcileLandingIfStuck(supabase, landing);
+
   // While still draft, ProcessingPoller.tsx needs to tell "still waiting for
   // Mercado Pago" apart from "the charge was actually declined" -- landing
   // status alone can't do that (it only ever moves on approval, see
   // record_approved_payment), so surface the most recent payment's own
-  // status too. Only relevant pre-activation; skip the extra queries once
-  // the landing is already active.
+  // status too. Only relevant pre-activation; skip the extra query once the
+  // landing is already active (including just now, via reconciliation).
   let paymentStatus: string | null = null;
-  if (landing.status !== "active") {
+  if (status !== "active") {
     const { data: subscription } = await supabase
       .from("subscriptions")
       .select("id")
@@ -49,5 +52,5 @@ export async function GET() {
     }
   }
 
-  return NextResponse.json({ status: landing.status, paymentStatus });
+  return NextResponse.json({ status, paymentStatus });
 }

@@ -104,6 +104,14 @@ export interface MercadoPagoClient {
   getAuthorizedPayment(id: string): Promise<AuthorizedPaymentDetails>;
   createPreference(input: CreatePreferenceInput): Promise<CreatePreferenceResult>;
   getPayment(id: string): Promise<PaymentDetails>;
+  // Pull-based fallback for when the subscription_authorized_payment
+  // webhook never arrives at all (confirmed happening in production --
+  // verified against a real preapproval where MP's own records showed an
+  // approved charge that our webhook_events table had zero trace of).
+  // Note: this is GET /authorized_payments/search?preapproval_id=, NOT
+  // GET /preapproval/{id}/authorized_payments (that one 404s -- doesn't
+  // exist despite seeming like the more obvious REST shape).
+  searchAuthorizedPayments(preapprovalId: string): Promise<AuthorizedPaymentDetails[]>;
 }
 
 function accessToken(): string {
@@ -204,6 +212,31 @@ export const mercadoPagoClient: MercadoPagoClient = {
       transactionAmount: data.transaction_amount,
       currencyId: data.currency_id,
     };
+  },
+
+  async searchAuthorizedPayments(preapprovalId) {
+    const data = (await mpFetch(
+      `/authorized_payments/search?preapproval_id=${encodeURIComponent(preapprovalId)}`
+    )) as {
+      results: Array<{
+        id: string | number;
+        status: string;
+        preapproval_id: string | number;
+        transaction_amount: number;
+        currency_id: string;
+        payment?: { status?: string; status_detail?: string } | null;
+      }>;
+    };
+
+    return data.results.map((item) => ({
+      id: String(item.id),
+      status: item.status,
+      paymentStatus: item.payment?.status ?? null,
+      paymentStatusDetail: item.payment?.status_detail ?? null,
+      preapprovalId: String(item.preapproval_id),
+      transactionAmount: item.transaction_amount,
+      currencyId: item.currency_id,
+    }));
   },
 
   async createPreference(input) {

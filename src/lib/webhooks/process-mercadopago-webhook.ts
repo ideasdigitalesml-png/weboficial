@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { MercadoPagoClient } from "../mercadopago/client";
+import type { AuthorizedPaymentDetails, MercadoPagoClient } from "../mercadopago/client";
 import { ensureCustomer, ensureContact, registerDomain } from "../resellerclub/client";
 import { addProjectDomain, VERCEL_NAMESERVERS } from "../vercel/client";
 
@@ -185,13 +185,15 @@ async function handlePreapprovalEvent(
   return subscriptionId ? "preapproval_updated" : "landing_not_found";
 }
 
-async function handleAuthorizedPaymentEvent(
+// Shared by the live webhook path and reconcileMissedAuthorizedPayments
+// below -- both end up with an already-resolved AuthorizedPaymentDetails,
+// they just get there differently (a single ID from the webhook payload vs.
+// a search result from MP directly).
+async function recordAuthorizedPayment(
   supabase: SupabaseClient,
   mpClient: MercadoPagoClient,
-  paymentId: string
+  payment: AuthorizedPaymentDetails
 ): Promise<Extract<ProcessResult, { outcome: "processed" }>["action"]> {
-  const payment = await mpClient.getAuthorizedPayment(paymentId);
-
   // "scheduled" means MP hasn't attempted the charge yet -- there's no
   // approved/rejected outcome to record. A later webhook delivery (status
   // "processed" or "recycling", with the nested `payment` object filled
@@ -234,6 +236,40 @@ async function handleAuthorizedPaymentEvent(
   });
   if (error) throw error;
   return "payment_recorded";
+}
+
+async function handleAuthorizedPaymentEvent(
+  supabase: SupabaseClient,
+  mpClient: MercadoPagoClient,
+  paymentId: string
+): Promise<Extract<ProcessResult, { outcome: "processed" }>["action"]> {
+  const payment = await mpClient.getAuthorizedPayment(paymentId);
+  return recordAuthorizedPayment(supabase, mpClient, payment);
+}
+
+// Fallback for when subscription_authorized_payment never arrives at all --
+// confirmed happening in production: MP's own authorized_payments/search
+// showed a charge approved days ago that webhook_events had zero record of
+// (not even a failed attempt), leaving the landing stuck in "draft" forever
+// with an "authorized" subscription sitting right next to it. Called from
+// /api/landings/status with a service-role client (record_approved_payment
+// is service_role-only, see 0025_lock_down_domain_rpcs.sql's sibling
+// grants) whenever that route notices this exact mismatch. Safe to call
+// repeatedly: record_approved_payment's own `where status = 'draft'` guard
+// makes it a no-op once the landing is already active.
+export async function reconcileMissedAuthorizedPayments(
+  supabase: SupabaseClient,
+  mpClient: MercadoPagoClient,
+  preapprovalId: string
+): Promise<{ recorded: boolean }> {
+  const payments = await mpClient.searchAuthorizedPayments(preapprovalId);
+  const approved = payments.find((p) => p.paymentStatus === "approved");
+  if (!approved) {
+    return { recorded: false };
+  }
+
+  const action = await recordAuthorizedPayment(supabase, mpClient, approved);
+  return { recorded: action === "payment_recorded" };
 }
 
 // Custom-domain purchases are one-time Checkout Pro payments (see
