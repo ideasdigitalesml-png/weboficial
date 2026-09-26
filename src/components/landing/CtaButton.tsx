@@ -13,7 +13,7 @@ export function CtaButton({ className = "" }: { className?: string }) {
       href="/onboarding"
       className={`inline-flex min-h-11 items-center justify-center rounded-full bg-sky px-8 py-3 text-lg font-semibold text-white transition-colors hover:bg-sky-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky ${className}`}
     >
-      Creá tu página
+      Crear mi página
     </Link>
   );
 }

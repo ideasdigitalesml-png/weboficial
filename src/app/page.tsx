@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Wordmark } from "@/components/landing/Wordmark";
 import { Hero } from "@/components/landing/Hero";
+import { ProfessionShowcase } from "@/components/landing/ProfessionShowcase";
 import { TemplatesShowcase } from "@/components/landing/TemplatesShowcase";
 import { SocialProof } from "@/components/landing/SocialProof";
 import { HowItWorks } from "@/components/landing/HowItWorks";
@@ -41,13 +42,20 @@ export default async function Home() {
               href="/onboarding"
               className="hidden items-center justify-center gap-1.5 rounded-full bg-sky px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-sky-dark sm:inline-flex"
             >
-              Creá tu página
+              Crear mi página
               <span aria-hidden>→</span>
             </Link>
           </div>
         </div>
       </header>
-      <Hero />
+      <Hero
+        previewImages={[
+          { src: "/previews/contador-moderno.jpg", alt: "Ejemplo de página para contadores" },
+          { src: "/previews/abogado-moderno.jpg", alt: "Ejemplo de página para abogados" },
+          { src: "/previews/psicologo-moderno.jpg", alt: "Ejemplo de página para psicólogos" },
+        ]}
+      />
+      <ProfessionShowcase />
       <TemplatesShowcase />
       <SocialProof />
       <HowItWorks />

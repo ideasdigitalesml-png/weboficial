@@ -11,19 +11,18 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 const SITE_DESCRIPTION =
-  "Tu página profesional, lista en minutos. Sin programar, sin complicaciones. $13.400/mes con Mercado Pago.";
+  "Creá tu página web profesional en minutos. Elegí tu profesión, seleccioná un diseño y publicá tu página sin saber programación.";
 
-const SITE_TITLE = "weboficial — Tu página profesional, lista en minutos";
-const SITE_OG_DESCRIPTION =
-  "Sin programar, sin complicaciones. Elegís tu diseño, completás tus datos y listo. Desde $13.400/mes con Mercado Pago.";
+const SITE_TITLE = "Weboficial — Tu página profesional lista en minutos";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://weboficial.com.ar"),
   title: SITE_TITLE,
   description: SITE_DESCRIPTION,
+  alternates: { canonical: "https://weboficial.com.ar" },
   openGraph: {
     title: SITE_TITLE,
-    description: SITE_OG_DESCRIPTION,
+    description: SITE_DESCRIPTION,
     type: "website",
     url: "https://weboficial.com.ar",
     images: ["/og-image.png"],
@@ -31,7 +30,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: SITE_TITLE,
-    description: SITE_OG_DESCRIPTION,
+    description: SITE_DESCRIPTION,
   },
 };
 

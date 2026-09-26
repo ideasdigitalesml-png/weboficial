@@ -12,6 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: base, changeFrequency: "weekly", priority: 1 },
     { url: `${base}/contadores`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/abogados`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${base}/psicologos`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/terminos`, changeFrequency: "yearly", priority: 0.3 },
     { url: `${base}/privacidad`, changeFrequency: "yearly", priority: 0.3 },
   ];

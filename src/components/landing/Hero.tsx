@@ -1,10 +1,46 @@
 import Link from "next/link";
+import Image from "next/image";
+
+export interface HeroPreviewImage {
+  src: string;
+  alt: string;
+}
+
+// Real per-profession screenshots (see /public/previews/) shown as a small
+// grid instead of the BrowserMockup fallback below -- only passed by the
+// home page, which wants to show all three professions at once. Profession
+// landing pages (/contadores, /abogados, /psicologos) render just one
+// profession's own previews lower on the page (see ProfessionLandingPage),
+// so they keep the generic BrowserMockup here instead.
+function PreviewGrid({ images }: { images: HeroPreviewImage[] }) {
+  return (
+    <div className="grid w-full max-w-sm grid-cols-3 gap-3 md:max-w-md">
+      {images.map((image, index) => (
+        <div
+          key={image.src}
+          className="overflow-hidden rounded-xl border border-white/10 shadow-lg shadow-black/40"
+        >
+          <Image
+            src={image.src}
+            alt={image.alt}
+            width={200}
+            height={125}
+            className="h-auto w-full"
+            priority={index === 0}
+            loading={index === 0 ? undefined : "lazy"}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // A browser-chrome mockup showing a miniature of the real
 // ContadorModernoTemplate design (navy #0B2545 + green #1A6B4A accents) --
 // a visitor needs to recognize "that's what my page would look like"
-// within a couple seconds, which a generic gray wireframe can't do. Swap
-// for an actual screenshot once one exists.
+// within a couple seconds, which a generic gray wireframe can't do. Used on
+// profession pages, which show that profession's own real previews further
+// down instead.
 function BrowserMockup() {
   return (
     <div className="w-full max-w-sm scale-90 md:max-w-md md:scale-100">
@@ -104,8 +140,10 @@ function BrowserMockup() {
 
 export function Hero({
   title = "Tu página profesional, lista en minutos.",
+  previewImages,
 }: {
   title?: string;
+  previewImages?: HeroPreviewImage[];
 }) {
   return (
     <section className="relative w-full overflow-hidden bg-navy">
@@ -169,7 +207,7 @@ export function Hero({
             className="group inline-flex items-center gap-2 rounded-xl bg-sky-dark px-8 py-4 text-base font-semibold text-white shadow-lg shadow-sky-500/25 transition-all hover:-translate-y-0.5 hover:bg-sky-800"
             style={{ animation: "fadeInUp 0.6s ease both", animationDelay: "0.5s" }}
           >
-            Creá tu página
+            Crear mi página
             <span className="transition-transform group-hover:translate-x-0.5">
               →
             </span>
@@ -200,7 +238,11 @@ export function Hero({
               animationDelay: "0.3s",
             }}
           >
-            <BrowserMockup />
+            {previewImages ? (
+              <PreviewGrid images={previewImages} />
+            ) : (
+              <BrowserMockup />
+            )}
           </div>
         </div>
       </div>
