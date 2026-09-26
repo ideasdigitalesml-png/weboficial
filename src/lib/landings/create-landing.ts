@@ -3,6 +3,7 @@ import { validateFormData, type FormSchema } from "../forms/validate-form-data";
 import { slugify, isValidSlugFormat, generateSlugCandidates } from "./slug";
 import { CONTADOR_PALETAS, DEFAULT_CONTADOR_PALETA_ID } from "../templates/contador-paletas";
 import { ABOGADO_PALETAS, DEFAULT_ABOGADO_PALETA_ID } from "../templates/abogado-paletas";
+import { UTM_PARAM_KEYS, type UtmParams } from "../utm-cookie";
 
 const PALETAS_BY_PROFESSION: Record<string, { ids: ReadonlySet<string>; defaultId: string }> = {
   contadores: {
@@ -38,6 +39,12 @@ export interface CreateLandingInput {
   // resolve_active_reseller_id rather than trusted as-is: an invalid,
   // unknown, or inactive code is silently ignored, same as a missing one.
   referralCode?: string;
+  // First-touch ad-campaign UTM params, captured the same way as
+  // referralCode above (see get-stored-utm-params.ts / actions.ts). Written
+  // as-is, no RPC validation needed -- unlike a referral code these don't
+  // grant anything (commission, access), they're purely informational for
+  // the admin panel.
+  utmParams?: UtmParams;
 }
 
 export type CreateLandingResult =
@@ -119,6 +126,12 @@ export async function createLandingForUser(
       ? input.paletaId
       : paletaConfig?.defaultId;
 
+  const utmFields: Partial<Record<(typeof UTM_PARAM_KEYS)[number], string>> = {};
+  for (const key of UTM_PARAM_KEYS) {
+    const value = input.utmParams?.[key];
+    if (value) utmFields[key] = value;
+  }
+
   let resellerId: string | null = null;
   if (input.referralCode) {
     const { data } = await supabase.rpc("resolve_active_reseller_id", {
@@ -143,6 +156,7 @@ export async function createLandingForUser(
       ...(resellerId
         ? { reseller_id: resellerId, referral_code: input.referralCode!.toUpperCase() }
         : {}),
+      ...utmFields,
     })
     .select("id, slug")
     .single();

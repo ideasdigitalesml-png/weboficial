@@ -9,6 +9,7 @@ import {
   type SlugCheckResult,
 } from "@/lib/landings/create-landing";
 import { REFERRAL_COOKIE_NAME } from "@/lib/resellers/referral-cookie";
+import { UTM_COOKIE_NAME, type UtmParams } from "@/lib/utm-cookie";
 
 // No auth required: checking whether a slug is taken isn't sensitive, and
 // the wizard is reachable by anonymous visitors now (they only need a
@@ -33,6 +34,9 @@ export async function createLandingAction(input: {
   // directly below, always takes priority when both are present since it's
   // the primary, tamper-resistant channel ReferralCapture.tsx writes to.
   referralCode?: string;
+  // Same fallback shape as referralCode above, for the weboficial_utm
+  // cookie -- see getStoredUtmParams.
+  utmParams?: UtmParams;
 }): Promise<CreateLandingResult> {
   const supabase = await createClient();
   const {
@@ -47,5 +51,19 @@ export async function createLandingAction(input: {
   const referralCode =
     cookieStore.get(REFERRAL_COOKIE_NAME)?.value ?? input.referralCode;
 
-  return createLandingForUser(supabase, user.id, { ...input, referralCode });
+  const utmCookieRaw = cookieStore.get(UTM_COOKIE_NAME)?.value;
+  let utmParams = input.utmParams;
+  if (utmCookieRaw) {
+    try {
+      utmParams = JSON.parse(utmCookieRaw) as UtmParams;
+    } catch {
+      // Malformed cookie value -- fall back to whatever the client passed.
+    }
+  }
+
+  return createLandingForUser(supabase, user.id, {
+    ...input,
+    referralCode,
+    utmParams,
+  });
 }

@@ -6,6 +6,7 @@ import { createSubscriptionAction } from "@/app/dashboard/actions";
 import { loadDraftPage, clearDraftPage } from "./draft-storage";
 import { uploadPendingPhotos } from "./photo-upload";
 import { getStoredReferralCode } from "@/lib/resellers/get-stored-referral-code";
+import { getStoredUtmParams, clearStoredUtmParams } from "@/lib/get-stored-utm-params";
 
 export type PublishOutcome =
   | { status: "no_draft" }
@@ -73,6 +74,7 @@ export async function publishDraftPage(): Promise<PublishOutcome> {
     desiredSlug: draft.desiredSlug,
     paletaId: draft.paletaId,
     referralCode: getStoredReferralCode() ?? undefined,
+    utmParams: getStoredUtmParams() ?? undefined,
   });
 
   if (!result.ok) {
@@ -92,6 +94,10 @@ export async function publishDraftPage(): Promise<PublishOutcome> {
   }
 
   clearDraftPage();
+  // Persisted to the landing row by createLandingAction above -- clear now
+  // so a later, unrelated visit from the same browser never inherits this
+  // campaign.
+  clearStoredUtmParams();
 
   // createSubscriptionAction redirects (throws NEXT_REDIRECT) on every
   // success path -- reusing an existing pending subscription's checkout
