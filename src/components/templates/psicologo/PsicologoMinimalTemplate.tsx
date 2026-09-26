@@ -6,7 +6,12 @@ import { capitalizeName } from "@/lib/capitalize-name";
 import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
-import type { PsicologoFormData } from "./PsicologoModernoTemplate";
+import { SocialLinks } from "@/components/templates/shared/SocialLinks";
+import {
+  ENFOQUE_TERAPEUTICO_LABELS,
+  POBLACION_ATENDIDA_LABELS,
+  type PsicologoFormData,
+} from "./PsicologoModernoTemplate";
 
 // Same content rules as the other two psicologo templates: "Cómo trabajo"
 // is fixed generic copy (same category as the abogado templates'
@@ -95,14 +100,22 @@ export function PsicologoMinimalTemplate({
   const year = new Date().getFullYear();
   const ctaText = formData.cta_text || "Reservá tu turno";
   const especialidades = formData.especialidades ?? [];
-  const obrasSociales = formData.obras_sociales ?? [];
+  const poblacionAtendida = formData.poblacion_atendida ?? [];
+  const obrasSocialesNombres =
+    formData.acepta_obras_sociales === "si" && formData.obras_sociales_detalle
+      ? formData.obras_sociales_detalle.split(",").map((s) => s.trim()).filter(Boolean)
+      : [];
   const testimonios = formData.testimonios ?? [];
   const modalidadLabel = formData.modalidad
     ? MODALIDAD_LABELS[formData.modalidad] || formData.modalidad
     : "";
-  const showModalidadBand = Boolean(modalidadLabel) || obrasSociales.length > 0;
-  const heroLead = formData.enfoque_terapeutico
-    ? `Enfoque terapéutico: ${formData.enfoque_terapeutico}`
+  const enfoqueLabel = formData.enfoque_terapeutico
+    ? ENFOQUE_TERAPEUTICO_LABELS[formData.enfoque_terapeutico] ?? formData.enfoque_terapeutico
+    : "";
+  const showModalidadBand =
+    Boolean(modalidadLabel) || obrasSocialesNombres.length > 0 || poblacionAtendida.length > 0;
+  const heroLead = enfoqueLabel
+    ? `Enfoque terapéutico: ${enfoqueLabel}`
     : "Un espacio de escucha y acompañamiento profesional.";
 
   return (
@@ -196,13 +209,25 @@ export function PsicologoMinimalTemplate({
               {modalidadLabel && (
                 <FadeInSection className="pm-modalidad-tag">{modalidadLabel}</FadeInSection>
               )}
-              {obrasSociales.length > 0 && (
+              {poblacionAtendida.length > 0 && (
+                <FadeInSection delayMs={30} className="pm-obras-sociales">
+                  <p className="pm-obras-sociales-label pm-uc">Atiendo a</p>
+                  <div className="pm-obras-sociales-pills">
+                    {poblacionAtendida.map((value) => (
+                      <span key={value} className="pm-pill">
+                        {POBLACION_ATENDIDA_LABELS[value] ?? value}
+                      </span>
+                    ))}
+                  </div>
+                </FadeInSection>
+              )}
+              {obrasSocialesNombres.length > 0 && (
                 <FadeInSection delayMs={60} className="pm-obras-sociales">
                   <p className="pm-obras-sociales-label pm-uc">Obras sociales y prepagas</p>
                   <div className="pm-obras-sociales-pills">
-                    {obrasSociales.map((item, i) => (
-                      <span key={`${item.nombre}-${i}`} className="pm-pill">
-                        {item.nombre}
+                    {obrasSocialesNombres.map((nombre, i) => (
+                      <span key={`${nombre}-${i}`} className="pm-pill">
+                        {nombre}
                       </span>
                     ))}
                   </div>
@@ -238,8 +263,8 @@ export function PsicologoMinimalTemplate({
             </FadeInSection>
             <FadeInSection delayMs={60} className="pm-about-copy">
               {formData.descripcion && <p>{formData.descripcion}</p>}
-              {formData.enfoque_terapeutico && (
-                <p className="pm-enfoque">Enfoque terapéutico: {formData.enfoque_terapeutico}</p>
+              {enfoqueLabel && (
+                <p className="pm-enfoque">Enfoque terapéutico: {enfoqueLabel}</p>
               )}
               <div className="pm-credentials-list">
                 {formData.titulo_profesional && (
@@ -316,20 +341,15 @@ export function PsicologoMinimalTemplate({
             )}
             <span className="pm-sep">·</span>
             {year}
-            {isRealUrl(formData.linkedin_url) && (
+            {(isRealUrl(formData.linkedin_url) || isRealUrl(formData.instagram_url)) && (
               <>
                 <span className="pm-sep">·</span>
-                <a className="pm-link-cta" href={formData.linkedin_url} target="_blank" rel="noopener">
-                  LinkedIn
-                </a>
-              </>
-            )}
-            {isRealUrl(formData.instagram_url) && (
-              <>
-                <span className="pm-sep">·</span>
-                <a className="pm-link-cta" href={formData.instagram_url} target="_blank" rel="noopener">
-                  Instagram
-                </a>
+                <SocialLinks
+                  linkedinUrl={formData.linkedin_url}
+                  instagramUrl={formData.instagram_url}
+                  className="pm-link-cta"
+                  size={16}
+                />
               </>
             )}
           </p>
@@ -447,7 +467,7 @@ const CSS = `
 .pm-minimal .pm-process-step h3{ font-size:1.1rem; font-weight:600; margin-bottom:8px; }
 .pm-minimal .pm-process-step p{ font-family: var(--font-pm-body), sans-serif; font-size:.9rem; color:var(--c-muted); }
 @media (max-width:760px){ .pm-minimal .pm-process-grid{ grid-template-columns:1fr 1fr; } }
-@media (max-width:480px){ .pm-minimal .pm-process-grid{ grid-template-columns:1fr; } }
+@media (max-width:480px){ .pm-minimal .pm-process-grid{ grid-template-columns:repeat(2,1fr); gap:16px; } }
 
 .pm-minimal .pm-about-copy{ max-width:65ch; }
 .pm-minimal .pm-about-copy p{ font-family: var(--font-pm-body), sans-serif; font-size:1.05rem; color:var(--c-text); margin-bottom:18px; }
@@ -468,7 +488,7 @@ const CSS = `
 .pm-minimal .pm-testimonial-name{ font-family: var(--font-pm-body), sans-serif; font-weight:600; font-size:.9rem; color:var(--c-primary); }
 .pm-minimal .pm-testimonial-role{ font-family: var(--font-pm-body), sans-serif; font-size:.82rem; color:var(--c-muted); }
 @media (max-width:920px){ .pm-minimal .pm-testimonials-grid{ grid-template-columns:1fr 1fr; } }
-@media (max-width:600px){ .pm-minimal .pm-testimonials-grid{ grid-template-columns:1fr; } }
+@media (max-width:600px){ .pm-minimal .pm-testimonials-grid{ grid-template-columns:repeat(2,1fr); gap:16px; } }
 
 .pm-minimal .pm-cta{ text-align:center; padding-block:100px; }
 .pm-minimal .pm-cta h2{ font-size:clamp(1.6rem,3.4vw,2.3rem); font-weight:600; color:var(--c-primary); margin-bottom:16px; }

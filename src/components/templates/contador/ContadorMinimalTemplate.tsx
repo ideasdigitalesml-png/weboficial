@@ -10,6 +10,7 @@ import { capitalizeName } from "@/lib/capitalize-name";
 import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
+import { SocialLinks } from "@/components/templates/shared/SocialLinks";
 import type { ContadorFormData } from "./ContadorLandingTemplate";
 
 // Sober/Linear-Stripe-inspired layout: small circular photo, oversized
@@ -39,6 +40,15 @@ const MODALIDAD_LABELS: Record<string, string> = {
   presencial: "Atención presencial",
   remoto: "Atención remota",
   ambos: "Atención presencial y remota",
+};
+
+const ESPECIALIZACION_LABELS: Record<string, string> = {
+  monotributo_autonomos: "Monotributo y Autónomos",
+  pymes: "PYMES",
+  sociedades: "Sociedades",
+  ecommerce: "E-commerce",
+  auditoria: "Auditoría",
+  liquidacion_sueldos: "Liquidación de Sueldos",
 };
 
 function isRealUrl(value?: string): value is string {
@@ -198,6 +208,13 @@ export function ContadorMinimalTemplate({
                 {formData.modalidad && (
                   <p className="cm-fact">{MODALIDAD_LABELS[formData.modalidad] ?? formData.modalidad}</p>
                 )}
+                {formData.especializacion && formData.especializacion.length > 0 && (
+                  <p className="cm-fact">
+                    {formData.especializacion
+                      .map((v) => ESPECIALIZACION_LABELS[v] ?? v)
+                      .join(" · ")}
+                  </p>
+                )}
                 {formData.horario_atencion && (
                   <p className="cm-fact">{formData.horario_atencion}</p>
                 )}
@@ -296,19 +313,11 @@ export function ContadorMinimalTemplate({
           </p>
           {hasRedes && (
             <p className="cm-footer-line">
-              {isRealUrl(formData.linkedin_url) && (
-                <a className="cm-link-cta" href={formData.linkedin_url} target="_blank" rel="noopener">
-                  LinkedIn
-                </a>
-              )}
-              {isRealUrl(formData.instagram_url) && (
-                <>
-                  {isRealUrl(formData.linkedin_url) && <span className="cm-sep">·</span>}
-                  <a className="cm-link-cta" href={formData.instagram_url} target="_blank" rel="noopener">
-                    Instagram
-                  </a>
-                </>
-              )}
+              <SocialLinks
+                linkedinUrl={formData.linkedin_url}
+                instagramUrl={formData.instagram_url}
+                className="cm-link-cta"
+              />
             </p>
           )}
           {subdomain && <p className="cm-footer-disclaimer">{`${subdomain}.weboficial.com.ar`}</p>}
@@ -395,7 +404,7 @@ const CSS = `
 .cm-minimal .cm-testimonial-text{ font-size:1rem; color:var(--c-text); line-height:1.6; margin-bottom:12px; font-style:italic; }
 .cm-minimal .cm-testimonial-name{ font-size:.86rem; color:var(--c-muted); font-weight:500; }
 .cm-minimal .cm-testimonial-role{ font-weight:400; }
-@media (max-width:640px){ .cm-minimal .cm-testimonial-list{ grid-template-columns:1fr; gap:28px; } }
+@media (max-width:640px){ .cm-minimal .cm-testimonial-list{ grid-template-columns:repeat(2,1fr); gap:20px; } }
 
 .cm-minimal .cm-cta{ text-align:center; padding-block:96px; border-top:1px solid var(--c-border); }
 .cm-minimal .cm-cta h2{ font-size:clamp(1.4rem,3vw,2rem); font-weight:400; margin-bottom:26px; }

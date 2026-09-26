@@ -87,7 +87,10 @@ const FIELD_STEP: Record<string, ContadorStep> = {
   email: "contacto",
   zona: "contacto",
   modalidad: "contacto",
+  linkedin_url: "contacto",
+  instagram_url: "contacto",
   servicios: "servicios",
+  especializacion: "servicios",
   description: "quienes",
 };
 
@@ -376,7 +379,10 @@ export function ContadorWizard({
     email: asString(values.email) || undefined,
     zona: asString(values.zona) || undefined,
     modalidad: asString(values.modalidad) || undefined,
+    linkedin_url: asString(values.linkedin_url) || undefined,
+    instagram_url: asString(values.instagram_url) || undefined,
     servicios: asStringArray(values.servicios),
+    especializacion: asStringArray(values.especializacion),
     description: description || undefined,
   };
   const colorPrimary = template.config?.primaryColor;
@@ -482,16 +488,36 @@ export function ContadorWizard({
                   error={formErrors.modalidad}
                   onChange={(v) => updateValue("modalidad", v)}
                 />
+                <FieldInput
+                  field={fieldByKey("linkedin_url")}
+                  value={values.linkedin_url ?? ""}
+                  error={formErrors.linkedin_url}
+                  onChange={(v) => updateValue("linkedin_url", v)}
+                />
+                <FieldInput
+                  field={fieldByKey("instagram_url")}
+                  value={values.instagram_url ?? ""}
+                  error={formErrors.instagram_url}
+                  onChange={(v) => updateValue("instagram_url", v)}
+                />
               </div>
             )}
 
             {step === "servicios" && (
-              <FieldInput
-                field={fieldByKey("servicios")}
-                value={values.servicios ?? []}
-                error={formErrors.servicios}
-                onChange={(v) => updateValue("servicios", v)}
-              />
+              <div className="flex flex-col gap-6">
+                <FieldInput
+                  field={fieldByKey("servicios")}
+                  value={values.servicios ?? []}
+                  error={formErrors.servicios}
+                  onChange={(v) => updateValue("servicios", v)}
+                />
+                <FieldInput
+                  field={fieldByKey("especializacion")}
+                  value={values.especializacion ?? []}
+                  error={formErrors.especializacion}
+                  onChange={(v) => updateValue("especializacion", v)}
+                />
+              </div>
             )}
 
             {step === "quienes" && (

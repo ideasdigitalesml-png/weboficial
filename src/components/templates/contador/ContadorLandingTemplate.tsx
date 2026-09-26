@@ -10,6 +10,7 @@ import { capitalizeName } from "@/lib/capitalize-name";
 import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
+import { SocialLinks } from "@/components/templates/shared/SocialLinks";
 
 // This is the contador's own client-facing page -- deliberately not styled
 // with weboficial's navy/sky brand tokens (globals.css). The palette lives
@@ -50,6 +51,7 @@ export interface ContadorFormData {
   zona?: string;
   modalidad?: string;
   servicios?: string[];
+  especializacion?: string[];
   description?: string;
   // Added for the Clásico/Minimal templates -- Moderno predates these and
   // doesn't render them, but they live on the same shared form_schema/type
@@ -181,27 +183,11 @@ export function ContadorLandingTemplate({
       )}
 
       {hasRedes && (
-        <div className="flex justify-center gap-6 border-t border-[var(--cf-border)] px-6 py-6 text-sm font-medium text-[var(--cf-body)]">
-          {isRealUrl(formData.linkedin_url) && (
-            <a
-              href={formData.linkedin_url}
-              target="_blank"
-              rel="noreferrer"
-              className="transition-colors hover:text-[var(--cf-accent)]"
-            >
-              LinkedIn
-            </a>
-          )}
-          {isRealUrl(formData.instagram_url) && (
-            <a
-              href={formData.instagram_url}
-              target="_blank"
-              rel="noreferrer"
-              className="transition-colors hover:text-[var(--cf-accent)]"
-            >
-              Instagram
-            </a>
-          )}
+        <div className="flex justify-center border-t border-[var(--cf-border)] px-6 py-6 text-[var(--cf-body)]">
+          <SocialLinks
+            linkedinUrl={formData.linkedin_url}
+            instagramUrl={formData.instagram_url}
+          />
         </div>
       )}
 

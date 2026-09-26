@@ -62,7 +62,10 @@ const FIELD_STEP: Record<string, AbogadoStep> = {
   direccion: "contacto",
   ciudad: "contacto",
   provincia: "contacto",
+  zona: "contacto",
+  modalidad: "contacto",
   linkedin_url: "contacto",
+  instagram_url: "contacto",
   servicios: "servicios",
   descripcion_corta: "sobre-mi",
   universidad: "sobre-mi",
@@ -340,7 +343,10 @@ export function AbogadoWizard({
     direccion: asString(values.direccion) || undefined,
     ciudad: asString(values.ciudad) || undefined,
     provincia: asString(values.provincia) || undefined,
+    zona: asString(values.zona) || undefined,
+    modalidad: asString(values.modalidad) || undefined,
     linkedin_url: asString(values.linkedin_url) || undefined,
+    instagram_url: asString(values.instagram_url) || undefined,
     servicios,
     descripcion_corta: descripcionCorta || undefined,
     universidad: asString(values.universidad) || undefined,
@@ -454,10 +460,28 @@ export function AbogadoWizard({
                   onChange={(v) => updateValue("provincia", v)}
                 />
                 <FieldInput
+                  field={fieldByKey("zona")}
+                  value={values.zona ?? ""}
+                  error={formErrors.zona}
+                  onChange={(v) => updateValue("zona", v)}
+                />
+                <FieldInput
+                  field={fieldByKey("modalidad")}
+                  value={values.modalidad ?? ""}
+                  error={formErrors.modalidad}
+                  onChange={(v) => updateValue("modalidad", v)}
+                />
+                <FieldInput
                   field={fieldByKey("linkedin_url")}
                   value={values.linkedin_url ?? ""}
                   error={formErrors.linkedin_url}
                   onChange={(v) => updateValue("linkedin_url", v)}
+                />
+                <FieldInput
+                  field={fieldByKey("instagram_url")}
+                  value={values.instagram_url ?? ""}
+                  error={formErrors.instagram_url}
+                  onChange={(v) => updateValue("instagram_url", v)}
                 />
               </div>
             )}

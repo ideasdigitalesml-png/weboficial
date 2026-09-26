@@ -10,6 +10,7 @@ import { capitalizeName } from "@/lib/capitalize-name";
 import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
+import { SocialLinks } from "@/components/templates/shared/SocialLinks";
 import type { ContadorFormData } from "./ContadorLandingTemplate";
 
 // Classic-professional layout: sticky nav, hero with copy on the left and
@@ -44,6 +45,15 @@ const MODALIDAD_LABELS: Record<string, string> = {
   presencial: "Atención presencial",
   remoto: "Atención remota",
   ambos: "Atención presencial y remota",
+};
+
+const ESPECIALIZACION_LABELS: Record<string, string> = {
+  monotributo_autonomos: "Monotributo y Autónomos",
+  pymes: "PYMES",
+  sociedades: "Sociedades",
+  ecommerce: "E-commerce",
+  auditoria: "Auditoría",
+  liquidacion_sueldos: "Liquidación de Sueldos",
 };
 
 function isRealUrl(value?: string): value is string {
@@ -246,6 +256,16 @@ export function ContadorClasicoTemplate({
                   </span>
                 </div>
               )}
+              {formData.especializacion && formData.especializacion.length > 0 && (
+                <div className="cc-row">
+                  <span className="cc-k">Especialización</span>
+                  <span className="cc-v">
+                    {formData.especializacion
+                      .map((v) => ESPECIALIZACION_LABELS[v] ?? v)
+                      .join(", ")}
+                  </span>
+                </div>
+              )}
               {formData.horario_atencion && (
                 <div className="cc-row">
                   <span className="cc-k">Horario</span>
@@ -328,18 +348,11 @@ export function ContadorClasicoTemplate({
               {formData.direccion && <span>{formData.direccion}</span>}
               {formData.horario_atencion && <span>{formData.horario_atencion}</span>}
               {hasRedes && (
-                <span className="cc-cta-redes">
-                  {isRealUrl(formData.linkedin_url) && (
-                    <a href={formData.linkedin_url} target="_blank" rel="noopener">
-                      LinkedIn
-                    </a>
-                  )}
-                  {isRealUrl(formData.instagram_url) && (
-                    <a href={formData.instagram_url} target="_blank" rel="noopener">
-                      Instagram
-                    </a>
-                  )}
-                </span>
+                <SocialLinks
+                  linkedinUrl={formData.linkedin_url}
+                  instagramUrl={formData.instagram_url}
+                  className="cc-cta-redes"
+                />
               )}
             </div>
           </FadeInSection>
@@ -446,7 +459,7 @@ const CSS = `
 .cc-clasico .cc-service-card h3{ font-size:1.05rem; margin-bottom:8px; }
 .cc-clasico .cc-service-card p{ color:var(--c-muted); font-size:.92rem; }
 @media (max-width:920px){ .cc-clasico .cc-services-grid{ grid-template-columns:1fr 1fr; } }
-@media (max-width:600px){ .cc-clasico .cc-services-grid{ grid-template-columns:1fr; } }
+@media (max-width:600px){ .cc-clasico .cc-services-grid{ grid-template-columns:repeat(2,1fr); gap:16px; } }
 
 .cc-clasico .cc-stats{ background:var(--c-primary); padding-block:56px; }
 .cc-clasico .cc-stats-grid{ display:flex; justify-content:center; gap:80px; flex-wrap:wrap; text-align:center; }
@@ -474,7 +487,7 @@ const CSS = `
 .cc-clasico .cc-why-icon{ font-size:1.7rem; }
 .cc-clasico .cc-why-item p{ font-weight:600; font-size:.96rem; color:var(--c-text); }
 @media (max-width:920px){ .cc-clasico .cc-why-grid{ grid-template-columns:repeat(2,1fr); } }
-@media (max-width:560px){ .cc-clasico .cc-why-grid{ grid-template-columns:1fr; } }
+@media (max-width:560px){ .cc-clasico .cc-why-grid{ grid-template-columns:repeat(2,1fr); gap:16px; } }
 
 .cc-clasico .cc-testimonial-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
 .cc-clasico .cc-testimonial-card{
@@ -485,7 +498,7 @@ const CSS = `
 .cc-clasico .cc-testimonial-name{ font-weight:700; font-size:.92rem; color:var(--c-primary); }
 .cc-clasico .cc-testimonial-role{ font-size:.82rem; color:var(--c-muted); margin-top:2px; }
 @media (max-width:920px){ .cc-clasico .cc-testimonial-grid{ grid-template-columns:repeat(2,1fr); } }
-@media (max-width:600px){ .cc-clasico .cc-testimonial-grid{ grid-template-columns:1fr; } }
+@media (max-width:600px){ .cc-clasico .cc-testimonial-grid{ grid-template-columns:repeat(2,1fr); gap:16px; } }
 
 .cc-clasico .cc-cta-banner{ background:var(--c-primary); color:#fff; padding-block:64px; text-align:center; }
 .cc-clasico .cc-cta-banner h2{ color:#fff; font-size:clamp(1.6rem,3.2vw,2.2rem); margin-bottom:12px; }

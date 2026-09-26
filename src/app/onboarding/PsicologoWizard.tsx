@@ -65,10 +65,12 @@ const FIELD_STEP: Record<string, PsicologoStep> = {
   linkedin_url: "contacto",
   instagram_url: "contacto",
   especialidades: "especialidades",
+  poblacion_atendida: "especialidades",
   descripcion: "sobre-mi",
   enfoque_terapeutico: "sobre-mi",
   precio_consulta: "sobre-mi",
-  obras_sociales: "sobre-mi",
+  acepta_obras_sociales: "sobre-mi",
+  obras_sociales_detalle: "sobre-mi",
   cta_text: "sobre-mi",
 };
 
@@ -80,6 +82,12 @@ type SlugStatus =
 
 function asString(value: FormFieldValue | undefined): string {
   return typeof value === "string" ? value : "";
+}
+
+function asStringArray(value: FormFieldValue | undefined): string[] {
+  return Array.isArray(value)
+    ? value.filter((v): v is string => typeof v === "string")
+    : [];
 }
 
 function asRepeaterItems(value: FormFieldValue | undefined): RepeaterItem[] {
@@ -178,7 +186,6 @@ export function PsicologoWizard({
   const especialidadTitulos = especialidades
     .map((e) => (e.titulo ?? "").trim())
     .filter(Boolean);
-  const obrasSociales = asRepeaterItems(values.obras_sociales);
   const genero = asString(values.genero) as Genero;
   const suggestedBio =
     nombre && tituloProfesional && matriculaNumero
@@ -356,10 +363,12 @@ export function PsicologoWizard({
     linkedin_url: asString(values.linkedin_url) || undefined,
     instagram_url: asString(values.instagram_url) || undefined,
     especialidades: especialidades.length > 0 ? especialidades : undefined,
+    poblacion_atendida: asStringArray(values.poblacion_atendida),
     descripcion: descripcion || undefined,
     enfoque_terapeutico: enfoqueTerapeutico || undefined,
     precio_consulta: asString(values.precio_consulta) || undefined,
-    obras_sociales: obrasSociales.length > 0 ? obrasSociales : undefined,
+    acepta_obras_sociales: asString(values.acepta_obras_sociales) || undefined,
+    obras_sociales_detalle: asString(values.obras_sociales_detalle) || undefined,
     cta_text: asString(values.cta_text) || undefined,
   };
   const layout = template.config?.layout;
@@ -484,12 +493,20 @@ export function PsicologoWizard({
             )}
 
             {step === "especialidades" && (
-              <FieldInput
-                field={fieldByKey("especialidades")}
-                value={values.especialidades ?? []}
-                error={formErrors.especialidades}
-                onChange={(v) => updateValue("especialidades", v)}
-              />
+              <div className="flex flex-col gap-6">
+                <FieldInput
+                  field={fieldByKey("especialidades")}
+                  value={values.especialidades ?? []}
+                  error={formErrors.especialidades}
+                  onChange={(v) => updateValue("especialidades", v)}
+                />
+                <FieldInput
+                  field={fieldByKey("poblacion_atendida")}
+                  value={values.poblacion_atendida ?? []}
+                  error={formErrors.poblacion_atendida}
+                  onChange={(v) => updateValue("poblacion_atendida", v)}
+                />
+              </div>
             )}
 
             {step === "sobre-mi" && (
@@ -552,11 +569,19 @@ export function PsicologoWizard({
                   onChange={(v) => updateValue("precio_consulta", v)}
                 />
                 <FieldInput
-                  field={fieldByKey("obras_sociales")}
-                  value={values.obras_sociales ?? []}
-                  error={formErrors.obras_sociales}
-                  onChange={(v) => updateValue("obras_sociales", v)}
+                  field={fieldByKey("acepta_obras_sociales")}
+                  value={values.acepta_obras_sociales ?? ""}
+                  error={formErrors.acepta_obras_sociales}
+                  onChange={(v) => updateValue("acepta_obras_sociales", v)}
                 />
+                {asString(values.acepta_obras_sociales) === "si" && (
+                  <FieldInput
+                    field={fieldByKey("obras_sociales_detalle")}
+                    value={values.obras_sociales_detalle ?? ""}
+                    error={formErrors.obras_sociales_detalle}
+                    onChange={(v) => updateValue("obras_sociales_detalle", v)}
+                  />
+                )}
                 <FieldInput
                   field={fieldByKey("cta_text")}
                   value={values.cta_text ?? ""}

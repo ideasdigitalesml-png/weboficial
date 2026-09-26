@@ -10,6 +10,7 @@ import { capitalizeName } from "@/lib/capitalize-name";
 import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
+import { SocialLinks } from "@/components/templates/shared/SocialLinks";
 import type { AbogadoFormData } from "./AbogadoModernoTemplate";
 
 // Ported from templates/abogado-minimal.html. Same content rules as the
@@ -32,6 +33,12 @@ const inter = Inter({
 const DEFAULT_PRIMARY = "#1a2744";
 const DEFAULT_ACCENT = "#c9a84c";
 
+const MODALIDAD_LABELS: Record<string, string> = {
+  presencial: "Atención presencial",
+  virtual: "Atención virtual",
+  ambas: "Atención presencial y virtual",
+};
+
 const PROCESO = [
   { titulo: "Consulta inicial", desc: "Me contás tu situación y evaluamos juntos cómo puedo ayudarte." },
   { titulo: "Análisis del caso", desc: "Reviso la documentación y el contexto legal en detalle." },
@@ -40,7 +47,7 @@ const PROCESO = [
 ];
 
 const FAQ = [
-  { q: "¿Cuánto cuesta una consulta inicial?", a: "La primera consulta es sin costo. Escribime por WhatsApp para coordinar un horario." },
+  { q: "¿Cómo es la primera consulta?", a: "Escribime por WhatsApp, me contás tu situación y coordinamos un horario para conversar." },
   { q: "¿Cuánto tiempo puede llevar mi caso?", a: "Depende del tipo de trámite y su complejidad. Te doy un estimado realista en la primera consulta." },
   { q: "¿Trabajan con honorarios fijos o por porcentaje?", a: "Los honorarios se definen según el tipo y la complejidad del caso, siguiendo las pautas del colegio profesional correspondiente." },
   { q: "¿Qué documentos necesito para la primera consulta?", a: "En general: tu documento de identidad, la documentación relacionada al asunto y cualquier comunicación previa relevante." },
@@ -302,7 +309,7 @@ export function AbogadoMinimalTemplate({
       {showContact && waLink && (
         <section className="am-cta" id="contacto">
           <div className="am-container">
-            <h2>¿Tenés una consulta legal? Primera consulta sin costo.</h2>
+            <h2>¿Tenés una consulta legal? Escribime.</h2>
             {formData.horario_atencion && (
               <p className="am-cta-schedule">{formData.horario_atencion}</p>
             )}
@@ -337,20 +344,15 @@ export function AbogadoMinimalTemplate({
             )}
             <span className="am-sep">·</span>
             {year}
-            {isRealUrl(formData.linkedin_url) && (
+            {(isRealUrl(formData.linkedin_url) || isRealUrl(formData.instagram_url)) && (
               <>
                 <span className="am-sep">·</span>
-                <a className="am-link-cta" href={formData.linkedin_url} target="_blank" rel="noopener">
-                  LinkedIn
-                </a>
-              </>
-            )}
-            {isRealUrl(formData.instagram_url) && (
-              <>
-                <span className="am-sep">·</span>
-                <a className="am-link-cta" href={formData.instagram_url} target="_blank" rel="noopener">
-                  Instagram
-                </a>
+                <SocialLinks
+                  linkedinUrl={formData.linkedin_url}
+                  instagramUrl={formData.instagram_url}
+                  className="am-link-cta"
+                  size={16}
+                />
               </>
             )}
           </p>
@@ -360,6 +362,13 @@ export function AbogadoMinimalTemplate({
           {(formData.direccion || formData.provincia) && (
             <p className="am-footer-disclaimer">
               {[formData.direccion, formData.ciudad, formData.provincia].filter(Boolean).join(", ")}
+            </p>
+          )}
+          {(formData.zona || formData.modalidad) && (
+            <p className="am-footer-disclaimer">
+              {[formData.zona, formData.modalidad ? MODALIDAD_LABELS[formData.modalidad] ?? formData.modalidad : undefined]
+                .filter(Boolean)
+                .join(" · ")}
             </p>
           )}
           {formData.horario_atencion && (
@@ -459,14 +468,14 @@ const CSS = `
 .am-minimal .am-whyus-icon{ font-size:1.6rem; }
 .am-minimal .am-whyus-item p{ font-family: var(--font-am-body), sans-serif; font-size:.94rem; color:var(--c-text); }
 @media (max-width:760px){ .am-minimal .am-whyus-grid{ grid-template-columns:1fr 1fr; } }
-@media (max-width:480px){ .am-minimal .am-whyus-grid{ grid-template-columns:1fr; } }
+@media (max-width:480px){ .am-minimal .am-whyus-grid{ grid-template-columns:repeat(2,1fr); gap:16px; } }
 
 .am-minimal .am-process-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:32px; }
 .am-minimal .am-num{ display:block; font-family: var(--font-am-body), sans-serif; font-size:.75rem; color:var(--c-muted); margin-bottom:14px; }
 .am-minimal .am-process-step h3{ font-size:1.1rem; font-weight:600; margin-bottom:8px; }
 .am-minimal .am-process-step p{ font-family: var(--font-am-body), sans-serif; font-size:.9rem; color:var(--c-muted); }
 @media (max-width:760px){ .am-minimal .am-process-grid{ grid-template-columns:1fr 1fr; } }
-@media (max-width:480px){ .am-minimal .am-process-grid{ grid-template-columns:1fr; } }
+@media (max-width:480px){ .am-minimal .am-process-grid{ grid-template-columns:repeat(2,1fr); gap:16px; } }
 
 .am-minimal .am-about-copy{ max-width:65ch; }
 .am-minimal .am-about-copy p{ font-family: var(--font-am-body), sans-serif; font-size:1.05rem; color:var(--c-text); margin-bottom:18px; }
@@ -486,7 +495,7 @@ const CSS = `
 .am-minimal .am-testimonial-name{ font-family: var(--font-am-body), sans-serif; font-weight:600; font-size:.9rem; color:var(--c-primary); }
 .am-minimal .am-testimonial-role{ font-family: var(--font-am-body), sans-serif; font-size:.82rem; color:var(--c-muted); }
 @media (max-width:920px){ .am-minimal .am-testimonials-grid{ grid-template-columns:1fr 1fr; } }
-@media (max-width:600px){ .am-minimal .am-testimonials-grid{ grid-template-columns:1fr; } }
+@media (max-width:600px){ .am-minimal .am-testimonials-grid{ grid-template-columns:repeat(2,1fr); gap:16px; } }
 
 .am-minimal .am-faq-list{ border-top:1px solid var(--c-border); }
 .am-minimal .am-faq-item{ border-bottom:1px solid var(--c-border); }

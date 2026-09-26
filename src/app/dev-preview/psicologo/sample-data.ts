@@ -20,7 +20,7 @@ export const PSICOLOGO_PREVIEW_DATA: PsicologoFormData = {
   direccion: "Palermo, CABA",
   horario_atencion: "Lunes a viernes de 9 a 19hs",
   modalidad: "ambas",
-  enfoque_terapeutico: "Terapia cognitivo-conductual",
+  enfoque_terapeutico: "cognitivo_conductual",
   descripcion:
     "Acompaño procesos de ansiedad, duelo y autoestima con un enfoque cálido y basado en evidencia, para que encuentres herramientas concretas para tu día a día.",
   precio_consulta: "$15.000",
@@ -35,7 +35,9 @@ export const PSICOLOGO_PREVIEW_DATA: PsicologoFormData = {
     { icono: "😴", titulo: "Estrés", descripcion: "Manejo del estrés y prevención del burnout." },
     { icono: "🎯", titulo: "Desarrollo personal", descripcion: "Acompañamiento en procesos de cambio y crecimiento." },
   ],
-  obras_sociales: [{ nombre: "OSDE" }, { nombre: "Swiss Medical" }, { nombre: "Particular" }],
+  poblacion_atendida: ["adultos", "adolescentes", "parejas"],
+  acepta_obras_sociales: "si",
+  obras_sociales_detalle: "OSDE, Swiss Medical, Particular",
   testimonios: [
     {
       nombre: "M.L.",

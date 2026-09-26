@@ -6,6 +6,7 @@ import { capitalizeName } from "@/lib/capitalize-name";
 import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
+import { SocialLinks } from "@/components/templates/shared/SocialLinks";
 
 // Third profession, first of its three templates. Unlike abogado/contador
 // there is no legacy checkbox-group field and no derive-fallback helper --
@@ -59,9 +60,30 @@ export interface PsicologoFormData {
   linkedin_url?: string;
   instagram_url?: string;
   especialidades?: RepeaterItem[];
-  obras_sociales?: RepeaterItem[];
+  poblacion_atendida?: string[];
+  acepta_obras_sociales?: string;
+  obras_sociales_detalle?: string;
   testimonios?: RepeaterItem[];
 }
+
+// enfoque_terapeutico moved from free text to a fixed `select` (migration
+// 0031) -- form_data stores one of these keys, never the human label.
+export const ENFOQUE_TERAPEUTICO_LABELS: Record<string, string> = {
+  cognitivo_conductual: "Cognitivo-Conductual",
+  psicoanalitica: "Psicoanalítica",
+  sistemica: "Sistémica",
+  gestalt: "Gestalt",
+  integrativa: "Integrativa",
+  otra: "Otra",
+};
+
+export const POBLACION_ATENDIDA_LABELS: Record<string, string> = {
+  adultos: "Adultos",
+  adolescentes: "Adolescentes",
+  ninos: "Niños",
+  parejas: "Parejas",
+  familias: "Familias",
+};
 
 const MODALIDAD_LABELS: Record<string, string> = {
   presencial: "Atención presencial",
@@ -83,10 +105,6 @@ const COMO_TRABAJO = [
     desc: "Avanzamos a tu ritmo, con sesiones regulares en un espacio de escucha y confidencialidad.",
   },
 ];
-
-function isRealUrl(value?: string): value is string {
-  return Boolean(value && value !== "#");
-}
 
 function Avatar({ name, photoUrl }: { name: string; photoUrl?: string }) {
   if (photoUrl) {
@@ -129,14 +147,22 @@ export function PsicologoModernoTemplate({
   const year = new Date().getFullYear();
   const ctaText = formData.cta_text || "Reservá tu turno";
   const especialidades = formData.especialidades ?? [];
-  const obrasSociales = formData.obras_sociales ?? [];
+  const poblacionAtendida = formData.poblacion_atendida ?? [];
+  const obrasSocialesNombres =
+    formData.acepta_obras_sociales === "si" && formData.obras_sociales_detalle
+      ? formData.obras_sociales_detalle.split(",").map((s) => s.trim()).filter(Boolean)
+      : [];
   const testimonios = formData.testimonios ?? [];
   const modalidadLabel = formData.modalidad
     ? MODALIDAD_LABELS[formData.modalidad] || formData.modalidad
     : "";
-  const showModalidadBand = Boolean(modalidadLabel) || obrasSociales.length > 0;
-  const heroLead = formData.enfoque_terapeutico
-    ? `Enfoque terapéutico: ${formData.enfoque_terapeutico}`
+  const enfoqueLabel = formData.enfoque_terapeutico
+    ? ENFOQUE_TERAPEUTICO_LABELS[formData.enfoque_terapeutico] ?? formData.enfoque_terapeutico
+    : "";
+  const showModalidadBand =
+    Boolean(modalidadLabel) || obrasSocialesNombres.length > 0 || poblacionAtendida.length > 0;
+  const heroLead = enfoqueLabel
+    ? `Enfoque terapéutico: ${enfoqueLabel}`
     : "Un espacio de escucha y acompañamiento profesional.";
 
   return (
@@ -249,13 +275,25 @@ export function PsicologoModernoTemplate({
                   <span>{modalidadLabel}</span>
                 </FadeInSection>
               )}
-              {obrasSociales.length > 0 && (
+              {poblacionAtendida.length > 0 && (
+                <FadeInSection delayMs={40} className="pw-obras-sociales">
+                  <p className="pw-obras-sociales-label">Atiendo a</p>
+                  <div className="pw-obras-sociales-pills">
+                    {poblacionAtendida.map((value) => (
+                      <span key={value} className="pw-pill">
+                        {POBLACION_ATENDIDA_LABELS[value] ?? value}
+                      </span>
+                    ))}
+                  </div>
+                </FadeInSection>
+              )}
+              {obrasSocialesNombres.length > 0 && (
                 <FadeInSection delayMs={70} className="pw-obras-sociales">
                   <p className="pw-obras-sociales-label">Obras sociales y prepagas</p>
                   <div className="pw-obras-sociales-pills">
-                    {obrasSociales.map((item, i) => (
-                      <span key={`${item.nombre}-${i}`} className="pw-pill">
-                        {item.nombre}
+                    {obrasSocialesNombres.map((nombre, i) => (
+                      <span key={`${nombre}-${i}`} className="pw-pill">
+                        {nombre}
                       </span>
                     ))}
                   </div>
@@ -290,8 +328,8 @@ export function PsicologoModernoTemplate({
             <FadeInSection className="pw-about-bio">
               <h2>Sobre {name || "Tu nombre"}</h2>
               {formData.descripcion && <p>{formData.descripcion}</p>}
-              {formData.enfoque_terapeutico && (
-                <p className="pw-enfoque">Enfoque terapéutico: {formData.enfoque_terapeutico}</p>
+              {enfoqueLabel && (
+                <p className="pw-enfoque">Enfoque terapéutico: {enfoqueLabel}</p>
               )}
             </FadeInSection>
             <FadeInSection delayMs={80} className="pw-credentials-box">
@@ -377,20 +415,11 @@ export function PsicologoModernoTemplate({
               {formData.phone && <p>{formData.phone}</p>}
               {formData.direccion && <p>Zona / consultorio: {formData.direccion}</p>}
               {formData.horario_atencion && <p>{formData.horario_atencion}</p>}
-              {(isRealUrl(formData.linkedin_url) || isRealUrl(formData.instagram_url)) && (
-                <p className="pw-footer-social">
-                  {isRealUrl(formData.linkedin_url) && (
-                    <a href={formData.linkedin_url} target="_blank" rel="noopener">
-                      LinkedIn
-                    </a>
-                  )}
-                  {isRealUrl(formData.instagram_url) && (
-                    <a href={formData.instagram_url} target="_blank" rel="noopener">
-                      Instagram
-                    </a>
-                  )}
-                </p>
-              )}
+              <SocialLinks
+                linkedinUrl={formData.linkedin_url}
+                instagramUrl={formData.instagram_url}
+                className="pw-footer-social"
+              />
             </div>
           </div>
           <p className="pw-footer-disclaimer">
@@ -525,7 +554,7 @@ const CSS = `
 .pw-moderno .pw-especialidad-card h3{ font-size:1.15rem; color:var(--c-text); margin-bottom:10px; }
 .pw-moderno .pw-especialidad-card p{ color:var(--c-muted); font-size:.92rem; }
 @media (max-width:920px){ .pw-moderno .pw-especialidades-grid{ grid-template-columns:repeat(2,1fr); } }
-@media (max-width:600px){ .pw-moderno .pw-especialidades-grid{ grid-template-columns:1fr; } }
+@media (max-width:600px){ .pw-moderno .pw-especialidades-grid{ grid-template-columns:repeat(2,1fr); gap:16px; } }
 
 .pw-moderno .pw-modalidad{ background:var(--c-bg2); }
 .pw-moderno .pw-modalidad-body{ display:flex; flex-direction:column; align-items:center; gap:36px; }
@@ -557,7 +586,7 @@ const CSS = `
 @media (min-width:761px){
   .pw-moderno .pw-process-step:not(:first-child){ border-top:none; padding-top:0; border-left:1px solid rgba(255,255,255,.18); padding-left:24px; }
 }
-@media (max-width:760px){ .pw-moderno .pw-process-grid{ grid-template-columns:1fr; gap:24px; } }
+@media (max-width:760px){ .pw-moderno .pw-process-grid{ grid-template-columns:repeat(2,1fr); gap:20px; } }
 
 .pw-moderno .pw-about-grid{ display:grid; grid-template-columns:1.3fr 1fr; gap:56px; align-items:start; }
 .pw-moderno .pw-about-bio h2{ font-size:clamp(1.6rem,3vw,2.1rem); color:var(--c-primary-dark); margin-bottom:22px; }
@@ -584,7 +613,7 @@ const CSS = `
 .pw-moderno .pw-testimonial-name{ font-weight:700; color:var(--c-primary-dark); font-size:.95rem; }
 .pw-moderno .pw-testimonial-role{ font-size:.84rem; color:var(--c-muted); }
 @media (max-width:920px){ .pw-moderno .pw-testimonials-grid{ grid-template-columns:1fr 1fr; } }
-@media (max-width:600px){ .pw-moderno .pw-testimonials-grid{ grid-template-columns:1fr; } }
+@media (max-width:600px){ .pw-moderno .pw-testimonials-grid{ grid-template-columns:repeat(2,1fr); gap:16px; } }
 
 .pw-moderno .pw-cta-banner{ background:var(--c-primary); color:#fff; padding-block:68px; text-align:center; }
 .pw-moderno .pw-cta-banner h2{ color:#fff; font-size:clamp(1.7rem,3.4vw,2.4rem); margin-bottom:14px; }

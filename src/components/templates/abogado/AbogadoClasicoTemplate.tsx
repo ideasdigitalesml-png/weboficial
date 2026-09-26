@@ -10,6 +10,7 @@ import { capitalizeName } from "@/lib/capitalize-name";
 import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
+import { SocialLinks } from "@/components/templates/shared/SocialLinks";
 import type { AbogadoFormData } from "./AbogadoModernoTemplate";
 
 // Ported from templates/abogado-clasico.html. Same content rules as
@@ -32,6 +33,12 @@ const inter = Inter({
 const DEFAULT_PRIMARY = "#1a2744";
 const DEFAULT_ACCENT = "#c9a84c";
 
+const MODALIDAD_LABELS: Record<string, string> = {
+  presencial: "Atención presencial",
+  virtual: "Atención virtual",
+  ambas: "Atención presencial y virtual",
+};
+
 const PROCESO = [
   { titulo: "Consulta inicial", desc: "Me contás tu situación y evaluamos juntos cómo puedo ayudarte." },
   { titulo: "Análisis del caso", desc: "Reviso la documentación y el contexto legal en detalle." },
@@ -40,16 +47,12 @@ const PROCESO = [
 ];
 
 const FAQ = [
-  { q: "¿Cuánto cuesta una consulta inicial?", a: "La primera consulta es sin costo. Escribime por WhatsApp para coordinar un horario." },
+  { q: "¿Cómo es la primera consulta?", a: "Escribime por WhatsApp, me contás tu situación y coordinamos un horario para conversar." },
   { q: "¿Cuánto tiempo puede llevar mi caso?", a: "Depende del tipo de trámite y su complejidad. Te doy un estimado realista en la primera consulta." },
   { q: "¿Trabajan con honorarios fijos o por porcentaje?", a: "Los honorarios se definen según el tipo y la complejidad del caso, siguiendo las pautas del colegio profesional correspondiente." },
   { q: "¿Qué documentos necesito para la primera consulta?", a: "En general: tu documento de identidad, la documentación relacionada al asunto y cualquier comunicación previa relevante." },
   { q: "¿Atienden solo en mi zona?", a: "Atiendo presencial en mi zona de trabajo y, para casos que lo permiten, también a distancia." },
 ];
-
-function isRealUrl(value?: string): value is string {
-  return Boolean(value && value !== "#");
-}
 
 function Avatar({ name, photoUrl }: { name: string; photoUrl?: string }) {
   if (photoUrl) {
@@ -134,7 +137,7 @@ export function AbogadoClasicoTemplate({
             {showContact && <a className="ac-uc" href="#contacto">Contacto</a>}
             {waLink && (
               <a className="ac-btn ac-btn-outline" href={waLink} target="_blank" rel="noopener">
-                Consulta gratuita
+                {ctaText}
               </a>
             )}
           </div>
@@ -338,7 +341,7 @@ export function AbogadoClasicoTemplate({
         <section className="ac-cta-banner" id="contacto">
           <div className="ac-container">
             <h2>¿Tenés una consulta legal? Hablemos.</h2>
-            <p>Primera consulta sin costo</p>
+            <p>Coordinemos tu consulta</p>
             {formData.horario_atencion && (
               <p className="ac-cta-schedule">{formData.horario_atencion}</p>
             )}
@@ -378,26 +381,21 @@ export function AbogadoClasicoTemplate({
               </>
             )}
           </p>
+          {(formData.zona || formData.modalidad) && (
+            <p className="ac-footer-line">
+              {[formData.zona, formData.modalidad ? MODALIDAD_LABELS[formData.modalidad] ?? formData.modalidad : undefined]
+                .filter(Boolean)
+                .join(" — ")}
+            </p>
+          )}
           {formData.horario_atencion && (
             <p className="ac-footer-line">{formData.horario_atencion}</p>
           )}
-          {(isRealUrl(formData.linkedin_url) || isRealUrl(formData.instagram_url)) && (
-            <p className="ac-footer-line">
-              {isRealUrl(formData.linkedin_url) && (
-                <a href={formData.linkedin_url} target="_blank" rel="noopener">
-                  LinkedIn
-                </a>
-              )}
-              {isRealUrl(formData.linkedin_url) && isRealUrl(formData.instagram_url) && (
-                <span className="ac-footer-sep">—</span>
-              )}
-              {isRealUrl(formData.instagram_url) && (
-                <a href={formData.instagram_url} target="_blank" rel="noopener">
-                  Instagram
-                </a>
-              )}
-            </p>
-          )}
+          <SocialLinks
+            linkedinUrl={formData.linkedin_url}
+            instagramUrl={formData.instagram_url}
+            className="ac-footer-line"
+          />
           {subdomain && (
             <p className="ac-footer-line">{`${subdomain}.weboficial.com.ar`}</p>
           )}
@@ -509,7 +507,7 @@ const CSS = `
 .ac-clasico .ac-whyus-icon{ font-size:2rem; }
 .ac-clasico .ac-whyus-item p{ font-weight:600; color:var(--c-primary); font-size:.96rem; }
 @media (max-width:860px){ .ac-clasico .ac-whyus-grid{ grid-template-columns:1fr 1fr; } }
-@media (max-width:480px){ .ac-clasico .ac-whyus-grid{ grid-template-columns:1fr; } }
+@media (max-width:480px){ .ac-clasico .ac-whyus-grid{ grid-template-columns:repeat(2,1fr); gap:16px; } }
 
 .ac-clasico .ac-process{ background:var(--c-primary); color:#fff; }
 .ac-clasico .ac-process .ac-section-head h2{ color:#fff; }
@@ -555,7 +553,7 @@ const CSS = `
 .ac-clasico .ac-testimonial-name{ font-weight:700; color:var(--c-primary); font-size:.92rem; }
 .ac-clasico .ac-testimonial-role{ font-size:.82rem; color:var(--c-muted); }
 @media (max-width:920px){ .ac-clasico .ac-testimonials-grid{ grid-template-columns:1fr 1fr; } }
-@media (max-width:600px){ .ac-clasico .ac-testimonials-grid{ grid-template-columns:1fr; } }
+@media (max-width:600px){ .ac-clasico .ac-testimonials-grid{ grid-template-columns:repeat(2,1fr); gap:16px; } }
 
 .ac-clasico .ac-faq-list{ max-width:760px; margin-inline:auto; }
 .ac-clasico .ac-faq-block{ padding-block:22px; border-bottom:1px solid var(--c-border); }

@@ -10,6 +10,7 @@ import { capitalizeName } from "@/lib/capitalize-name";
 import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
+import { SocialLinks } from "@/components/templates/shared/SocialLinks";
 import type { ContadorFormData } from "./ContadorLandingTemplate";
 
 // Ported from templates/contador.html (design approved separately) into a
@@ -41,6 +42,15 @@ const MODALIDAD_LABELS: Record<string, string> = {
   presencial: "Atención presencial",
   remoto: "Atención remota",
   ambos: "Atención presencial y remota",
+};
+
+const ESPECIALIZACION_LABELS: Record<string, string> = {
+  monotributo_autonomos: "Monotributo y Autónomos",
+  pymes: "PYMES",
+  sociedades: "Sociedades",
+  ecommerce: "E-commerce",
+  auditoria: "Auditoría",
+  liquidacion_sueldos: "Liquidación de Sueldos",
 };
 
 function isRealUrl(value?: string): value is string {
@@ -321,6 +331,15 @@ export function ContadorModernoTemplate({
               {formData.description && (
                 <p className="cf-profile-bio">{formData.description}</p>
               )}
+              {formData.especializacion && formData.especializacion.length > 0 && (
+                <div className="cf-profile-tags">
+                  {formData.especializacion.map((value) => (
+                    <span key={value} className="cf-profile-tag">
+                      {ESPECIALIZACION_LABELS[value] ?? value}
+                    </span>
+                  ))}
+                </div>
+              )}
               {(formData.anos_experiencia || formData.cantidad_clientes) && (
                 <div className="cf-profile-stats">
                   {formData.anos_experiencia && (
@@ -410,18 +429,11 @@ export function ContadorModernoTemplate({
                 <span>{formData.horario_atencion}</span>
               )}
               {hasRedes && (
-                <span className="cf-cta-redes">
-                  {isRealUrl(formData.linkedin_url) && (
-                    <a href={formData.linkedin_url} target="_blank" rel="noopener">
-                      LinkedIn
-                    </a>
-                  )}
-                  {isRealUrl(formData.instagram_url) && (
-                    <a href={formData.instagram_url} target="_blank" rel="noopener">
-                      Instagram
-                    </a>
-                  )}
-                </span>
+                <SocialLinks
+                  linkedinUrl={formData.linkedin_url}
+                  instagramUrl={formData.instagram_url}
+                  className="cf-cta-redes"
+                />
               )}
             </div>
           </FadeInSection>
@@ -593,7 +605,7 @@ const CSS = `
 .cf-moderno .cf-service-card h3{ font-family: var(--font-cf-body), sans-serif; font-weight:700; font-size:1.08rem; color:var(--c-text); margin-bottom:8px; }
 .cf-moderno .cf-service-card p{ color:var(--c-muted); font-size:.94rem; }
 @media (max-width:920px){ .cf-moderno .cf-services-grid{ grid-template-columns:repeat(2,1fr); } }
-@media (max-width:600px){ .cf-moderno .cf-services-grid{ grid-template-columns:1fr; } }
+@media (max-width:600px){ .cf-moderno .cf-services-grid{ grid-template-columns:repeat(2,1fr); gap:16px; } }
 
 .cf-moderno .cf-process{ background:var(--c-primary); color:#fff; padding-block:88px; }
 .cf-moderno .cf-process .cf-section-head h2{ color:#fff; }
@@ -606,7 +618,7 @@ const CSS = `
 .cf-moderno .cf-process-step h3{ font-family: var(--font-cf-body), sans-serif; font-weight:700; font-size:1rem; margin-bottom:8px; }
 .cf-moderno .cf-process-step p{ color:rgba(255,255,255,.68); font-size:.9rem; }
 @media (max-width:920px){ .cf-moderno .cf-process-grid{ grid-template-columns:repeat(2,1fr); } }
-@media (max-width:560px){ .cf-moderno .cf-process-grid{ grid-template-columns:1fr; } }
+@media (max-width:560px){ .cf-moderno .cf-process-grid{ grid-template-columns:repeat(2,1fr); gap:16px; } }
 
 .cf-moderno .cf-profile-grid{ display:grid; grid-template-columns:.8fr 1.2fr; gap:56px; align-items:start; }
 .cf-moderno .cf-profile-photo{ aspect-ratio:1/1; width:100%; border-radius:18px; overflow:hidden; border:1px solid var(--c-border); box-shadow:0 8px 24px rgba(16,21,28,.08); }
@@ -618,6 +630,11 @@ const CSS = `
   background:var(--c-accent-lt); padding:6px 12px; border-radius:999px; margin-bottom:22px;
 }
 .cf-moderno .cf-profile-bio{ color:var(--c-text); font-size:1.02rem; line-height:1.7; margin-bottom:28px; max-width:60ch; overflow-wrap:break-word; }
+.cf-moderno .cf-profile-tags{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:24px; }
+.cf-moderno .cf-profile-tag{
+  font-size:.78rem; font-weight:600; color:var(--c-primary);
+  background:var(--c-bg2); border:1px solid var(--c-border); padding:5px 12px; border-radius:999px;
+}
 .cf-moderno .cf-profile-stats{ display:flex; flex-wrap:wrap; gap:32px; }
 .cf-moderno .cf-profile-stats > div{ display:flex; flex-direction:column; gap:2px; }
 .cf-moderno .cf-profile-stat-num{ font-family: var(--font-cf-display), serif; font-weight:700; font-size:1.9rem; color:var(--c-primary); }
@@ -635,7 +652,7 @@ const CSS = `
 .cf-moderno .cf-why-icon{ font-size:1.7rem; }
 .cf-moderno .cf-why-item p{ font-weight:600; font-size:.96rem; color:var(--c-text); }
 @media (max-width:920px){ .cf-moderno .cf-why-grid{ grid-template-columns:repeat(2,1fr); } }
-@media (max-width:560px){ .cf-moderno .cf-why-grid{ grid-template-columns:1fr; } }
+@media (max-width:560px){ .cf-moderno .cf-why-grid{ grid-template-columns:repeat(2,1fr); gap:16px; } }
 
 .cf-moderno .cf-testimonial-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
 .cf-moderno .cf-testimonial-card{
@@ -646,7 +663,7 @@ const CSS = `
 .cf-moderno .cf-testimonial-name{ font-weight:700; font-size:.94rem; color:var(--c-primary); }
 .cf-moderno .cf-testimonial-role{ font-size:.84rem; color:var(--c-muted); margin-top:2px; }
 @media (max-width:920px){ .cf-moderno .cf-testimonial-grid{ grid-template-columns:repeat(2,1fr); } }
-@media (max-width:600px){ .cf-moderno .cf-testimonial-grid{ grid-template-columns:1fr; } }
+@media (max-width:600px){ .cf-moderno .cf-testimonial-grid{ grid-template-columns:repeat(2,1fr); gap:16px; } }
 
 .cf-moderno .cf-cta-banner{
   background:linear-gradient(120deg,var(--c-primary),var(--c-accent)); color:#fff;

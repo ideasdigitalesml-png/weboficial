@@ -6,7 +6,12 @@ import { capitalizeName } from "@/lib/capitalize-name";
 import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
-import type { PsicologoFormData } from "./PsicologoModernoTemplate";
+import { SocialLinks } from "@/components/templates/shared/SocialLinks";
+import {
+  ENFOQUE_TERAPEUTICO_LABELS,
+  POBLACION_ATENDIDA_LABELS,
+  type PsicologoFormData,
+} from "./PsicologoModernoTemplate";
 
 // Same content rules as PsicologoModernoTemplate.tsx: "Cómo trabajo" is
 // fixed generic copy (same category as the abogado templates' Proceso/FAQ),
@@ -50,10 +55,6 @@ const COMO_TRABAJO = [
   },
 ];
 
-function isRealUrl(value?: string): value is string {
-  return Boolean(value && value !== "#");
-}
-
 function Avatar({ name, photoUrl }: { name: string; photoUrl?: string }) {
   if (photoUrl) {
     return (
@@ -95,14 +96,22 @@ export function PsicologoClasicoTemplate({
   const year = new Date().getFullYear();
   const ctaText = formData.cta_text || "Reservá tu turno";
   const especialidades = formData.especialidades ?? [];
-  const obrasSociales = formData.obras_sociales ?? [];
+  const poblacionAtendida = formData.poblacion_atendida ?? [];
+  const obrasSocialesNombres =
+    formData.acepta_obras_sociales === "si" && formData.obras_sociales_detalle
+      ? formData.obras_sociales_detalle.split(",").map((s) => s.trim()).filter(Boolean)
+      : [];
   const testimonios = formData.testimonios ?? [];
   const modalidadLabel = formData.modalidad
     ? MODALIDAD_LABELS[formData.modalidad] || formData.modalidad
     : "";
-  const showModalidadBand = Boolean(modalidadLabel) || obrasSociales.length > 0;
-  const heroLead = formData.enfoque_terapeutico
-    ? `Enfoque terapéutico: ${formData.enfoque_terapeutico}`
+  const enfoqueLabel = formData.enfoque_terapeutico
+    ? ENFOQUE_TERAPEUTICO_LABELS[formData.enfoque_terapeutico] ?? formData.enfoque_terapeutico
+    : "";
+  const showModalidadBand =
+    Boolean(modalidadLabel) || obrasSocialesNombres.length > 0 || poblacionAtendida.length > 0;
+  const heroLead = enfoqueLabel
+    ? `Enfoque terapéutico: ${enfoqueLabel}`
     : "Un espacio de escucha y acompañamiento profesional.";
 
   return (
@@ -204,10 +213,10 @@ export function PsicologoClasicoTemplate({
                   <span className="pc-v">Nº {matriculaNumero}</span>
                 </div>
               )}
-              {formData.enfoque_terapeutico && (
+              {enfoqueLabel && (
                 <div className="pc-row">
                   <span className="pc-k pc-uc">Enfoque</span>
-                  <span className="pc-v">{formData.enfoque_terapeutico}</span>
+                  <span className="pc-v">{enfoqueLabel}</span>
                 </div>
               )}
               {formData.horario_atencion && (
@@ -261,13 +270,25 @@ export function PsicologoClasicoTemplate({
                   <p>{modalidadLabel}</p>
                 </FadeInSection>
               )}
-              {obrasSociales.length > 0 && (
+              {poblacionAtendida.length > 0 && (
+                <FadeInSection delayMs={40} className="pc-obras-sociales">
+                  <p className="pc-obras-sociales-label pc-uc">Atiendo a</p>
+                  <div className="pc-obras-sociales-pills">
+                    {poblacionAtendida.map((value) => (
+                      <span key={value} className="pc-pill">
+                        {POBLACION_ATENDIDA_LABELS[value] ?? value}
+                      </span>
+                    ))}
+                  </div>
+                </FadeInSection>
+              )}
+              {obrasSocialesNombres.length > 0 && (
                 <FadeInSection delayMs={70} className="pc-obras-sociales">
                   <p className="pc-obras-sociales-label pc-uc">Obras sociales y prepagas</p>
                   <div className="pc-obras-sociales-pills">
-                    {obrasSociales.map((item, i) => (
-                      <span key={`${item.nombre}-${i}`} className="pc-pill">
-                        {item.nombre}
+                    {obrasSocialesNombres.map((nombre, i) => (
+                      <span key={`${nombre}-${i}`} className="pc-pill">
+                        {nombre}
                       </span>
                     ))}
                   </div>
@@ -369,23 +390,11 @@ export function PsicologoClasicoTemplate({
             )}
           </p>
           {formData.horario_atencion && <p className="pc-footer-line">{formData.horario_atencion}</p>}
-          {(isRealUrl(formData.linkedin_url) || isRealUrl(formData.instagram_url)) && (
-            <p className="pc-footer-line">
-              {isRealUrl(formData.linkedin_url) && (
-                <a href={formData.linkedin_url} target="_blank" rel="noopener">
-                  LinkedIn
-                </a>
-              )}
-              {isRealUrl(formData.linkedin_url) && isRealUrl(formData.instagram_url) && (
-                <span className="pc-footer-sep">—</span>
-              )}
-              {isRealUrl(formData.instagram_url) && (
-                <a href={formData.instagram_url} target="_blank" rel="noopener">
-                  Instagram
-                </a>
-              )}
-            </p>
-          )}
+          <SocialLinks
+            linkedinUrl={formData.linkedin_url}
+            instagramUrl={formData.instagram_url}
+            className="pc-footer-line"
+          />
           {subdomain && <p className="pc-footer-line">{`${subdomain}.weboficial.com.ar`}</p>}
           <p className="pc-footer-disclaimer">
             La información de este sitio tiene fines informativos y no reemplaza una consulta profesional. Ante una
@@ -549,7 +558,7 @@ const CSS = `
 .pc-clasico .pc-testimonial-name{ font-weight:700; color:var(--c-primary); font-size:.92rem; }
 .pc-clasico .pc-testimonial-role{ font-size:.82rem; color:var(--c-muted); }
 @media (max-width:920px){ .pc-clasico .pc-testimonials-grid{ grid-template-columns:1fr 1fr; } }
-@media (max-width:600px){ .pc-clasico .pc-testimonials-grid{ grid-template-columns:1fr; } }
+@media (max-width:600px){ .pc-clasico .pc-testimonials-grid{ grid-template-columns:repeat(2,1fr); gap:16px; } }
 
 .pc-clasico .pc-cta-banner{ background:var(--c-primary); color:#fff; padding-block:68px; text-align:center; }
 .pc-clasico .pc-cta-banner h2{ color:#fff; font-size:clamp(1.6rem,3.2vw,2.2rem); margin-bottom:12px; }
