@@ -115,6 +115,18 @@ export async function getResellerCost(tld: string): Promise<number> {
 
   const product = data[productKey];
   const yearOnePrice = product?.addnewdomain?.["1"];
+
+  // TEMP (testing): logs the raw, unconverted reseller-price.json value for
+  // .com so it can be eyeballed in Vercel logs and confirmed to be a
+  // USD-shaped cost (e.g. "9.00"), not an ARS-shaped customer price (e.g.
+  // "18000") -- see the conversation this was added for. Safe to remove
+  // once confirmed.
+  if (tld === "com") {
+    console.log(
+      `[resellerclub] reseller-price.json addnewdomain["1"] for productKey="${productKey}": raw=${JSON.stringify(yearOnePrice)}`
+    );
+  }
+
   if (!yearOnePrice) {
     throw new Error(
       `ResellerClub reseller-price.json had no addnewdomain[1] price for product "${productKey}" (TLD "${tld}")`

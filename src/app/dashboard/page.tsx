@@ -354,7 +354,12 @@ export default async function DashboardPage({
               : null
           }
           hasRegistrantContact={Boolean(registrantContact)}
-          purchaseEnabled={process.env.DOMAIN_PURCHASE_ENABLED === "true"}
+          // TEMP (testing, no real customers yet): forced on regardless of
+          // DOMAIN_PURCHASE_ENABLED so the domain search can be tried end to
+          // end. To revert: restore
+          // `process.env.DOMAIN_PURCHASE_ENABLED === "true"` here (or just
+          // revert this commit).
+          purchaseEnabled={true}
           currentUrl={publicUrl}
         />
       </div>
