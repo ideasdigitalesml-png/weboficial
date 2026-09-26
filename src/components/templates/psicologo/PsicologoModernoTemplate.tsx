@@ -7,6 +7,7 @@ import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 import { SocialLinks } from "@/components/templates/shared/SocialLinks";
+import { resolveEnfoqueLabel, formatPrecioConsulta } from "@/lib/professions/psicologos";
 
 // Third profession, first of its three templates. Unlike abogado/contador
 // there is no legacy checkbox-group field and no derive-fallback helper --
@@ -54,6 +55,7 @@ export interface PsicologoFormData {
   horario_atencion?: string;
   modalidad?: string;
   enfoque_terapeutico?: string;
+  enfoque_terapeutico_custom?: string;
   descripcion?: string;
   precio_consulta?: string;
   cta_text?: string;
@@ -65,17 +67,6 @@ export interface PsicologoFormData {
   obras_sociales_detalle?: string;
   testimonios?: RepeaterItem[];
 }
-
-// enfoque_terapeutico moved from free text to a fixed `select` (migration
-// 0031) -- form_data stores one of these keys, never the human label.
-export const ENFOQUE_TERAPEUTICO_LABELS: Record<string, string> = {
-  cognitivo_conductual: "Cognitivo-Conductual",
-  psicoanalitica: "Psicoanalítica",
-  sistemica: "Sistémica",
-  gestalt: "Gestalt",
-  integrativa: "Integrativa",
-  otra: "Otra",
-};
 
 export const POBLACION_ATENDIDA_LABELS: Record<string, string> = {
   adultos: "Adultos",
@@ -156,9 +147,11 @@ export function PsicologoModernoTemplate({
   const modalidadLabel = formData.modalidad
     ? MODALIDAD_LABELS[formData.modalidad] || formData.modalidad
     : "";
-  const enfoqueLabel = formData.enfoque_terapeutico
-    ? ENFOQUE_TERAPEUTICO_LABELS[formData.enfoque_terapeutico] ?? formData.enfoque_terapeutico
-    : "";
+  const enfoqueLabel = resolveEnfoqueLabel(
+    formData.enfoque_terapeutico,
+    formData.enfoque_terapeutico_custom
+  );
+  const precioConsultaDisplay = formatPrecioConsulta(formData.precio_consulta);
   const showModalidadBand =
     Boolean(modalidadLabel) || obrasSocialesNombres.length > 0 || poblacionAtendida.length > 0;
   const heroLead = enfoqueLabel
@@ -251,7 +244,9 @@ export function PsicologoModernoTemplate({
                   delayMs={Math.min(i, 5) * 70}
                   className="pw-especialidad-card"
                 >
-                  <span className="pw-especialidad-icon-badge">{item.icono || "🧠"}</span>
+                  {item.icono && (
+                    <span className="pw-especialidad-icon-badge">{item.icono}</span>
+                  )}
                   <h3>{item.titulo}</h3>
                   {item.descripcion && <p>{item.descripcion}</p>}
                 </FadeInSection>
@@ -389,8 +384,8 @@ export function PsicologoModernoTemplate({
             <h2>¿Querés empezar un proceso terapéutico?</h2>
             <p>Escribime y coordinamos una consulta.</p>
             {formData.horario_atencion && <p className="pw-cta-schedule">{formData.horario_atencion}</p>}
-            {formData.precio_consulta && (
-              <p className="pw-cta-schedule">Valor de la consulta: {formData.precio_consulta}</p>
+            {precioConsultaDisplay && (
+              <p className="pw-cta-schedule">Valor de la consulta: {precioConsultaDisplay}</p>
             )}
             {waLink && (
               <a className="pw-btn pw-btn-dark" href={waLink} target="_blank" rel="noopener">

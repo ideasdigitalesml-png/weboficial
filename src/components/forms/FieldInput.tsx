@@ -158,6 +158,23 @@ export function FieldInput({
           placeholder={field.placeholder}
           className={INPUT_CLASS}
         />
+      ) : field.prefix ? (
+        <div className="relative flex items-center">
+          <span className="pointer-events-none absolute left-3 text-navy">
+            {field.prefix}
+          </span>
+          <input
+            value={stringValue}
+            onChange={(e) => {
+              const prefix = field.prefix ?? "";
+              const next = e.target.value;
+              onChange(next.startsWith(prefix) ? next.slice(prefix.length) : next);
+            }}
+            type="text"
+            placeholder={field.placeholder}
+            className={`${INPUT_CLASS} w-full pl-7`}
+          />
+        </div>
       ) : (
         <input
           value={stringValue}

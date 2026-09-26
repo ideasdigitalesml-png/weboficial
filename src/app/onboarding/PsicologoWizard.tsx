@@ -68,6 +68,7 @@ const FIELD_STEP: Record<string, PsicologoStep> = {
   poblacion_atendida: "especialidades",
   descripcion: "sobre-mi",
   enfoque_terapeutico: "sobre-mi",
+  enfoque_terapeutico_custom: "sobre-mi",
   precio_consulta: "sobre-mi",
   acepta_obras_sociales: "sobre-mi",
   obras_sociales_detalle: "sobre-mi",
@@ -96,10 +97,6 @@ function asRepeaterItems(value: FormFieldValue | undefined): RepeaterItem[] {
         (v): v is RepeaterItem => typeof v === "object" && v !== null && !Array.isArray(v)
       )
     : [];
-}
-
-function hasNonEmptyTitulo(items: RepeaterItem[]): boolean {
-  return items.some((item) => (item.titulo ?? "").trim().length > 0);
 }
 
 export function PsicologoWizard({
@@ -182,6 +179,7 @@ export function PsicologoWizard({
   const tituloProfesional = asString(values.titulo_profesional);
   const matriculaNumero = asString(values.matricula_numero);
   const enfoqueTerapeutico = asString(values.enfoque_terapeutico);
+  const enfoqueTerapeuticoCustom = asString(values.enfoque_terapeutico_custom);
   const especialidades = asRepeaterItems(values.especialidades);
   const especialidadTitulos = especialidades
     .map((e) => (e.titulo ?? "").trim())
@@ -194,6 +192,7 @@ export function PsicologoWizard({
           titulo: tituloProfesional,
           matricula: matriculaNumero,
           enfoque: enfoqueTerapeutico || undefined,
+          enfoqueCustom: enfoqueTerapeuticoCustom || undefined,
           especialidades: especialidadTitulos,
           genero,
         })
@@ -252,7 +251,7 @@ export function PsicologoWizard({
       case "contacto":
         return WHATSAPP_VALUE_RE.test(asString(values.phone));
       case "especialidades":
-        return hasNonEmptyTitulo(especialidades);
+        return true;
       case "sobre-mi":
         return true;
       case "revision":
@@ -366,6 +365,7 @@ export function PsicologoWizard({
     poblacion_atendida: asStringArray(values.poblacion_atendida),
     descripcion: descripcion || undefined,
     enfoque_terapeutico: enfoqueTerapeutico || undefined,
+    enfoque_terapeutico_custom: enfoqueTerapeuticoCustom || undefined,
     precio_consulta: asString(values.precio_consulta) || undefined,
     acepta_obras_sociales: asString(values.acepta_obras_sociales) || undefined,
     obras_sociales_detalle: asString(values.obras_sociales_detalle) || undefined,
@@ -545,6 +545,7 @@ export function PsicologoWizard({
                         titulo: tituloProfesional || "Lic. en Psicología",
                         matricula: matriculaNumero || "12345",
                         enfoque: enfoqueTerapeutico || undefined,
+                        enfoqueCustom: enfoqueTerapeuticoCustom || undefined,
                         especialidades:
                           especialidadTitulos.length > 0 ? especialidadTitulos : ["ansiedad"],
                         genero,
@@ -562,6 +563,14 @@ export function PsicologoWizard({
                   error={formErrors.enfoque_terapeutico}
                   onChange={(v) => updateValue("enfoque_terapeutico", v)}
                 />
+                {enfoqueTerapeutico === "otra" && (
+                  <FieldInput
+                    field={fieldByKey("enfoque_terapeutico_custom")}
+                    value={values.enfoque_terapeutico_custom ?? ""}
+                    error={formErrors.enfoque_terapeutico_custom}
+                    onChange={(v) => updateValue("enfoque_terapeutico_custom", v)}
+                  />
+                )}
                 <FieldInput
                   field={fieldByKey("precio_consulta")}
                   value={values.precio_consulta ?? ""}

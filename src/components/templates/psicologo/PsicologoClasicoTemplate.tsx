@@ -8,10 +8,10 @@ import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 import { SocialLinks } from "@/components/templates/shared/SocialLinks";
 import {
-  ENFOQUE_TERAPEUTICO_LABELS,
   POBLACION_ATENDIDA_LABELS,
   type PsicologoFormData,
 } from "./PsicologoModernoTemplate";
+import { resolveEnfoqueLabel, formatPrecioConsulta } from "@/lib/professions/psicologos";
 
 // Same content rules as PsicologoModernoTemplate.tsx: "Cómo trabajo" is
 // fixed generic copy (same category as the abogado templates' Proceso/FAQ),
@@ -105,9 +105,11 @@ export function PsicologoClasicoTemplate({
   const modalidadLabel = formData.modalidad
     ? MODALIDAD_LABELS[formData.modalidad] || formData.modalidad
     : "";
-  const enfoqueLabel = formData.enfoque_terapeutico
-    ? ENFOQUE_TERAPEUTICO_LABELS[formData.enfoque_terapeutico] ?? formData.enfoque_terapeutico
-    : "";
+  const enfoqueLabel = resolveEnfoqueLabel(
+    formData.enfoque_terapeutico,
+    formData.enfoque_terapeutico_custom
+  );
+  const precioConsultaDisplay = formatPrecioConsulta(formData.precio_consulta);
   const showModalidadBand =
     Boolean(modalidadLabel) || obrasSocialesNombres.length > 0 || poblacionAtendida.length > 0;
   const heroLead = enfoqueLabel
@@ -244,7 +246,9 @@ export function PsicologoClasicoTemplate({
                   delayMs={Math.min(i, 5) * 70}
                   className="pc-especialidad-row"
                 >
-                  <span className="pc-especialidad-medallion">{item.icono || "🧠"}</span>
+                  {item.icono && (
+                    <span className="pc-especialidad-medallion">{item.icono}</span>
+                  )}
                   <div>
                     <h3>{item.titulo}</h3>
                     {item.descripcion && <p>{item.descripcion}</p>}
@@ -351,8 +355,8 @@ export function PsicologoClasicoTemplate({
             <h2>¿Querés empezar un proceso terapéutico?</h2>
             <p>Escribime y coordinamos una consulta</p>
             {formData.horario_atencion && <p className="pc-cta-schedule">{formData.horario_atencion}</p>}
-            {formData.precio_consulta && (
-              <p className="pc-cta-schedule">Valor de la consulta: {formData.precio_consulta}</p>
+            {precioConsultaDisplay && (
+              <p className="pc-cta-schedule">Valor de la consulta: {precioConsultaDisplay}</p>
             )}
             {waLink && (
               <a className="pc-btn pc-btn-ivory" href={waLink} target="_blank" rel="noopener">

@@ -14,11 +14,30 @@ export const ENFOQUE_TERAPEUTICO_LABELS: Record<string, string> = {
   otra: "Otra",
 };
 
+// Resolves the human-readable corriente terapéutica for both the suggested
+// bio text and every template's display. When `enfoque` is "otra" the fixed
+// label ("Otra") is never shown -- the professional's own free-text
+// enfoqueCustom takes its place, or nothing renders at all if that's blank.
+export function resolveEnfoqueLabel(enfoque?: string, enfoqueCustom?: string): string {
+  if (!enfoque) return "";
+  if (enfoque === "otra") return (enfoqueCustom ?? "").trim();
+  return ENFOQUE_TERAPEUTICO_LABELS[enfoque] ?? enfoque;
+}
+
+// precio_consulta's "$" prefix is a render-time-only adornment (see
+// FieldInput's `prefix` support) -- never stored. Strips any "$" a user may
+// already have typed (old data, or pasted) before re-adding exactly one.
+export function formatPrecioConsulta(value?: string): string {
+  const cleaned = (value ?? "").trim().replace(/^\$+\s*/, "");
+  return cleaned ? `$${cleaned}` : "";
+}
+
 export interface PsicologoTextTemplateData {
   nombre: string;
   titulo: string;
   matricula: string;
   enfoque?: string;
+  enfoqueCustom?: string;
   especialidades: string[];
   genero?: Genero;
 }
@@ -34,6 +53,7 @@ export function getSuggestedPsicologoText({
   titulo,
   matricula,
   enfoque,
+  enfoqueCustom,
   especialidades,
   genero,
 }: PsicologoTextTemplateData): string {
@@ -42,9 +62,7 @@ export function getSuggestedPsicologoText({
     especialidades.length > 0
       ? ` Me especializo en ${formatListWithAnd(especialidades)}.`
       : "";
-  // `enfoque` arrives as the stored select value (e.g. "cognitivo_conductual"),
-  // never the label -- map it back to something readable for the sentence.
-  const enfoqueLabel = enfoque ? ENFOQUE_TERAPEUTICO_LABELS[enfoque] ?? enfoque : undefined;
+  const enfoqueLabel = resolveEnfoqueLabel(enfoque, enfoqueCustom);
   const enfoqueText = enfoqueLabel
     ? ` Trabajo desde un enfoque ${enfoqueLabel.toLowerCase()}.`
     : "";

@@ -8,10 +8,10 @@ import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 import { SocialLinks } from "@/components/templates/shared/SocialLinks";
 import {
-  ENFOQUE_TERAPEUTICO_LABELS,
   POBLACION_ATENDIDA_LABELS,
   type PsicologoFormData,
 } from "./PsicologoModernoTemplate";
+import { resolveEnfoqueLabel, formatPrecioConsulta } from "@/lib/professions/psicologos";
 
 // Same content rules as the other two psicologo templates: "Cómo trabajo"
 // is fixed generic copy (same category as the abogado templates'
@@ -109,9 +109,11 @@ export function PsicologoMinimalTemplate({
   const modalidadLabel = formData.modalidad
     ? MODALIDAD_LABELS[formData.modalidad] || formData.modalidad
     : "";
-  const enfoqueLabel = formData.enfoque_terapeutico
-    ? ENFOQUE_TERAPEUTICO_LABELS[formData.enfoque_terapeutico] ?? formData.enfoque_terapeutico
-    : "";
+  const enfoqueLabel = resolveEnfoqueLabel(
+    formData.enfoque_terapeutico,
+    formData.enfoque_terapeutico_custom
+  );
+  const precioConsultaDisplay = formatPrecioConsulta(formData.precio_consulta);
   const showModalidadBand =
     Boolean(modalidadLabel) || obrasSocialesNombres.length > 0 || poblacionAtendida.length > 0;
   const heroLead = enfoqueLabel
@@ -187,7 +189,9 @@ export function PsicologoMinimalTemplate({
                   delayMs={Math.min(i, 5) * 60}
                   className="pm-especialidad-row"
                 >
-                  <span className="pm-especialidad-icon">{item.icono || "🧠"}</span>
+                  {item.icono && (
+                    <span className="pm-especialidad-icon">{item.icono}</span>
+                  )}
                   <div>
                     <h3>{item.titulo}</h3>
                     {item.descripcion && <p>{item.descripcion}</p>}
@@ -313,8 +317,8 @@ export function PsicologoMinimalTemplate({
           <div className="pm-container">
             <h2>¿Querés empezar un proceso terapéutico?</h2>
             {formData.horario_atencion && <p className="pm-cta-schedule">{formData.horario_atencion}</p>}
-            {formData.precio_consulta && (
-              <p className="pm-cta-schedule">Valor de la consulta: {formData.precio_consulta}</p>
+            {precioConsultaDisplay && (
+              <p className="pm-cta-schedule">Valor de la consulta: {precioConsultaDisplay}</p>
             )}
             <a className="pm-cta-phone" href={waLink} target="_blank" rel="noopener">
               {formData.phone}

@@ -36,6 +36,11 @@ export interface FormFieldSchema {
   // validated server-side -- e.g. "Ej: 12.847" on a matricula field so a
   // professional sees a real-looking example instead of a blank box.
   placeholder?: string;
+  // UI hint only (shown via FieldInput as a fixed adornment to the left of
+  // a "text" input, e.g. "$" on precio_consulta) -- never stored. The typed
+  // value stays a plain number/string; the symbol is purely visual here and
+  // re-added at render time by the templates.
+  prefix?: string;
   min_length?: number;
   max_length?: number;
   options?: FormFieldOption[];
