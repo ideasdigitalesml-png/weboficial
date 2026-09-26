@@ -7,6 +7,14 @@ export interface ExistingCustomDomain {
   domain: string;
   status: "pending_payment" | "pending_registration" | "active" | "failed" | "expired";
   failureReason: string | null;
+  expiresAt: string | null;
+}
+
+// Computed on render, not stored/ticked anywhere -- expiresAt is a fixed
+// timestamp, so "days left" only ever needs today's date to derive.
+function daysUntil(isoDate: string): number {
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.ceil((new Date(isoDate).getTime() - Date.now()) / msPerDay);
 }
 
 const STATUS_LABELS: Record<ExistingCustomDomain["status"], string> = {
@@ -116,11 +124,18 @@ export function DomainSection({
               </p>
             )}
             {existingDomain.status === "active" && (
-              <p className="text-xs text-amber-700">
-                Revisá el email del titular del dominio y confirmá el correo de verificación que
-                te mandó ResellerClub/ICANN. Si no lo confirmás dentro de los 15 días, el dominio
-                se suspende automáticamente.
-              </p>
+              <>
+                {existingDomain.expiresAt && (
+                  <p className="text-xs text-text-body">
+                    Tu dominio vence en {daysUntil(existingDomain.expiresAt)} días.
+                  </p>
+                )}
+                <p className="text-xs text-amber-700">
+                  Revisá el email del titular del dominio y confirmá el correo de verificación que
+                  te mandó ResellerClub/ICANN. Si no lo confirmás dentro de los 15 días, el
+                  dominio se suspende automáticamente.
+                </p>
+              </>
             )}
           </div>
           <span

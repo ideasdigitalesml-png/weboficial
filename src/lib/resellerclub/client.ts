@@ -234,6 +234,13 @@ export async function registerDomain(input: {
     "POST"
   )) as { entityid?: string | number; actionstatus?: string; actionstatusdesc?: string };
 
+  // TEMP (testing): logs the full domains/register.json response once per
+  // real registration, to confirm whether ResellerClub actually returns an
+  // expiry timestamp we're not currently reading -- expiresAt below is
+  // computed locally (today + years), not parsed from this response. Safe
+  // to remove once confirmed either way.
+  console.log(`[resellerclub] domains/register.json response for ${input.domain}: ${JSON.stringify(data)}`);
+
   if (!data.entityid || data.actionstatus !== "Success") {
     throw new Error(
       `ResellerClub domain registration failed for ${input.domain}: ${data.actionstatusdesc ?? "unknown error"}`

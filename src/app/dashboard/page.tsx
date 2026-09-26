@@ -121,7 +121,7 @@ export default async function DashboardPage({
     supabase.from("plans").select("amount").eq("active", true).limit(1).maybeSingle(),
     supabase
       .from("custom_domains")
-      .select("domain, status, failure_reason")
+      .select("domain, status, failure_reason, expires_at")
       .eq("landing_id", landing.id)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -386,6 +386,7 @@ export default async function DashboardPage({
                   domain: customDomain.domain,
                   status: customDomain.status as ExistingCustomDomain["status"],
                   failureReason: customDomain.failure_reason,
+                  expiresAt: customDomain.expires_at,
                 }
               : null
           }
