@@ -21,6 +21,7 @@ export type ProcessResult =
         | "landing_not_found" // resource is real and valid, but doesn't match any of our landings (external_reference and preapproval_plan_id both came up empty) -- most likely a stale/orphaned MP resource, not our bug.
         | "domain_payment_pending" // one-time "payment" event for a custom_domains purchase, but MP's status isn't "approved" yet (pending/in_process/rejected) -- nothing to register.
         | "domain_not_found" // payment's external_reference doesn't match any custom_domains row -- stale/orphaned MP resource, not our bug.
+        | "domain_already_processing" // a second MP notification (different mp_event_id, so webhook_events' uniqueness didn't catch it) for a payment whose custom_domains row already moved past pending_payment -- no-op, not an error.
         | "domain_registered" // payment approved, ResellerClub registration + Vercel domain-add both succeeded.
         | "domain_registration_failed" // payment approved and recorded, but registration/DNS wiring failed after -- see custom_domains.failure_reason.
         | "ignored_unknown_type";
@@ -305,11 +306,22 @@ async function handleDomainPaymentEvent(
     return "domain_payment_pending";
   }
 
-  const { error: activateError } = await supabase.rpc("activate_domain_payment", {
-    p_custom_domain_id: customDomain.id,
-    p_mp_payment_id: payment.id,
-  });
+  const { data: activated, error: activateError } = await supabase.rpc(
+    "activate_domain_payment",
+    {
+      p_custom_domain_id: customDomain.id,
+      p_mp_payment_id: payment.id,
+    }
+  );
   if (activateError) throw activateError;
+
+  // The row was already past pending_payment (registration in flight, or
+  // already active/failed) -- a different MP notification for this same
+  // payment got here first. Registering the domain again would hit
+  // ResellerClub a second time for a domain that's already handled.
+  if (!activated) {
+    return "domain_already_processing";
+  }
 
   // From here on, the payment already succeeded -- any failure below must
   // be recorded via mark_domain_registration_failed (not thrown/left
