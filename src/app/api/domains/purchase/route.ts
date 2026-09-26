@@ -39,9 +39,18 @@ interface RegistrantInput {
   companyName?: string;
 }
 
+// Local number without the leading trunk (0) or mobile (15) prefix --
+// DomainSection.tsx's form only ever collects this shape.
+const PHONE_RE = /^\d{10,11}$/;
+
+// Either a classic 4-digit postal code or the newer 8-character CPA format
+// (1 letter + 4 digits + 3 letters).
+const ZIPCODE_RE = /^(\d{4}|[A-Za-z]\d{4}[A-Za-z]{3})$/;
+
 // Same required fields ResellerClub needs to create a customer/contact
 // (resellerclub/client.ts's ensureCustomer/ensureContact) -- companyName is
-// the only optional one.
+// the only optional one. Mirrors DomainSection.tsx's client-side checks --
+// re-validated here since the client's checks are only a UX convenience.
 function validateRegistrant(input: RegistrantInput | undefined | null) {
   if (!input) return null;
   const required = [
@@ -56,6 +65,8 @@ function validateRegistrant(input: RegistrantInput | undefined | null) {
     input.zipcode,
   ];
   if (required.some((v) => !v || !v.trim())) return null;
+  if (!PHONE_RE.test(input.phoneNumber!.trim())) return null;
+  if (!ZIPCODE_RE.test(input.zipcode!.trim())) return null;
 
   return {
     full_name: input.fullName!.trim(),

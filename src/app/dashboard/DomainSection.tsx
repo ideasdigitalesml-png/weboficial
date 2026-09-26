@@ -67,6 +67,44 @@ const EMPTY_CONTACT: ContactFormState = {
   companyName: "",
 };
 
+// Only Argentina is served -- phoneCountryCode/countryCode are fixed, never
+// shown as editable inputs (see the form below).
+const AR_PROVINCES = [
+  "Buenos Aires",
+  "Ciudad Autónoma de Buenos Aires",
+  "Catamarca",
+  "Chaco",
+  "Chubut",
+  "Córdoba",
+  "Corrientes",
+  "Entre Ríos",
+  "Formosa",
+  "Jujuy",
+  "La Pampa",
+  "La Rioja",
+  "Mendoza",
+  "Misiones",
+  "Neuquén",
+  "Río Negro",
+  "Salta",
+  "San Juan",
+  "San Luis",
+  "Santa Cruz",
+  "Santa Fe",
+  "Santiago del Estero",
+  "Tierra del Fuego",
+  "Tucumán",
+] as const;
+
+// Local number without the leading area-code trunk prefix (0) or mobile
+// prefix (15) -- ResellerClub/WHOIS wants just the national number here,
+// phoneCountryCode ("54") is sent separately.
+const PHONE_RE = /^\d{10,11}$/;
+
+// Either a classic 4-digit postal code or the newer 8-character CPA format
+// (1 letter + 4 digits + 3 letters, e.g. "C1425AAB").
+const ZIPCODE_RE = /^(\d{4}|[A-Za-z]\d{4}[A-Za-z]{3})$/;
+
 // Precompletion only -- see dashboard/page.tsx's defaultRegistrant comment.
 // Every field is optional here (the user might have neither a previous
 // purchase nor a name on file) and gets merged over EMPTY_CONTACT below.
@@ -101,6 +139,10 @@ export function DomainSection({
   const [contact, setContact] = useState<ContactFormState>({
     ...EMPTY_CONTACT,
     ...defaultRegistrant,
+    // Only Argentina is served -- always these two, regardless of what a
+    // precompleted defaultRegistrant might otherwise carry.
+    phoneCountryCode: "54",
+    countryCode: "AR",
   });
   const [purchasing, setPurchasing] = useState(false);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
@@ -206,8 +248,18 @@ export function DomainSection({
   async function handleConfirmRegistrantAndPurchase(e: React.FormEvent) {
     e.preventDefault();
     if (!pendingPurchaseDomain) return;
-    setPurchasing(true);
     setPurchaseError(null);
+
+    if (!PHONE_RE.test(contact.phoneNumber.trim())) {
+      setPurchaseError("El teléfono debe tener entre 10 y 11 dígitos, sin 0 ni 15.");
+      return;
+    }
+    if (!ZIPCODE_RE.test(contact.zipcode.trim())) {
+      setPurchaseError("Código postal inválido -- 4 dígitos, o el formato CPA de 8 caracteres.");
+      return;
+    }
+
+    setPurchasing(true);
 
     try {
       const res = await fetch("/api/domains/purchase", {
@@ -334,21 +386,30 @@ export function DomainSection({
                   className={INPUT_CLASS}
                 />
               </div>
-              <div className="flex flex-col gap-1.5">
-                <label className={LABEL_CLASS}>Cód. país tel.</label>
-                <input
-                  required
-                  value={contact.phoneCountryCode}
-                  onChange={(e) => setContact((c) => ({ ...c, phoneCountryCode: e.target.value }))}
-                  className={INPUT_CLASS}
-                />
-              </div>
+              <p className="text-xs text-amber-700 sm:col-span-2">
+                Revisalos bien: cambiar el titular después puede bloquear el dominio por 60 días.
+              </p>
               <div className="flex flex-col gap-1.5">
                 <label className={LABEL_CLASS}>Teléfono</label>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-text-body">+54</span>
+                  <input
+                    required
+                    inputMode="numeric"
+                    pattern="\d{10,11}"
+                    value={contact.phoneNumber}
+                    onChange={(e) => setContact((c) => ({ ...c, phoneNumber: e.target.value }))}
+                    className={`${INPUT_CLASS} flex-1`}
+                  />
+                </div>
+                <p className="text-xs text-text-body">Ej: 2257543456 (sin 0 ni 15)</p>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className={LABEL_CLASS}>Código postal</label>
                 <input
                   required
-                  value={contact.phoneNumber}
-                  onChange={(e) => setContact((c) => ({ ...c, phoneNumber: e.target.value }))}
+                  value={contact.zipcode}
+                  onChange={(e) => setContact((c) => ({ ...c, zipcode: e.target.value }))}
                   className={INPUT_CLASS}
                 />
               </div>
@@ -372,31 +433,21 @@ export function DomainSection({
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className={LABEL_CLASS}>Provincia</label>
-                <input
+                <select
                   required
                   value={contact.state}
                   onChange={(e) => setContact((c) => ({ ...c, state: e.target.value }))}
                   className={INPUT_CLASS}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className={LABEL_CLASS}>País (ISO2)</label>
-                <input
-                  required
-                  maxLength={2}
-                  value={contact.countryCode}
-                  onChange={(e) => setContact((c) => ({ ...c, countryCode: e.target.value }))}
-                  className={INPUT_CLASS}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className={LABEL_CLASS}>Código postal</label>
-                <input
-                  required
-                  value={contact.zipcode}
-                  onChange={(e) => setContact((c) => ({ ...c, zipcode: e.target.value }))}
-                  className={INPUT_CLASS}
-                />
+                >
+                  <option value="" disabled>
+                    Elegí una provincia
+                  </option>
+                  {AR_PROVINCES.map((province) => (
+                    <option key={province} value={province}>
+                      {province}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="flex flex-col gap-1.5 sm:col-span-2">
                 <label className={LABEL_CLASS}>Empresa (opcional)</label>
