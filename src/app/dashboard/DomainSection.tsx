@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { saveRegistrantContactAction } from "./actions";
 import type { DomainCheckResult } from "@/app/api/domains/check/route";
 
 export interface ExistingCustomDomain {
@@ -44,6 +43,7 @@ type ContactFormState = {
   state: string;
   countryCode: string;
   zipcode: string;
+  companyName: string;
 };
 
 const EMPTY_CONTACT: ContactFormState = {
@@ -56,16 +56,22 @@ const EMPTY_CONTACT: ContactFormState = {
   state: "",
   countryCode: "AR",
   zipcode: "",
+  companyName: "",
 };
+
+// Precompletion only -- see dashboard/page.tsx's defaultRegistrant comment.
+// Every field is optional here (the user might have neither a previous
+// purchase nor a name on file) and gets merged over EMPTY_CONTACT below.
+export type DefaultRegistrant = Partial<ContactFormState>;
 
 export function DomainSection({
   existingDomain,
-  hasRegistrantContact,
+  defaultRegistrant,
   purchaseEnabled,
   currentUrl,
 }: {
   existingDomain: ExistingCustomDomain | null;
-  hasRegistrantContact: boolean;
+  defaultRegistrant: DefaultRegistrant;
   // Whether this user's subscription is active (or they're an admin) --
   // see isDomainAccessAllowed in dashboard/page.tsx. The API routes enforce
   // the same rule server-side (checkDomainAccess), so hiding the UI here is
@@ -81,8 +87,13 @@ export function DomainSection({
   const [checkError, setCheckError] = useState<string | null>(null);
 
   const [pendingPurchaseDomain, setPendingPurchaseDomain] = useState<string | null>(null);
-  const [contactKnown, setContactKnown] = useState(hasRegistrantContact);
-  const [contact, setContact] = useState<ContactFormState>(EMPTY_CONTACT);
+  // Always starts from the precompleted defaults, but nothing here is ever
+  // submitted without the user seeing and being able to edit it first --
+  // the form below is shown on every purchase attempt, never skipped.
+  const [contact, setContact] = useState<ContactFormState>({
+    ...EMPTY_CONTACT,
+    ...defaultRegistrant,
+  });
   const [purchasing, setPurchasing] = useState(false);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
 
@@ -165,35 +176,22 @@ export function DomainSection({
     }
   }
 
-  function handleWantToBuy(domain: string) {
+  function handleBuyClick(domain: string) {
     setPurchaseError(null);
     setPendingPurchaseDomain(domain);
   }
 
-  async function handleSaveContactAndContinue(e: React.FormEvent) {
+  async function handleConfirmRegistrantAndPurchase(e: React.FormEvent) {
     e.preventDefault();
     if (!pendingPurchaseDomain) return;
     setPurchasing(true);
     setPurchaseError(null);
 
-    const result = await saveRegistrantContactAction(contact);
-    if (!result.ok) {
-      setPurchasing(false);
-      setPurchaseError("No se pudieron guardar tus datos de contacto. Revisá los campos.");
-      return;
-    }
-    setContactKnown(true);
-    await doPurchase(pendingPurchaseDomain);
-  }
-
-  async function doPurchase(domain: string) {
-    setPurchasing(true);
-    setPurchaseError(null);
     try {
       const res = await fetch("/api/domains/purchase", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domain }),
+        body: JSON.stringify({ domain: pendingPurchaseDomain, registrant: contact }),
       });
       const data = await res.json();
       if (!data.ok) {
@@ -201,7 +199,9 @@ export function DomainSection({
         setPurchaseError(
           data.reason === "domain_taken"
             ? "Ese dominio ya no está disponible."
-            : "No se pudo iniciar la compra. Intentá de nuevo."
+            : data.reason === "invalid_registrant"
+              ? "Revisá los datos del titular -- falta completar algún campo."
+              : "No se pudo iniciar la compra. Intentá de nuevo."
         );
         return;
       }
@@ -209,14 +209,6 @@ export function DomainSection({
     } catch {
       setPurchasing(false);
       setPurchaseError("No se pudo iniciar la compra. Intentá de nuevo.");
-    }
-  }
-
-  function handleBuyClick(domain: string) {
-    if (contactKnown) {
-      doPurchase(domain);
-    } else {
-      handleWantToBuy(domain);
     }
   }
 
@@ -291,10 +283,14 @@ export function DomainSection({
           </p>
         )}
 
-        {pendingPurchaseDomain && !contactKnown && (
-          <form onSubmit={handleSaveContactAndContinue} className="flex flex-col gap-3 border-t border-border-subtle pt-4">
+        {pendingPurchaseDomain && (
+          <form
+            onSubmit={handleConfirmRegistrantAndPurchase}
+            className="flex flex-col gap-3 border-t border-border-subtle pt-4"
+          >
             <p className="text-sm font-medium text-navy">
-              Datos del titular del dominio (requeridos para el registro)
+              Datos del titular de {pendingPurchaseDomain} (el dominio queda a su nombre, no al
+              tuyo -- podés cambiarlo si es para otra persona)
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
@@ -377,6 +373,14 @@ export function DomainSection({
                   required
                   value={contact.zipcode}
                   onChange={(e) => setContact((c) => ({ ...c, zipcode: e.target.value }))}
+                  className={INPUT_CLASS}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5 sm:col-span-2">
+                <label className={LABEL_CLASS}>Empresa (opcional)</label>
+                <input
+                  value={contact.companyName}
+                  onChange={(e) => setContact((c) => ({ ...c, companyName: e.target.value }))}
                   className={INPUT_CLASS}
                 />
               </div>

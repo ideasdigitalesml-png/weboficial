@@ -139,10 +139,13 @@ export interface RegistrantContact {
 }
 
 // Creates a ResellerClub "customer" for this contact if one doesn't exist
-// yet (persisted as registrant_contacts.resellerclub_customer_id so it's
-// only ever created once per weboficial user). The password is generated
-// and discarded -- this customer record is never logged into directly, it
-// only exists so ResellerClub has an owner to attach the contact/domain to.
+// yet -- the caller (process-mercadopago-webhook.ts) looks up/persists
+// existingCustomerId in resellerclub_customers, keyed by the registrant's
+// email so it's only ever created once per email regardless of which
+// weboficial account is buying (ResellerClub's signup.json errors on a
+// repeat email). The password is generated and discarded -- this customer
+// record is never logged into directly, it only exists so ResellerClub has
+// an owner to attach the contact/domain to.
 export async function ensureCustomer(
   contact: RegistrantContact,
   existingCustomerId: string | null

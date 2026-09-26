@@ -327,61 +327,56 @@ async function handleDomainPaymentEvent(
   // be recorded via mark_domain_registration_failed (not thrown/left
   // stuck in pending_registration), since the customer already paid.
   try {
-    const { data: landing } = await supabase
-      .from("landings")
-      .select("user_id")
-      .eq("id", customDomain.landing_id)
-      .single();
-    if (!landing) throw new Error(`landing ${customDomain.landing_id} not found`);
-
-    const { data: contact } = await supabase
-      .from("registrant_contacts")
+    // Captured fresh per purchase by /api/domains/purchase (see
+    // domain_registrants' migration comment) -- the domain's titular can be
+    // a different person/email each time, so this is never assumed to
+    // match the weboficial account owner.
+    const { data: registrant } = await supabase
+      .from("domain_registrants")
       .select("*")
-      .eq("user_id", landing.user_id)
+      .eq("custom_domain_id", customDomain.id)
       .single();
-    if (!contact) throw new Error(`registrant_contacts not found for user ${landing.user_id}`);
+    if (!registrant) throw new Error(`domain_registrants not found for custom_domains.id ${customDomain.id}`);
+
+    const registrantContact = {
+      fullName: registrant.full_name,
+      email: registrant.email,
+      phoneCountryCode: registrant.phone_country_code,
+      phoneNumber: registrant.phone_number,
+      addressLine1: registrant.address_line1,
+      city: registrant.city,
+      state: registrant.state,
+      countryCode: registrant.country_code,
+      zipcode: registrant.zipcode,
+      companyName: registrant.company_name,
+    };
+
+    // ResellerClub's customers/signup.json errors on a repeat signup for
+    // the same email, so the "customer" record (not the per-purchase
+    // "contact" below) is reused across purchases by email -- independent
+    // of which weboficial account is buying, since domain_registrants is
+    // per purchase, not per weboficial user.
+    const { data: cachedCustomer } = await supabase
+      .from("resellerclub_customers")
+      .select("resellerclub_customer_id")
+      .eq("email", registrant.email)
+      .maybeSingle();
 
     const customerId = await ensureCustomer(
-      {
-        fullName: contact.full_name,
-        email: contact.email,
-        phoneCountryCode: contact.phone_country_code,
-        phoneNumber: contact.phone_number,
-        addressLine1: contact.address_line1,
-        city: contact.city,
-        state: contact.state,
-        countryCode: contact.country_code,
-        zipcode: contact.zipcode,
-        companyName: contact.company_name,
-      },
-      contact.resellerclub_customer_id
+      registrantContact,
+      cachedCustomer?.resellerclub_customer_id ?? null
     );
-    const contactId = await ensureContact(
-      {
-        fullName: contact.full_name,
-        email: contact.email,
-        phoneCountryCode: contact.phone_country_code,
-        phoneNumber: contact.phone_number,
-        addressLine1: contact.address_line1,
-        city: contact.city,
-        state: contact.state,
-        countryCode: contact.country_code,
-        zipcode: contact.zipcode,
-        companyName: contact.company_name,
-      },
-      customerId,
-      contact.resellerclub_contact_id
-    );
-
-    if (
-      customerId !== contact.resellerclub_customer_id ||
-      contactId !== contact.resellerclub_contact_id
-    ) {
+    if (customerId !== cachedCustomer?.resellerclub_customer_id) {
       await supabase
-        .from("registrant_contacts")
-        .update({ resellerclub_customer_id: customerId, resellerclub_contact_id: contactId })
-        .eq("user_id", landing.user_id);
+        .from("resellerclub_customers")
+        .upsert({ email: registrant.email, resellerclub_customer_id: customerId });
     }
+
+    // No reuse for the "contact" record -- always created fresh. Contacts
+    // (unlike customer signups) aren't known to error on repeats, and
+    // domain_registrants has no field to cache a contact id against, since
+    // it's meant to be an immutable per-purchase record.
+    const contactId = await ensureContact(registrantContact, customerId, null);
 
     const registration = await registerDomain({
       domain: customDomain.domain,

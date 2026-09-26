@@ -26,6 +26,51 @@ function splitDomain(fullDomain: string): { baseName: string; tld: SupportedTld 
   return null;
 }
 
+interface RegistrantInput {
+  fullName?: string;
+  email?: string;
+  phoneCountryCode?: string;
+  phoneNumber?: string;
+  addressLine1?: string;
+  city?: string;
+  state?: string;
+  countryCode?: string;
+  zipcode?: string;
+  companyName?: string;
+}
+
+// Same required fields ResellerClub needs to create a customer/contact
+// (resellerclub/client.ts's ensureCustomer/ensureContact) -- companyName is
+// the only optional one.
+function validateRegistrant(input: RegistrantInput | undefined | null) {
+  if (!input) return null;
+  const required = [
+    input.fullName,
+    input.email,
+    input.phoneCountryCode,
+    input.phoneNumber,
+    input.addressLine1,
+    input.city,
+    input.state,
+    input.countryCode,
+    input.zipcode,
+  ];
+  if (required.some((v) => !v || !v.trim())) return null;
+
+  return {
+    full_name: input.fullName!.trim(),
+    email: input.email!.trim(),
+    phone_country_code: input.phoneCountryCode!.trim(),
+    phone_number: input.phoneNumber!.trim(),
+    address_line1: input.addressLine1!.trim(),
+    city: input.city!.trim(),
+    state: input.state!.trim(),
+    country_code: input.countryCode!.trim().toUpperCase(),
+    zipcode: input.zipcode!.trim(),
+    company_name: input.companyName?.trim() || null,
+  };
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {
@@ -51,7 +96,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, reason: "rate_limited" }, { status: 429 });
   }
 
-  const body = (await request.json().catch(() => null)) as { domain?: string } | null;
+  const body = (await request.json().catch(() => null)) as {
+    domain?: string;
+    registrant?: RegistrantInput;
+  } | null;
   const fullDomain = body?.domain?.trim().toLowerCase();
   if (!fullDomain) {
     return NextResponse.json({ ok: false, reason: "invalid_domain" }, { status: 400 });
@@ -60,6 +108,14 @@ export async function POST(request: Request) {
   const split = splitDomain(fullDomain);
   if (!split || !isValidDomainBaseName(split.baseName)) {
     return NextResponse.json({ ok: false, reason: "invalid_domain" }, { status: 400 });
+  }
+
+  // The titular's data is submitted with every purchase (never reused
+  // silently across purchases) -- DomainSection.tsx always shows this form
+  // before the pay button, precompleted but editable.
+  const registrant = validateRegistrant(body?.registrant);
+  if (!registrant) {
+    return NextResponse.json({ ok: false, reason: "invalid_registrant" }, { status: 400 });
   }
 
   // user_id is deliberately never read from the request body -- it always
@@ -72,15 +128,6 @@ export async function POST(request: Request) {
     .maybeSingle();
   if (!landing) {
     return NextResponse.json({ ok: false, reason: "no_landing" }, { status: 400 });
-  }
-
-  const { data: contact } = await supabase
-    .from("registrant_contacts")
-    .select("user_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  if (!contact) {
-    return NextResponse.json({ ok: false, reason: "missing_registrant_contact" }, { status: 400 });
   }
 
   const { data: existingActive } = await supabase
@@ -129,6 +176,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, reason: "domain_taken" }, { status: 409 });
     }
     console.error("domains/purchase insert failed", insertError);
+    return NextResponse.json({ ok: false, reason: "insert_failed" }, { status: 500 });
+  }
+
+  const { error: registrantError } = await supabase.from("domain_registrants").insert({
+    custom_domain_id: customDomain.id,
+    ...registrant,
+  });
+  if (registrantError) {
+    // No MP preference exists yet at this point, so it's safe to fully
+    // undo the custom_domains row rather than leave an orphaned
+    // pending_payment row with no registrant attached to it.
+    console.error("domains/purchase registrant insert failed", registrantError);
+    await createAdminClient().from("custom_domains").delete().eq("id", customDomain.id);
     return NextResponse.json({ ok: false, reason: "insert_failed" }, { status: 500 });
   }
 

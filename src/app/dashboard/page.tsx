@@ -98,7 +98,7 @@ export default async function DashboardPage({
     { data: profile },
     { data: activePlan },
     { data: customDomain },
-    { data: registrantContact },
+    { data: lastRegistrant },
   ] = await Promise.all([
     supabase
       .from("professions")
@@ -126,7 +126,19 @@ export default async function DashboardPage({
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
-    supabase.from("registrant_contacts").select("user_id").eq("user_id", user.id).maybeSingle(),
+    // Precompletes (never auto-applies) the registrant form with the last
+    // titular this weboficial user actually used, so a repeat buyer doesn't
+    // retype the same address -- but it's still editable and re-submitted
+    // fresh on every purchase (see domain_registrants' migration comment).
+    supabase
+      .from("domain_registrants")
+      .select(
+        "full_name, email, phone_country_code, phone_number, address_line1, city, state, country_code, zipcode, company_name, custom_domains!inner(landing_id)"
+      )
+      .eq("custom_domains.landing_id", landing.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   // Only an active landing has a working public URL: landings' public SELECT
@@ -154,6 +166,29 @@ export default async function DashboardPage({
     ? TEMPLATE_PREVIEW_IMAGE[`${profession.slug}:${template.slug}`]
     : undefined;
   const paletas = profession?.slug ? PALETAS_BY_PROFESSION[profession.slug] : undefined;
+
+  // Precompletion source, per the priority the plan asked for: the last
+  // titular this user actually registered a domain under, else whatever we
+  // already know from their own profile/landing. Either way it's just a
+  // starting point -- DomainSection.tsx's form is always shown and always
+  // editable before paying, never silently reused.
+  const defaultRegistrant = lastRegistrant
+    ? {
+        fullName: lastRegistrant.full_name,
+        email: lastRegistrant.email,
+        phoneCountryCode: lastRegistrant.phone_country_code,
+        phoneNumber: lastRegistrant.phone_number,
+        addressLine1: lastRegistrant.address_line1,
+        city: lastRegistrant.city,
+        state: lastRegistrant.state,
+        countryCode: lastRegistrant.country_code,
+        zipcode: lastRegistrant.zipcode,
+        companyName: lastRegistrant.company_name ?? "",
+      }
+    : {
+        fullName: typeof professionalName === "string" ? professionalName : "",
+        email: user.email ?? "",
+      };
 
   return (
     <>
@@ -354,7 +389,7 @@ export default async function DashboardPage({
                 }
               : null
           }
-          hasRegistrantContact={Boolean(registrantContact)}
+          defaultRegistrant={defaultRegistrant}
           purchaseEnabled={isDomainAccessAllowed(profile?.role, subscription?.status)}
           currentUrl={publicUrl}
         />
