@@ -22,6 +22,7 @@ export type ProcessResult =
         | "domain_payment_pending" // one-time "payment" event for a custom_domains purchase, but MP's status isn't "approved" yet (pending/in_process/rejected) -- nothing to register.
         | "domain_not_found" // payment's external_reference doesn't match any custom_domains row -- stale/orphaned MP resource, not our bug.
         | "domain_already_processing" // a second MP notification (different mp_event_id, so webhook_events' uniqueness didn't catch it) for a payment whose custom_domains row already moved past pending_payment -- no-op, not an error.
+        | "domain_amount_mismatch" // payment approved, but its transaction_amount doesn't match custom_domains.price_ars -- refused, marked failed, never registered. See custom_domains.failure_reason.
         | "domain_registered" // payment approved, ResellerClub registration + Vercel domain-add both succeeded.
         | "domain_registration_failed" // payment approved and recorded, but registration/DNS wiring failed after -- see custom_domains.failure_reason.
         | "ignored_unknown_type";
@@ -291,7 +292,7 @@ async function handleDomainPaymentEvent(
 
   const { data: customDomain } = await supabase
     .from("custom_domains")
-    .select("id, domain, tld, landing_id")
+    .select("id, domain, tld, landing_id, price_ars")
     .eq("id", customDomainId)
     .maybeSingle();
 
@@ -321,6 +322,26 @@ async function handleDomainPaymentEvent(
   // ResellerClub a second time for a domain that's already handled.
   if (!activated) {
     return "domain_already_processing";
+  }
+
+  // Never register a domain for less (or more) than what /api/domains/purchase
+  // actually priced it at -- the checkout amount client-side could in
+  // principle be stale or tampered with by the time MP settles the charge.
+  // A whole-cent tolerance absorbs float/rounding noise, not a real mismatch
+  // (computePriceArs always rounds to a whole peso).
+  const AMOUNT_TOLERANCE_ARS = 0.5;
+  const priceArs = Number(customDomain.price_ars);
+  if (Math.abs(payment.transactionAmount - priceArs) > AMOUNT_TOLERANCE_ARS) {
+    const reason = `Monto no coincide: pagado ${payment.transactionAmount}, esperado ${priceArs}`;
+    console.error(
+      `domain payment amount mismatch for custom_domains.id=${customDomain.id}: ${reason}`
+    );
+    const { error: mismatchError } = await supabase.rpc("mark_domain_registration_failed", {
+      p_custom_domain_id: customDomain.id,
+      p_reason: reason,
+    });
+    if (mismatchError) throw mismatchError;
+    return "domain_amount_mismatch";
   }
 
   // From here on, the payment already succeeded -- any failure below must
