@@ -4,7 +4,9 @@
 // recomputes with this same function right before creating the MP
 // preference.
 
-export const SUPPORTED_TLDS = ["com", "com.ar"] as const;
+// Only ".com" is sold -- ".com.ar" is deliberately not offered (see
+// resellerclub/client.ts's file-level comment for why).
+export const SUPPORTED_TLDS = ["com"] as const;
 export type SupportedTld = (typeof SUPPORTED_TLDS)[number];
 
 // Same base-name shape as landing slugs (RFC 1035 DNS label): lowercase
@@ -15,14 +17,13 @@ export function isValidDomainBaseName(base: string): boolean {
   return DOMAIN_BASE_RE.test(base);
 }
 
-function marginFor(tld: SupportedTld): number {
-  const envKey = tld === "com.ar" ? "MARGEN_COM_AR" : "MARGEN_COM";
-  const raw = process.env[envKey];
-  const margin = Number(raw);
-  if (!raw || !Number.isFinite(margin)) {
-    throw new Error(`${envKey} is not set or invalid`);
+function margin(): number {
+  const raw = process.env.MARGEN_COM;
+  const value = Number(raw);
+  if (!raw || !Number.isFinite(value)) {
+    throw new Error("MARGEN_COM is not set or invalid");
   }
-  return margin;
+  return value;
 }
 
 function dolarOficial(): number {
@@ -36,8 +37,7 @@ function dolarOficial(): number {
 
 // precio_venta = costo_resellerclub_usd * (1 + margen/100) * DOLAR_OFICIAL,
 // rounded to the nearest peso.
-export function computePriceArs(costUsd: number, tld: SupportedTld): number {
-  const margin = marginFor(tld);
+export function computePriceArs(costUsd: number, _tld: SupportedTld): number {
   const fx = dolarOficial();
-  return Math.round(costUsd * (1 + margin / 100) * fx);
+  return Math.round(costUsd * (1 + margin() / 100) * fx);
 }

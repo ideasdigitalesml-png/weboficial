@@ -2,20 +2,17 @@
 // reads RESELLERCLUB_RESELLER_ID / RESELLERCLUB_API_KEY, which must never
 // reach the browser.
 //
-// IMPORTANT -- read before relying on this in production: this was written
-// from ResellerClub's publicly documented API shape, not verified against
-// a live sandbox call (no test credentials were available while building
-// this). Two specific things need to be confirmed against the real API
-// before accepting real payments for either TLD:
-//   1. TLD_PRODUCT_KEYS below only has a confident key for "com" (ResellerClub's
-//      well-known "dotcom" product). ".com.ar" is deliberately left `null`
-//      -- getResellerCost() throws a clear error for it rather than
-//      guessing a product-key and risking a silently wrong charge. Look up
-//      the real key via a manual reseller-price.json call and fill it in.
-//   2. Argentina's ccTLD often has NIC.ar-specific registration/contact
-//      requirements that plain gTLD contacts/add.json + domains/register.json
-//      may not satisfy. Don't enable ".com.ar" purchases for real users
-//      until a test registration actually succeeds in ResellerClub's panel.
+// Only ".com" is sold (see SUPPORTED_TLDS in @/lib/domains/pricing) -- no
+// ".com.ar", so no NIC.ar-specific registration/contact requirements to
+// worry about here.
+//
+// IMPORTANT: ResellerClub's product-key for ".com" is NOT the commonly
+// assumed "dotcom" -- it's "domcno" (confirmed via the reseller panel URL
+// /my-shop/domains/domcno; "dotcom" silently returned no addnewdomain
+// pricing and made getResellerCost() fail). If ResellerClub ever renames
+// this again, the TEMP log in getResellerCost() below prints every real
+// product-key reseller-price.json returns, so the right one can be found
+// without guessing.
 
 import { getFixieDispatcher } from "./fixie-proxy";
 
@@ -93,10 +90,10 @@ export async function checkAvailability(
   });
 }
 
-// See the file-level comment: only "com" has a confirmed product-key.
+// See the file-level comment: ResellerClub's real product-key for ".com"
+// is "domcno", not the commonly-assumed "dotcom".
 const TLD_PRODUCT_KEYS: Record<string, string | null> = {
-  com: "dotcom",
-  "com.ar": null,
+  com: "domcno",
 };
 
 export async function getResellerCost(tld: string): Promise<number> {
@@ -113,6 +110,12 @@ export async function getResellerCost(tld: string): Promise<number> {
     { addnewdomain?: Record<string, string> } | undefined
   >;
 
+  // TEMP (testing): logs just the product-key names reseller-price.json
+  // actually returns, once per call -- this is how "domcno" was found to be
+  // the real ".com" key instead of the assumed "dotcom". Safe to remove
+  // once every TLD in TLD_PRODUCT_KEYS is confirmed working.
+  console.log(`[resellerclub] reseller-price.json product keys: ${Object.keys(data).join(", ")}`);
+
   const product = data[productKey];
   const yearOnePrice = product?.addnewdomain?.["1"];
 
@@ -121,11 +124,9 @@ export async function getResellerCost(tld: string): Promise<number> {
   // USD-shaped cost (e.g. "9.00"), not an ARS-shaped customer price (e.g.
   // "18000") -- see the conversation this was added for. Safe to remove
   // once confirmed.
-  if (tld === "com") {
-    console.log(
-      `[resellerclub] reseller-price.json addnewdomain["1"] for productKey="${productKey}": raw=${JSON.stringify(yearOnePrice)}`
-    );
-  }
+  console.log(
+    `[resellerclub] reseller-price.json addnewdomain["1"] for productKey="${productKey}": raw=${JSON.stringify(yearOnePrice)}`
+  );
 
   if (!yearOnePrice) {
     throw new Error(

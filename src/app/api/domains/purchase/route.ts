@@ -11,8 +11,9 @@ import {
 } from "@/lib/domains/pricing";
 import { checkRateLimit } from "@/lib/rate-limit";
 
-// Longest first so "miempresa.com.ar" matches the "com.ar" TLD instead of
-// being mis-split on "com".
+// Longest first, so a multi-label TLD would match before a shorter one it
+// ends with (not currently relevant with only ".com" in SUPPORTED_TLDS, but
+// keeps this correct if another TLD is added later).
 const TLDS_BY_LENGTH_DESC = [...SUPPORTED_TLDS].sort((a, b) => b.length - a.length);
 
 function splitDomain(fullDomain: string): { baseName: string; tld: SupportedTld } | null {
