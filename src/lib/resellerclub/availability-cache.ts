@@ -2,10 +2,10 @@
 // few minutes so repeated searches for the same base name don't spend
 // another ResellerClub call (and another hop through the Fixie proxy's
 // limited request quota) every time. Used only by /api/domains/check --
-// /api/domains/purchase deliberately calls checkAvailability/getResellerCost
+// /api/domains/purchase deliberately calls checkAvailability/getResellerCostArs
 // directly (uncached), since it must never charge based on a price that
 // could be stale by even a few minutes.
-import { checkAvailability, getResellerCost } from "./client";
+import { checkAvailability, getResellerCostArs } from "./client";
 import { computePriceArs, type SupportedTld } from "@/lib/domains/pricing";
 
 // Within the requested 5-10 minute window.
@@ -61,16 +61,16 @@ export async function getCachedDomainChecks(
           };
         } else {
           try {
-            const costUsd = await getResellerCost(tld);
+            const costArs = await getResellerCostArs(tld);
             value = {
               tld,
               domain: entry.domain,
               available: true,
-              priceArs: computePriceArs(costUsd, tld),
+              priceArs: computePriceArs(costArs, tld),
               priceUnavailableReason: null,
             };
           } catch (err) {
-            console.error(`getResellerCost failed for tld=${tld}`, err);
+            console.error(`getResellerCostArs failed for tld=${tld}`, err);
             value = {
               tld,
               domain: entry.domain,

@@ -8,11 +8,12 @@
 //
 // IMPORTANT: ResellerClub's product-key for ".com" is NOT the commonly
 // assumed "dotcom" -- it's "domcno" (confirmed via the reseller panel URL
-// /my-shop/domains/domcno; "dotcom" silently returned no addnewdomain
-// pricing and made getResellerCost() fail). If ResellerClub ever renames
-// this again, the TEMP log in getResellerCost() below prints every real
-// product-key reseller-price.json returns, so the right one can be found
-// without guessing.
+// /my-shop/domains/domcno).
+//
+// IMPORTANT: this reseller account's core currency is ARS, not USD --
+// reseller-price.json's addnewdomain price is already an ARS amount (year-1
+// .com cost confirmed ~22494.66 ARS). getResellerCostArs() below reflects
+// that: no USD, no DOLAR_OFICIAL conversion anywhere in this pricing path.
 
 import { getFixieDispatcher } from "./fixie-proxy";
 
@@ -96,7 +97,7 @@ const TLD_PRODUCT_KEYS: Record<string, string | null> = {
   com: "domcno",
 };
 
-export async function getResellerCost(tld: string): Promise<number> {
+export async function getResellerCostArs(tld: string): Promise<number> {
   const productKey = TLD_PRODUCT_KEYS[tld];
   if (!productKey) {
     throw new Error(
@@ -107,40 +108,21 @@ export async function getResellerCost(tld: string): Promise<number> {
 
   const data = (await rcFetch("/products/reseller-price.json", {})) as Record<
     string,
-    { addnewdomain?: Record<string, string> } | undefined
+    { "0"?: { pricing?: { addnewdomain?: Record<string, string> } } } | undefined
   >;
 
-  const product = data[productKey];
-  const yearOnePrice = product?.addnewdomain?.["1"];
-
-  // TEMP (testing): "domcno" is confirmed to be a real product key, but
-  // addnewdomain["1"] still came back undefined -- so the shape of
-  // data["domcno"] itself doesn't match what this code assumes. Logging the
-  // whole product object (not the full reseller-price.json response) to see
-  // its actual shape instead of guessing. Safe to remove once parsing below
-  // is fixed to match.
-  console.log(`[resellerclub] reseller-price.json data["${productKey}"]: ${JSON.stringify(product)}`);
-
-  // TEMP (testing): logs the raw, unconverted reseller-price.json value for
-  // .com so it can be eyeballed in Vercel logs and confirmed to be a
-  // USD-shaped cost (e.g. "9.00"), not an ARS-shaped customer price (e.g.
-  // "18000") -- see the conversation this was added for. Safe to remove
-  // once confirmed.
-  console.log(
-    `[resellerclub] reseller-price.json addnewdomain["1"] for productKey="${productKey}": raw=${JSON.stringify(yearOnePrice)}`
-  );
-
-  if (!yearOnePrice) {
+  const yearOnePriceArs = data[productKey]?.["0"]?.pricing?.addnewdomain?.["1"];
+  if (!yearOnePriceArs) {
     throw new Error(
-      `ResellerClub reseller-price.json had no addnewdomain[1] price for product "${productKey}" (TLD "${tld}")`
+      `ResellerClub reseller-price.json had no ["0"].pricing.addnewdomain["1"] price for product "${productKey}" (TLD "${tld}")`
     );
   }
 
-  const cost = Number(yearOnePrice);
-  if (!Number.isFinite(cost) || cost <= 0) {
-    throw new Error(`ResellerClub returned an invalid price for "${productKey}": ${yearOnePrice}`);
+  const costArs = Number(yearOnePriceArs);
+  if (!Number.isFinite(costArs) || costArs <= 0) {
+    throw new Error(`ResellerClub returned an invalid price for "${productKey}": ${yearOnePriceArs}`);
   }
-  return cost;
+  return costArs;
 }
 
 export interface RegistrantContact {

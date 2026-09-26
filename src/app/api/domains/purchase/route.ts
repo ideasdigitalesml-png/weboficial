@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mercadoPagoClient } from "@/lib/mercadopago/client";
-import { checkAvailability, getResellerCost } from "@/lib/resellerclub/client";
+import { checkAvailability, getResellerCostArs } from "@/lib/resellerclub/client";
 import {
   computePriceArs,
   isValidDomainBaseName,
@@ -93,8 +93,8 @@ export async function POST(request: Request) {
     if (!availability?.available) {
       return NextResponse.json({ ok: false, reason: "domain_taken" }, { status: 409 });
     }
-    const costUsd = await getResellerCost(split.tld);
-    priceArs = computePriceArs(costUsd, split.tld);
+    const costArs = await getResellerCostArs(split.tld);
+    priceArs = computePriceArs(costArs, split.tld);
   } catch (err) {
     console.error("domains/purchase pricing/availability re-check failed", err);
     return NextResponse.json({ ok: false, reason: "pricing_unavailable" }, { status: 502 });

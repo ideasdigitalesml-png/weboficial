@@ -26,18 +26,10 @@ function margin(): number {
   return value;
 }
 
-function dolarOficial(): number {
-  const raw = process.env.DOLAR_OFICIAL;
-  const value = Number(raw);
-  if (!raw || !Number.isFinite(value)) {
-    throw new Error("DOLAR_OFICIAL is not set or invalid");
-  }
-  return value;
-}
-
-// precio_venta = costo_resellerclub_usd * (1 + margen/100) * DOLAR_OFICIAL,
-// rounded to the nearest peso.
-export function computePriceArs(costUsd: number, _tld: SupportedTld): number {
-  const fx = dolarOficial();
-  return Math.round(costUsd * (1 + margin() / 100) * fx);
+// ResellerClub's reseller-price.json already returns the cost in ARS (this
+// reseller account's core/selling currency) -- no USD, no FX conversion.
+// precio_venta = costo_resellerclub_ars * (1 + margen/100), rounded to the
+// nearest peso.
+export function computePriceArs(costArs: number, _tld: SupportedTld): number {
+  return Math.round(costArs * (1 + margin() / 100));
 }
