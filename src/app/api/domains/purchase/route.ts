@@ -9,6 +9,7 @@ import {
   SUPPORTED_TLDS,
   type SupportedTld,
 } from "@/lib/domains/pricing";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // Longest first so "miempresa.com.ar" matches the "com.ar" TLD instead of
 // being mis-split on "com".
@@ -31,6 +32,13 @@ export async function POST(request: Request) {
 
   if (!user) {
     return NextResponse.json({ ok: false, reason: "not_authenticated" }, { status: 401 });
+  }
+
+  // Same Fixie/ResellerClub quota concern as /api/domains/check -- each
+  // purchase attempt re-checks availability and re-prices via ResellerClub
+  // before charging, so repeated attempts spend quota just like searches do.
+  if (!checkRateLimit(`domains-purchase:${user.id}`, 5, 5 * 60 * 1000)) {
+    return NextResponse.json({ ok: false, reason: "rate_limited" }, { status: 429 });
   }
 
   const body = (await request.json().catch(() => null)) as { domain?: string } | null;

@@ -1,19 +1,33 @@
 import { NextResponse } from "next/server";
-import { checkAvailability, getResellerCost } from "@/lib/resellerclub/client";
-import { computePriceArs, isValidDomainBaseName, SUPPORTED_TLDS } from "@/lib/domains/pricing";
+import { createClient } from "@/lib/supabase/server";
+import { getCachedDomainChecks, type DomainCheckResult } from "@/lib/resellerclub/availability-cache";
+import { isValidDomainBaseName, SUPPORTED_TLDS } from "@/lib/domains/pricing";
+import { checkRateLimit } from "@/lib/rate-limit";
 
-export interface DomainCheckResult {
-  tld: string;
-  domain: string;
-  available: boolean;
-  priceArs: number | null;
-  // Set when pricing couldn't be computed (e.g. no confirmed ResellerClub
-  // product-key yet for this TLD -- see resellerclub/client.ts) even
-  // though the domain itself might be available.
-  priceUnavailableReason: string | null;
-}
+export type { DomainCheckResult };
 
+// Only reachable by a logged-in user (DomainSection.tsx is dashboard-only)
+// so the rate limit below can be keyed per user instead of per IP.
 export async function GET(request: Request) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "not_authenticated" }, { status: 401 });
+  }
+
+  // Protects the Fixie proxy's ResellerClub request quota from a single
+  // user hammering the search box (or a script bypassing the UI). The UI
+  // itself only calls this on explicit submit, never on keystroke -- this
+  // is the server-side backstop for that.
+  if (!checkRateLimit(`domains-check:${user.id}`, 15, 5 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: "Demasiadas búsquedas. Esperá un momento e intentá de nuevo." },
+      { status: 429 }
+    );
+  }
+
   const url = new URL(request.url);
   const rawDomain = url.searchParams.get("domain")?.trim().toLowerCase() ?? "";
 
@@ -30,42 +44,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const availability = await checkAvailability(baseName, [...SUPPORTED_TLDS]);
-
-    const results: DomainCheckResult[] = await Promise.all(
-      availability.map(async (entry) => {
-        if (!entry.available) {
-          return {
-            tld: entry.tld,
-            domain: entry.domain,
-            available: false,
-            priceArs: null,
-            priceUnavailableReason: null,
-          };
-        }
-
-        try {
-          const costUsd = await getResellerCost(entry.tld as (typeof SUPPORTED_TLDS)[number]);
-          return {
-            tld: entry.tld,
-            domain: entry.domain,
-            available: true,
-            priceArs: computePriceArs(costUsd, entry.tld as (typeof SUPPORTED_TLDS)[number]),
-            priceUnavailableReason: null,
-          };
-        } catch (err) {
-          console.error(`getResellerCost failed for tld=${entry.tld}`, err);
-          return {
-            tld: entry.tld,
-            domain: entry.domain,
-            available: true,
-            priceArs: null,
-            priceUnavailableReason: "No se pudo calcular el precio para esta extensión.",
-          };
-        }
-      })
-    );
-
+    const results = await getCachedDomainChecks(baseName, [...SUPPORTED_TLDS]);
     return NextResponse.json({ baseName, results });
   } catch (err) {
     console.error("domains/check failed", err);

@@ -17,6 +17,8 @@
 //      may not satisfy. Don't enable ".com.ar" purchases for real users
 //      until a test registration actually succeeds in ResellerClub's panel.
 
+import { getFixieDispatcher } from "./fixie-proxy";
+
 const RC_API_BASE = "https://httpapi.com/api";
 
 function credentials(): { resellerId: string; apiKey: string } {
@@ -46,7 +48,14 @@ async function rcFetch(
   }
 
   const url = `${RC_API_BASE}${path}?${query.toString()}`;
-  const res = await fetch(url, { method });
+  // `dispatcher` is a Node/undici-specific fetch extension, not part of the
+  // DOM fetch typings -- this is the only ResellerClub call site, and it's
+  // the only fetch in the codebase that must go through Fixie's static-IP
+  // proxy (see fixie-proxy.ts for why).
+  const res = await fetch(url, {
+    method,
+    dispatcher: getFixieDispatcher(),
+  } as RequestInit & { dispatcher: ReturnType<typeof getFixieDispatcher> });
   const body = await res.text();
   if (!res.ok) {
     throw new Error(`ResellerClub API error (${res.status}) on ${path}: ${body}`);
