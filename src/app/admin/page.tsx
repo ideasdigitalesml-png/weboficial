@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/require-admin";
-import { fetchAdminList } from "@/lib/admin/queries";
+import { fetchAdminList, fetchFailedDomains } from "@/lib/admin/queries";
 
 const LANDING_STATUS_LABELS: Record<string, string> = {
   draft: "Borrador",
@@ -21,6 +21,7 @@ export default async function AdminPage() {
   await requireAdmin(supabase);
 
   const { metrics, professionals } = await fetchAdminList(supabase);
+  const failedDomains = await fetchFailedDomains(supabase);
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-6 py-12">
@@ -94,6 +95,54 @@ export default async function AdminPage() {
           )}
         </tbody>
       </table>
+
+      {failedDomains.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold text-red-600">
+            Dominios con error de registro ({failedDomains.length})
+          </h2>
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-black/[.08] text-zinc-500 dark:border-white/[.145]">
+                <th className="py-2 pr-4">Dominio</th>
+                <th className="py-2 pr-4">Titular</th>
+                <th className="py-2 pr-4">Error</th>
+                <th className="py-2 pr-4">Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              {failedDomains.map((d) => (
+                <tr
+                  key={d.id}
+                  className="border-b border-black/[.04] dark:border-white/[.08]"
+                >
+                  <td className="py-2 pr-4">
+                    <Link
+                      href={`/admin/${d.landingId}`}
+                      className="text-blue-600 underline dark:text-blue-400"
+                    >
+                      {d.domain}
+                    </Link>
+                  </td>
+                  <td className="py-2 pr-4">
+                    {d.registrantName ?? "—"}
+                    {d.registrantEmail && (
+                      <>
+                        <br />
+                        <span className="text-xs text-zinc-500">{d.registrantEmail}</span>
+                      </>
+                    )}
+                  </td>
+                  <td className="py-2 pr-4 text-red-600">{d.failureReason ?? "—"}</td>
+                  <td className="py-2 pr-4">
+                    {new Date(d.createdAt).toLocaleDateString("es-AR")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

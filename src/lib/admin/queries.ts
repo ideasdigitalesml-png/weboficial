@@ -95,6 +95,56 @@ export async function fetchAdminList(
   };
 }
 
+export interface FailedDomain {
+  id: string;
+  domain: string;
+  failureReason: string | null;
+  createdAt: string;
+  landingId: string;
+  registrantEmail: string | null;
+  registrantName: string | null;
+}
+
+// Payment already succeeded but ResellerClub registration (or the Vercel
+// domain-add) failed after -- see mark_domain_registration_failed in
+// 0024_custom_domains.sql. No automatic retry/refund; this is how an admin
+// finds these to resolve by hand. custom_domains_select_admin /
+// domain_registrants_select_admin (0037_admin_domain_visibility.sql) grant
+// the visibility this query relies on.
+export async function fetchFailedDomains(
+  supabase: SupabaseClient
+): Promise<FailedDomain[]> {
+  const { data: domains } = await supabase
+    .from("custom_domains")
+    .select("id, domain, failure_reason, created_at, landing_id")
+    .eq("status", "failed")
+    .order("created_at", { ascending: false });
+
+  if (!domains || domains.length === 0) return [];
+
+  const { data: registrants } = await supabase
+    .from("domain_registrants")
+    .select("custom_domain_id, email, full_name")
+    .in(
+      "custom_domain_id",
+      domains.map((d) => d.id)
+    );
+
+  const registrantByDomainId = new Map(
+    (registrants ?? []).map((r) => [r.custom_domain_id, r])
+  );
+
+  return domains.map((d) => ({
+    id: d.id,
+    domain: d.domain,
+    failureReason: d.failure_reason,
+    createdAt: d.created_at,
+    landingId: d.landing_id,
+    registrantEmail: registrantByDomainId.get(d.id)?.email ?? null,
+    registrantName: registrantByDomainId.get(d.id)?.full_name ?? null,
+  }));
+}
+
 export interface ProfessionalDetail {
   landing: {
     id: string;
