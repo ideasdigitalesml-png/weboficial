@@ -115,6 +115,13 @@ export function DomainSection({
                 Registrando tu dominio y activando el DNS. Puede tardar unos minutos.
               </p>
             )}
+            {existingDomain.status === "active" && (
+              <p className="text-xs text-amber-700">
+                Revisá el email del titular del dominio y confirmá el correo de verificación que
+                te mandó ResellerClub/ICANN. Si no lo confirmás dentro de los 15 días, el dominio
+                se suspende automáticamente.
+              </p>
+            )}
           </div>
           <span
             className={`inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-semibold ${STATUS_BADGE[existingDomain.status]}`}
