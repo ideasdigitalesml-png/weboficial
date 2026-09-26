@@ -13,6 +13,7 @@ import { DomainSection, type ExistingCustomDomain } from "./DomainSection";
 import { CardPaymentBrick } from "@/components/CardPaymentBrick";
 import { reconcileLandingIfStuck } from "@/lib/landings/reconcile-payment-status";
 import { findActiveResellerForUser } from "@/lib/resellers/require-reseller";
+import { isDomainAccessAllowed } from "@/lib/domains/domain-access";
 
 // Kept in sync with OnboardingWizard.tsx's map of the same name.
 const TEMPLATE_PREVIEW_IMAGE: Record<string, string> = {
@@ -354,12 +355,7 @@ export default async function DashboardPage({
               : null
           }
           hasRegistrantContact={Boolean(registrantContact)}
-          // TEMP (testing, no real customers yet): forced on regardless of
-          // DOMAIN_PURCHASE_ENABLED so the domain search can be tried end to
-          // end. To revert: restore
-          // `process.env.DOMAIN_PURCHASE_ENABLED === "true"` here (or just
-          // revert this commit).
-          purchaseEnabled={true}
+          purchaseEnabled={isDomainAccessAllowed(profile?.role, subscription?.status)}
           currentUrl={publicUrl}
         />
       </div>

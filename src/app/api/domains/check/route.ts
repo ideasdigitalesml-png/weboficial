@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCachedDomainChecks, type DomainCheckResult } from "@/lib/resellerclub/availability-cache";
 import { isValidDomainBaseName, SUPPORTED_TLDS } from "@/lib/domains/pricing";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { checkDomainAccess } from "@/lib/domains/domain-access";
 
 export type { DomainCheckResult };
 
@@ -15,6 +16,14 @@ export async function GET(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "not_authenticated" }, { status: 401 });
+  }
+
+  // Business rule: only customers with an active subscription (or admins)
+  // may search/buy domains. Enforced here too, not just by hiding the
+  // button in DomainSection.tsx -- hiding a button doesn't stop a direct
+  // request to this endpoint.
+  if (!(await checkDomainAccess(supabase, user.id))) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
   // Protects the Fixie proxy's ResellerClub request quota from a single

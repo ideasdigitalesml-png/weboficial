@@ -10,6 +10,7 @@ import {
   type SupportedTld,
 } from "@/lib/domains/pricing";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { checkDomainAccess } from "@/lib/domains/domain-access";
 
 // Longest first, so a multi-label TLD would match before a shorter one it
 // ends with (not currently relevant with only ".com" in SUPPORTED_TLDS, but
@@ -33,6 +34,14 @@ export async function POST(request: Request) {
 
   if (!user) {
     return NextResponse.json({ ok: false, reason: "not_authenticated" }, { status: 401 });
+  }
+
+  // Business rule: only customers with an active subscription (or admins)
+  // may search/buy domains. Enforced here too, not just by hiding the
+  // button in DomainSection.tsx -- hiding a button doesn't stop a direct
+  // request to this endpoint.
+  if (!(await checkDomainAccess(supabase, user.id))) {
+    return NextResponse.json({ ok: false, reason: "forbidden" }, { status: 403 });
   }
 
   // Same Fixie/ResellerClub quota concern as /api/domains/check -- each

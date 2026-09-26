@@ -66,10 +66,12 @@ export function DomainSection({
 }: {
   existingDomain: ExistingCustomDomain | null;
   hasRegistrantContact: boolean;
-  // DOMAIN_PURCHASE_ENABLED env var (see dashboard/page.tsx) -- the API
-  // routes and all the logic below stay intact regardless, this only gates
-  // the UI. A user who already has a domain (any status) still sees it
-  // normally; this only affects visitors with no domain yet.
+  // Whether this user's subscription is active (or they're an admin) --
+  // see isDomainAccessAllowed in dashboard/page.tsx. The API routes enforce
+  // the same rule server-side (checkDomainAccess), so hiding the UI here is
+  // a convenience, not the real gate. A user who already has a domain (any
+  // status) still sees it normally; this only affects visitors with no
+  // domain yet.
   purchaseEnabled: boolean;
   currentUrl: string | null;
 }) {
