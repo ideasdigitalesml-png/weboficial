@@ -186,7 +186,7 @@ export function ContadorModernoTemplate({
                     target="_blank"
                     rel="noopener"
                   >
-                    {formData.cta_text || "Escribime por WhatsApp"}
+                    Contactame
                   </a>
                 )}
                 {showServices && services.length > 0 && (
@@ -410,7 +410,7 @@ export function ContadorModernoTemplate({
                   target="_blank"
                   rel="noopener"
                 >
-                  {formData.cta_text || "Escribime por WhatsApp"}
+                  Contactame
                 </a>
               </div>
             )}

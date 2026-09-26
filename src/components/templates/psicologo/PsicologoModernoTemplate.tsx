@@ -58,7 +58,6 @@ export interface PsicologoFormData {
   enfoque_terapeutico_custom?: string;
   descripcion?: string;
   precio_consulta?: string;
-  cta_text?: string;
   linkedin_url?: string;
   instagram_url?: string;
   especialidades?: RepeaterItem[];
@@ -136,7 +135,7 @@ export function PsicologoModernoTemplate({
   const matriculaNumero = isValidMatricula(formData.matricula_numero) ? formData.matricula_numero : undefined;
   const waLink = formData.phone ? buildWaLink(formData.phone) : null;
   const year = new Date().getFullYear();
-  const ctaText = formData.cta_text || "Reservá tu turno";
+  const ctaText = "Contactame";
   const especialidades = formData.especialidades ?? [];
   const poblacionAtendida = formData.poblacion_atendida ?? [];
   const obrasSocialesNombres =
@@ -389,7 +388,7 @@ export function PsicologoModernoTemplate({
             )}
             {waLink && (
               <a className="pw-btn pw-btn-dark" href={waLink} target="_blank" rel="noopener">
-                Escribime por WhatsApp
+                Contactame
               </a>
             )}
           </div>

@@ -147,7 +147,7 @@ export function ContadorMinimalTemplate({
             <div className="cm-hero-actions">
               {waLink && (
                 <a className="cm-link-cta" href={waLink} target="_blank" rel="noopener">
-                  {formData.cta_text || "Escribime por WhatsApp"} →
+                  Contactame →
                 </a>
               )}
               {showServices && services.length > 0 && (

@@ -72,7 +72,6 @@ const FIELD_STEP: Record<string, PsicologoStep> = {
   precio_consulta: "sobre-mi",
   acepta_obras_sociales: "sobre-mi",
   obras_sociales_detalle: "sobre-mi",
-  cta_text: "sobre-mi",
 };
 
 type SlugStatus =
@@ -369,7 +368,6 @@ export function PsicologoWizard({
     precio_consulta: asString(values.precio_consulta) || undefined,
     acepta_obras_sociales: asString(values.acepta_obras_sociales) || undefined,
     obras_sociales_detalle: asString(values.obras_sociales_detalle) || undefined,
-    cta_text: asString(values.cta_text) || undefined,
   };
   const layout = template.config?.layout;
   const colorPrimary = template.config?.primaryColor;
@@ -591,12 +589,6 @@ export function PsicologoWizard({
                     onChange={(v) => updateValue("obras_sociales_detalle", v)}
                   />
                 )}
-                <FieldInput
-                  field={fieldByKey("cta_text")}
-                  value={values.cta_text ?? ""}
-                  error={formErrors.cta_text}
-                  onChange={(v) => updateValue("cta_text", v)}
-                />
               </div>
             )}
 

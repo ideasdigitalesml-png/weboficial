@@ -24,7 +24,6 @@ export const PSICOLOGO_PREVIEW_DATA: PsicologoFormData = {
   descripcion:
     "Acompaño procesos de ansiedad, duelo y autoestima con un enfoque cálido y basado en evidencia, para que encuentres herramientas concretas para tu día a día.",
   precio_consulta: "$15.000",
-  cta_text: "Reservá tu turno",
   linkedin_url: "https://linkedin.com/in/valentina-rios",
   instagram_url: "https://instagram.com/valentina.psicologia",
   especialidades: [

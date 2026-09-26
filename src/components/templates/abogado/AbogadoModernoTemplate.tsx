@@ -67,7 +67,6 @@ export interface AbogadoFormData {
   // fallback used when servicios_detallados is empty (existing landings
   // created before this field existed).
   slogan?: string;
-  cta_text?: string;
   horario_atencion?: string;
   instagram_url?: string;
   anos_experiencia?: string;
@@ -138,7 +137,7 @@ export function AbogadoModernoTemplate({
   const waLink = formData.phone ? buildWaLink(formData.phone) : null;
   const year = new Date().getFullYear();
   const heroTagline = formData.slogan || formData.descripcion_corta || "";
-  const ctaText = formData.cta_text || "Consultá ahora";
+  const ctaText = "Contactame";
   const whyUs =
     formData.por_que_elegirnos && formData.por_que_elegirnos.length > 0
       ? formData.por_que_elegirnos
@@ -383,7 +382,7 @@ export function AbogadoModernoTemplate({
             )}
             {waLink && (
               <a className="aw-btn aw-btn-dark" href={waLink} target="_blank" rel="noopener">
-                Escribime por WhatsApp
+                Contactame
               </a>
             )}
           </div>

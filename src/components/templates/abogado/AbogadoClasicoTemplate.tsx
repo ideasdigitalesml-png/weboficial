@@ -96,7 +96,7 @@ export function AbogadoClasicoTemplate({
   const waLink = formData.phone ? buildWaLink(formData.phone) : null;
   const year = new Date().getFullYear();
   const heroTagline = formData.slogan || formData.descripcion_corta || "";
-  const ctaText = formData.cta_text || "Consultá ahora";
+  const ctaText = "Contactame";
   const whyUs =
     formData.por_que_elegirnos && formData.por_que_elegirnos.length > 0
       ? formData.por_que_elegirnos
@@ -347,7 +347,7 @@ export function AbogadoClasicoTemplate({
             )}
             {waLink && (
               <a className="ac-btn ac-btn-ivory" href={waLink} target="_blank" rel="noopener">
-                Escribime por WhatsApp
+                Contactame
               </a>
             )}
           </div>

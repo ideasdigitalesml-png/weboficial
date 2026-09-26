@@ -94,7 +94,7 @@ export function PsicologoClasicoTemplate({
   const matriculaNumero = isValidMatricula(formData.matricula_numero) ? formData.matricula_numero : undefined;
   const waLink = formData.phone ? buildWaLink(formData.phone) : null;
   const year = new Date().getFullYear();
-  const ctaText = formData.cta_text || "Reservá tu turno";
+  const ctaText = "Contactame";
   const especialidades = formData.especialidades ?? [];
   const poblacionAtendida = formData.poblacion_atendida ?? [];
   const obrasSocialesNombres =
@@ -360,7 +360,7 @@ export function PsicologoClasicoTemplate({
             )}
             {waLink && (
               <a className="pc-btn pc-btn-ivory" href={waLink} target="_blank" rel="noopener">
-                Escribime por WhatsApp
+                Contactame
               </a>
             )}
           </div>

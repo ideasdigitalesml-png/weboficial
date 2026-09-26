@@ -163,7 +163,7 @@ export function ContadorClasicoTemplate({
               <div className="cc-hero-actions">
                 {waLink && (
                   <a className="cc-btn cc-btn-primary" href={waLink} target="_blank" rel="noopener">
-                    {formData.cta_text || "Escribime por WhatsApp"}
+                    Contactame
                   </a>
                 )}
                 {showServices && services.length > 0 && (
@@ -337,7 +337,7 @@ export function ContadorClasicoTemplate({
             <p>Escribime y coordinamos una primera consulta.</p>
             {waLink && (
               <a className="cc-btn cc-btn-ivory" href={waLink} target="_blank" rel="noopener">
-                {formData.cta_text || "Escribime por WhatsApp"}
+                Contactame
               </a>
             )}
             <div className="cc-cta-contact">
