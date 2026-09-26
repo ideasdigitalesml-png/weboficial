@@ -110,14 +110,16 @@ export async function getResellerCost(tld: string): Promise<number> {
     { addnewdomain?: Record<string, string> } | undefined
   >;
 
-  // TEMP (testing): logs just the product-key names reseller-price.json
-  // actually returns, once per call -- this is how "domcno" was found to be
-  // the real ".com" key instead of the assumed "dotcom". Safe to remove
-  // once every TLD in TLD_PRODUCT_KEYS is confirmed working.
-  console.log(`[resellerclub] reseller-price.json product keys: ${Object.keys(data).join(", ")}`);
-
   const product = data[productKey];
   const yearOnePrice = product?.addnewdomain?.["1"];
+
+  // TEMP (testing): "domcno" is confirmed to be a real product key, but
+  // addnewdomain["1"] still came back undefined -- so the shape of
+  // data["domcno"] itself doesn't match what this code assumes. Logging the
+  // whole product object (not the full reseller-price.json response) to see
+  // its actual shape instead of guessing. Safe to remove once parsing below
+  // is fixed to match.
+  console.log(`[resellerclub] reseller-price.json data["${productKey}"]: ${JSON.stringify(product)}`);
 
   // TEMP (testing): logs the raw, unconverted reseller-price.json value for
   // .com so it can be eyeballed in Vercel logs and confirmed to be a
