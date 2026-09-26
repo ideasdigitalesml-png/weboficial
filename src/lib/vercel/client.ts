@@ -26,7 +26,10 @@ function config(): { token: string; projectId: string; teamId: string } {
   return { token, projectId, teamId };
 }
 
-export async function addProjectDomain(domain: string): Promise<void> {
+async function addSingleDomain(
+  domain: string,
+  extra?: { redirect: string; redirectStatusCode: number }
+): Promise<void> {
   const { token, projectId, teamId } = config();
 
   const res = await fetch(
@@ -37,7 +40,7 @@ export async function addProjectDomain(domain: string): Promise<void> {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ name: domain }),
+      body: JSON.stringify({ name: domain, ...extra }),
     }
   );
 
@@ -45,4 +48,21 @@ export async function addProjectDomain(domain: string): Promise<void> {
     const body = await res.text();
     throw new Error(`Vercel add-domain API error (${res.status}) for ${domain}: ${body}`);
   }
+}
+
+// Adds both the bare domain and its "www" host, with www permanently
+// (308) redirecting to the bare domain -- customers routinely type or
+// share the www form, and without this it fell through to whatever the
+// request's path happened to resolve to on weboficial's own project (i.e.
+// weboficial's own marketing home page, not the customer's landing).
+//
+// No separate DNS record is needed for www: registerDomain (see this
+// file's caller) delegates the domain's nameservers to Vercel's own
+// (ns1/ns2.vercel-dns.com) at registration time, so Vercel is authoritative
+// for the *entire* zone -- adding "www.<domain>" here is enough for Vercel
+// to answer for it directly, the same as any other record in a zone it's
+// authoritative for.
+export async function addProjectDomain(domain: string): Promise<void> {
+  await addSingleDomain(domain);
+  await addSingleDomain(`www.${domain}`, { redirect: domain, redirectStatusCode: 308 });
 }
