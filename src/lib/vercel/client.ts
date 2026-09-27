@@ -66,3 +66,24 @@ export async function addProjectDomain(domain: string): Promise<void> {
   await addSingleDomain(domain);
   await addSingleDomain(`www.${domain}`, { redirect: domain, redirectStatusCode: 308 });
 }
+
+// Polled by reconcile-domain-configuration.ts to find out whether Vercel
+// has actually confirmed this host (NS delegation detected, so it knows
+// how to answer for it) -- addProjectDomain succeeding only means Vercel
+// accepted the domain into the project, not that it's verified yet.
+export async function getDomainVerification(domain: string): Promise<{ verified: boolean }> {
+  const { token, projectId, teamId } = config();
+
+  const res = await fetch(
+    `${VERCEL_API_BASE}/v9/projects/${projectId}/domains/${encodeURIComponent(domain)}?teamId=${teamId}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Vercel get-domain API error (${res.status}) for ${domain}: ${body}`);
+  }
+
+  const data = (await res.json()) as { verified?: boolean };
+  return { verified: data.verified === true };
+}

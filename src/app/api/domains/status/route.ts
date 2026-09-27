@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { reconcileConfiguringDomain } from "@/lib/domains/reconcile-domain-configuration";
 
 // Polled by src/app/dashboard/dominio/processing/ProcessingPoller.tsx while
 // waiting for the webhook to finish (payment confirmation + ResellerClub
@@ -27,7 +28,7 @@ export async function GET() {
 
   const { data: customDomain } = await supabase
     .from("custom_domains")
-    .select("status, domain, failure_reason")
+    .select("id, status, domain, failure_reason")
     .eq("landing_id", landing.id)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -37,8 +38,10 @@ export async function GET() {
     return NextResponse.json({ status: null });
   }
 
+  const status = await reconcileConfiguringDomain(supabase, customDomain);
+
   return NextResponse.json({
-    status: customDomain.status,
+    status,
     domain: customDomain.domain,
     failureReason: customDomain.failure_reason,
   });

@@ -12,6 +12,7 @@ import { PaletteEditor } from "./PaletteEditor";
 import { DomainSection, type ExistingCustomDomain } from "./DomainSection";
 import { CardPaymentBrick } from "@/components/CardPaymentBrick";
 import { reconcileLandingIfStuck } from "@/lib/landings/reconcile-payment-status";
+import { reconcileConfiguringDomain } from "@/lib/domains/reconcile-domain-configuration";
 import { findActiveResellerForUser } from "@/lib/resellers/require-reseller";
 import { isDomainAccessAllowed } from "@/lib/domains/domain-access";
 
@@ -121,7 +122,7 @@ export default async function DashboardPage({
     supabase.from("plans").select("amount").eq("active", true).limit(1).maybeSingle(),
     supabase
       .from("custom_domains")
-      .select("domain, status, failure_reason, expires_at")
+      .select("id, domain, status, failure_reason, expires_at")
       .eq("landing_id", landing.id)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -140,6 +141,14 @@ export default async function DashboardPage({
       .limit(1)
       .maybeSingle(),
   ]);
+
+  // Self-heals a domain stuck in "configuring" in case the customer closed
+  // the post-purchase processing tab (which polls this too) before Vercel
+  // finished verifying it -- a no-op unless there's actually a domain in
+  // that state. See reconcileConfiguringDomain's own comment.
+  if (customDomain) {
+    customDomain.status = await reconcileConfiguringDomain(supabase, customDomain);
+  }
 
   // Only an active landing has a working public URL: landings' public SELECT
   // RLS policy is `status = 'active'` only (0007_remove_temporary_draft_public_read.sql,

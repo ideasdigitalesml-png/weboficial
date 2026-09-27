@@ -5,7 +5,7 @@ import type { DomainCheckResult } from "@/app/api/domains/check/route";
 
 export interface ExistingCustomDomain {
   domain: string;
-  status: "pending_payment" | "pending_registration" | "active" | "failed" | "expired";
+  status: "pending_payment" | "pending_registration" | "configuring" | "active" | "failed" | "expired";
   failureReason: string | null;
   expiresAt: string | null;
 }
@@ -20,6 +20,7 @@ function daysUntil(isoDate: string): number {
 const STATUS_LABELS: Record<ExistingCustomDomain["status"], string> = {
   pending_payment: "Pago pendiente",
   pending_registration: "Registrando...",
+  configuring: "Configurando...",
   active: "Activo",
   failed: "Error",
   expired: "Vencido",
@@ -28,6 +29,7 @@ const STATUS_LABELS: Record<ExistingCustomDomain["status"], string> = {
 const STATUS_BADGE: Record<ExistingCustomDomain["status"], string> = {
   pending_payment: "bg-amber-100 text-amber-700",
   pending_registration: "bg-amber-100 text-amber-700",
+  configuring: "bg-amber-100 text-amber-700",
   active: "bg-emerald-100 text-emerald-700",
   failed: "bg-red-100 text-red-700",
   expired: "bg-red-100 text-red-700",
@@ -163,6 +165,11 @@ export function DomainSection({
             {existingDomain.status === "pending_registration" && (
               <p className="text-xs text-text-body">
                 Registrando tu dominio y activando el DNS. Puede tardar unos minutos.
+              </p>
+            )}
+            {existingDomain.status === "configuring" && (
+              <p className="text-xs text-text-body">
+                Estamos configurando tu dominio, puede tardar hasta unas horas.
               </p>
             )}
             {existingDomain.status === "active" && (
