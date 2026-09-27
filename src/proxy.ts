@@ -1,8 +1,9 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 import { extractSubdomain } from "@/lib/tenancy/subdomain";
 import { ROOT_DOMAIN } from "@/lib/root-domain";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { reconcileConfiguringDomain } from "@/lib/domains/reconcile-domain-configuration";
 
 // Hosts that are never a custom-domain candidate even though they don't
 // match *.weboficial.com.ar: the bare root domain, localhost, and Vercel's
@@ -22,14 +23,24 @@ function isCustomDomainCandidate(hostname: string): boolean {
 // Vercel, so requests for it reach this same proxy with no subdomain to
 // extract. Resolved with a service-role lookup (RLS would return nothing --
 // there's no session for an anonymous visitor of someone else's domain).
-async function resolveCustomDomainSlug(hostname: string): Promise<string | null> {
+//
+// Accepts 'configuring' as well as 'active': DNS can start actually
+// resolving before our own DB record catches up (that only happens when
+// someone opens the dashboard or the post-purchase processing page --
+// reconcileConfiguringDomain below is this proxy's own trigger for that,
+// for a customer who paid and never came back). Refusing to serve
+// 'configuring' here would mean a domain that already resolves in the
+// browser shows nothing until someone happens to open the dashboard.
+async function resolveCustomDomainSlug(
+  hostname: string
+): Promise<{ id: string; slug: string; status: string } | null> {
   const { data } = await createAdminClient()
     .from("custom_domains")
-    .select("slug")
+    .select("id, slug, status")
     .eq("domain", hostname)
-    .eq("status", "active")
+    .in("status", ["configuring", "active"])
     .maybeSingle();
-  return data?.slug ?? null;
+  return data ?? null;
 }
 
 // Reverse of resolveCustomDomainSlug above -- once a landing's custom
@@ -46,7 +57,7 @@ async function resolveActiveCustomDomainForSlug(slug: string): Promise<string | 
   return data?.domain ?? null;
 }
 
-export async function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest, event: NextFetchEvent) {
   const host = request.headers.get("host") ?? "";
   const hostname = host.split(":")[0].toLowerCase();
   const subdomain = extractSubdomain(host, ROOT_DOMAIN);
@@ -67,10 +78,25 @@ export async function proxy(request: NextRequest) {
   }
 
   if (isCustomDomainCandidate(hostname)) {
-    const slug = await resolveCustomDomainSlug(hostname);
-    if (slug) {
+    const customDomain = await resolveCustomDomainSlug(hostname);
+    if (customDomain) {
+      if (customDomain.status === "configuring") {
+        // Fire-and-forget: don't hold up this visitor's response on a
+        // round-trip to Vercel's API. event.waitUntil keeps the check alive
+        // past the response, so it isn't killed mid-flight.
+        event.waitUntil(
+          reconcileConfiguringDomain(createAdminClient(), {
+            id: customDomain.id,
+            domain: hostname,
+            status: customDomain.status,
+          }).catch((err) =>
+            console.error(`proxy reconcileConfiguringDomain failed for ${hostname}`, err)
+          )
+        );
+      }
+
       const url = request.nextUrl.clone();
-      url.pathname = `/site/${slug}`;
+      url.pathname = `/site/${customDomain.slug}`;
       return updateSession(request, () => NextResponse.rewrite(url));
     }
   }
