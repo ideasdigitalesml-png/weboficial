@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { SectionConfigItem } from "@/lib/landings/update-landing";
 import { oneRelation } from "@/lib/supabase/normalize-relation";
 import {
@@ -47,14 +48,25 @@ export interface TemplateConfig {
 // non-active landing gets no dynamic meta, same as it gets notFound() below.
 export async function getPublicLandingMeta(
   slug: string
-): Promise<{ name: string; description?: string } | null> {
+): Promise<{ name: string; description?: string; customDomain: string | null } | null> {
   const supabase = await createClient();
 
-  const { data: landing } = await supabase
-    .from("landings")
-    .select("form_data, status")
-    .eq("internal_subdomain", slug)
-    .maybeSingle();
+  const [{ data: landing }, { data: customDomain }] = await Promise.all([
+    supabase.from("landings").select("form_data, status").eq("internal_subdomain", slug).maybeSingle(),
+    // Service-role: an anonymous visitor's RLS-scoped client can't see
+    // custom_domains at all (no public SELECT policy on it -- same reason
+    // proxy.ts's resolveCustomDomainSlug/resolveActiveCustomDomainForSlug
+    // both use the admin client too). landings.slug === landings.internal_subdomain
+    // always (set to the same value at creation, see create-landing.ts) --
+    // custom_domains.slug is a denormalized copy of the former, so this is
+    // comparable to `slug` directly.
+    createAdminClient()
+      .from("custom_domains")
+      .select("domain")
+      .eq("slug", slug)
+      .eq("status", "active")
+      .maybeSingle(),
+  ]);
 
   if (!landing || !PUBLICLY_VISIBLE_STATUSES.has(landing.status)) {
     return null;
@@ -65,7 +77,11 @@ export async function getPublicLandingMeta(
     return null;
   }
 
-  return { name: formData.name, description: formData.description };
+  return {
+    name: formData.name,
+    description: formData.description,
+    customDomain: customDomain?.domain ?? null,
+  };
 }
 
 export interface LandingRenderData {
