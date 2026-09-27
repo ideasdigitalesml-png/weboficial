@@ -15,6 +15,7 @@
 // .com cost confirmed ~22494.66 ARS). getResellerCostArs() below reflects
 // that: no USD, no DOLAR_OFICIAL conversion anywhere in this pricing path.
 
+import { randomBytes } from "node:crypto";
 import { getFixieDispatcher } from "./fixie-proxy";
 
 const RC_API_BASE = "https://httpapi.com/api";
@@ -152,7 +153,13 @@ export async function ensureCustomer(
 ): Promise<string> {
   if (existingCustomerId) return existingCustomerId;
 
-  const password = `Wo${crypto.randomUUID().replace(/-/g, "")}!1`;
+  // ResellerClub rejects anything outside "alphanumeric, 8-15 chars" (500
+  // on /customers/signup.json) -- the previous `Wo${uuid}!1` was 36 chars
+  // and had a "!", failing both rules. randomBytes(6).toString("hex") is
+  // always exactly 12 lowercase hex chars (0-9a-f); with the "Wo"/"1"
+  // wrapper that's always exactly 15 chars, always alphanumeric, and always
+  // includes both a letter and a digit.
+  const password = `Wo${randomBytes(6).toString("hex")}1`;
   const data = (await rcFetch(
     "/customers/signup.json",
     {
