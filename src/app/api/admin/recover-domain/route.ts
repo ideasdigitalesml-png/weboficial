@@ -126,38 +126,56 @@ export async function POST() {
   };
 
   try {
-    const { data: cachedCustomer } = await supabase
-      .from("resellerclub_customers")
-      .select("resellerclub_customer_id")
-      .eq("email", registrant.email)
-      .maybeSingle();
-
-    const customerId = await ensureCustomer(
-      registrantContact,
-      cachedCustomer?.resellerclub_customer_id ?? null
-    );
-    if (customerId !== cachedCustomer?.resellerclub_customer_id) {
-      await supabase
+    // Check first whether ResellerClub already has an order for this domain
+    // -- a previous attempt may have registered it successfully and then
+    // failed on a later step (e.g. addProjectDomain, before
+    // VERCEL_PROJECT_ID/VERCEL_TEAM_ID were configured), in which case
+    // calling registerDomain again would be registering an already-owned
+    // domain a second time. Only ensureCustomer/ensureContact/registerDomain
+    // run when there's genuinely no existing order yet.
+    let orderId: string;
+    let expiresAt: string;
+    try {
+      orderId = await getDomainOrderId(customDomain.domain);
+      const computedExpiry = new Date();
+      computedExpiry.setFullYear(computedExpiry.getFullYear() + 1);
+      expiresAt = computedExpiry.toISOString();
+    } catch {
+      const { data: cachedCustomer } = await supabase
         .from("resellerclub_customers")
-        .upsert({ email: registrant.email, resellerclub_customer_id: customerId });
+        .select("resellerclub_customer_id")
+        .eq("email", registrant.email)
+        .maybeSingle();
+
+      const customerId = await ensureCustomer(
+        registrantContact,
+        cachedCustomer?.resellerclub_customer_id ?? null
+      );
+      if (customerId !== cachedCustomer?.resellerclub_customer_id) {
+        await supabase
+          .from("resellerclub_customers")
+          .upsert({ email: registrant.email, resellerclub_customer_id: customerId });
+      }
+
+      const contactId = await ensureContact(registrantContact, customerId, null);
+
+      const registration = await registerDomain({
+        domain: customDomain.domain,
+        years: 1,
+        customerId,
+        contactId,
+        nameservers: VERCEL_NAMESERVERS,
+      });
+      orderId = registration.orderId;
+      expiresAt = registration.expiresAt;
     }
-
-    const contactId = await ensureContact(registrantContact, customerId, null);
-
-    const registration = await registerDomain({
-      domain: customDomain.domain,
-      years: 1,
-      customerId,
-      contactId,
-      nameservers: VERCEL_NAMESERVERS,
-    });
 
     await addProjectDomain(customDomain.domain);
 
     const { error: finalizeError } = await supabase.rpc("finalize_domain_registration", {
       p_custom_domain_id: customDomainId,
-      p_resellerclub_order_id: registration.orderId,
-      p_expires_at: registration.expiresAt,
+      p_resellerclub_order_id: orderId,
+      p_expires_at: expiresAt,
     });
     if (finalizeError) {
       return NextResponse.json({ step: "finalize_domain_registration", error: finalizeError.message }, { status: 500 });
@@ -166,8 +184,8 @@ export async function POST() {
     return NextResponse.json({
       ok: true,
       status: "configuring",
-      resellerclubOrderId: registration.orderId,
-      expiresAt: registration.expiresAt,
+      resellerclubOrderId: orderId,
+      expiresAt,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
