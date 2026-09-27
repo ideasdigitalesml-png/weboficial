@@ -1,8 +1,51 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ensureCustomer, ensureContact, registerDomain } from "@/lib/resellerclub/client";
+import { ensureCustomer, ensureContact, registerDomain, getDomainOrderId } from "@/lib/resellerclub/client";
 import { addProjectDomain, VERCEL_NAMESERVERS } from "@/lib/vercel/client";
+
+async function requireAdminSession() {
+  const sessionClient = await createClient();
+  const {
+    data: { user },
+  } = await sessionClient.auth.getUser();
+  if (!user) return { ok: false as const, status: 401, error: "not_authenticated" };
+
+  const { data: profile } = await sessionClient
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (!profile || profile.role !== "admin") {
+    return { ok: false as const, status: 403, error: "forbidden" };
+  }
+  return { ok: true as const };
+}
+
+// Read-only: checks whether ResellerClub already has an order for the
+// target domain, without registering or changing anything -- used to
+// confirm it's safe to retry POST below (a previous attempt could have
+// registered the domain at ResellerClub and then failed on a later step,
+// e.g. the Vercel domain-add, before that order id got persisted here).
+export async function GET() {
+  const gate = await requireAdminSession();
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
+
+  const expectedDomain = process.env.RECOVERY_EXPECTED_DOMAIN;
+  if (!expectedDomain) {
+    return NextResponse.json({ error: "server_misconfigured" }, { status: 500 });
+  }
+
+  try {
+    const orderId = await getDomainOrderId(expectedDomain);
+    return NextResponse.json({ registered: true, orderId });
+  } catch (err) {
+    return NextResponse.json({
+      registered: false,
+      resellerclubResponse: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
 
 // TEMPORARY, one-off manual recovery for a single stuck row: a customer
 // already paid (Mercado Pago) but ResellerClub registration failed on the
@@ -23,22 +66,8 @@ export async function POST() {
     return NextResponse.json({ error: "server_misconfigured" }, { status: 500 });
   }
 
-  const sessionClient = await createClient();
-  const {
-    data: { user },
-  } = await sessionClient.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "not_authenticated" }, { status: 401 });
-  }
-
-  const { data: profile } = await sessionClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (!profile || profile.role !== "admin") {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const gate = await requireAdminSession();
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
 
   const supabase = createAdminClient();
 

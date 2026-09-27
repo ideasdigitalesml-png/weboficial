@@ -98,6 +98,18 @@ const TLD_PRODUCT_KEYS: Record<string, string | null> = {
   com: "domcno",
 };
 
+// Read-only lookup: returns the ResellerClub order/entity id for a domain
+// already registered under this reseller account. Throws (same as every
+// other rcFetch-based call here) if ResellerClub has no order for it --
+// deliberately NOT swallowed to a bare null, so a caller checking "did this
+// already register?" sees ResellerClub's exact response either way instead
+// of conflating "not registered" with "something else went wrong". Never
+// registers or changes anything.
+export async function getDomainOrderId(domain: string): Promise<string> {
+  const data = await rcFetch("/domains/orderid.json", { "domain-name": domain });
+  return String(data);
+}
+
 export async function getResellerCostArs(tld: string): Promise<number> {
   const productKey = TLD_PRODUCT_KEYS[tld];
   if (!productKey) {
