@@ -8,6 +8,14 @@ import { reconcileConfiguringDomain } from "@/lib/domains/reconcile-domain-confi
 // Hosts that are never a custom-domain candidate even though they don't
 // match *.weboficial.com.ar: the bare root domain, localhost, and Vercel's
 // own preview/production aliases (*.vercel.app).
+// icon.tsx/apple-icon.tsx (see src/app/site/[slug]/) are real sub-routes
+// under /site/[slug], not the landing page itself -- a blanket rewrite to
+// `/site/${slug}` for every path would swallow these and serve the landing
+// page's HTML in place of the customer's favicon. Only these two paths get
+// preserved; everything else still collapses to the landing page, same as
+// before.
+const ICON_SUBPATHS = new Set(["/icon", "/apple-icon"]);
+
 function isCustomDomainCandidate(hostname: string): boolean {
   return (
     hostname !== ROOT_DOMAIN.split(":")[0].toLowerCase() &&
@@ -73,7 +81,8 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
     }
 
     const url = request.nextUrl.clone();
-    url.pathname = `/site/${subdomain}`;
+    const subpath = ICON_SUBPATHS.has(url.pathname) ? url.pathname : "";
+    url.pathname = `/site/${subdomain}${subpath}`;
     return updateSession(request, () => NextResponse.rewrite(url));
   }
 
@@ -96,7 +105,8 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
       }
 
       const url = request.nextUrl.clone();
-      url.pathname = `/site/${customDomain.slug}`;
+      const subpath = ICON_SUBPATHS.has(url.pathname) ? url.pathname : "";
+      url.pathname = `/site/${customDomain.slug}${subpath}`;
       return updateSession(request, () => NextResponse.rewrite(url));
     }
   }
