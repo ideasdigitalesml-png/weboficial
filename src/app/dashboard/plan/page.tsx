@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 
 export default async function PlanPage() {
   const supabase = await createClient();
@@ -14,8 +14,7 @@ export default async function PlanPage() {
   }
 
   return (
-    <>
-      <DashboardHeader email={user.email ?? ""} />
+    <DashboardShell>
       <div className="mx-auto flex w-full max-w-[900px] flex-1 flex-col items-center justify-center gap-4 px-6 py-20 text-center">
         <h1 className="text-2xl font-semibold text-navy">Actualizar plan</h1>
         <p className="text-text-body">
@@ -28,6 +27,6 @@ export default async function PlanPage() {
           Volver al dashboard
         </Link>
       </div>
-    </>
+    </DashboardShell>
   );
 }

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ROOT_DOMAIN } from "@/lib/root-domain";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import type { FormSchema, FormFieldValue } from "@/lib/forms/validate-form-data";
 import type { SectionConfigItem } from "@/lib/landings/update-landing";
 import { EditPageClient } from "./EditPageClient";
@@ -45,8 +45,7 @@ export default async function DashboardEditarPage() {
   const publicUrl = `https://${landing.slug}.${ROOT_DOMAIN}`;
 
   return (
-    <>
-      <DashboardHeader email={user.email ?? ""} />
+    <DashboardShell>
       <div className="mx-auto flex w-full max-w-[900px] flex-1 flex-col px-6 py-10">
         <EditPageClient
           landingId={landing.id}
@@ -57,6 +56,6 @@ export default async function DashboardEditarPage() {
           publicUrl={publicUrl}
         />
       </div>
-    </>
+    </DashboardShell>
   );
 }

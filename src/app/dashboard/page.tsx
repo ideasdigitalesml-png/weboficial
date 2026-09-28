@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { ROOT_DOMAIN } from "@/lib/root-domain";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { CONTADOR_PALETAS } from "@/lib/templates/contador-paletas";
 import { ABOGADO_PALETAS } from "@/lib/templates/abogado-paletas";
 import { WelcomeBanner } from "./WelcomeBanner";
@@ -200,11 +200,7 @@ export default async function DashboardPage({
       };
 
   return (
-    <>
-      <DashboardHeader
-        email={user.email ?? ""}
-        name={typeof displayName === "string" ? displayName : undefined}
-      />
+    <DashboardShell>
       <div className="mx-auto flex w-full max-w-[900px] flex-1 flex-col gap-6 px-5 py-6 sm:gap-8 sm:px-6 sm:py-10">
         {bienvenida === "1" && publicUrl && <WelcomeBanner publicUrl={publicUrl} />}
 
@@ -404,6 +400,6 @@ export default async function DashboardPage({
           currentUrl={publicUrl}
         />
       </div>
-    </>
+    </DashboardShell>
   );
 }

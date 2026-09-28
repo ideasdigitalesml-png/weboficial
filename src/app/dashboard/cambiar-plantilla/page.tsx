@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { TemplateGallery } from "./TemplateGallery";
 
 export default async function CambiarPlantillaPage() {
@@ -37,8 +37,7 @@ export default async function CambiarPlantillaPage() {
   ]);
 
   return (
-    <>
-      <DashboardHeader email={user.email ?? ""} />
+    <DashboardShell>
       <div className="mx-auto flex w-full max-w-[900px] flex-1 flex-col gap-6 px-5 py-6 sm:gap-8 sm:px-6 sm:py-10">
         <div className="flex flex-col gap-1">
           <h1 className="text-xl font-semibold text-navy sm:text-2xl">
@@ -58,6 +57,6 @@ export default async function CambiarPlantillaPage() {
           currentTemplateId={landing.template_id}
         />
       </div>
-    </>
+    </DashboardShell>
   );
 }

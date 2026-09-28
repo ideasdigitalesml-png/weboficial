@@ -2,11 +2,12 @@ import Link from "next/link";
 import { Wordmark } from "@/components/landing/Wordmark";
 import { getInitials } from "@/lib/avatar-initials";
 
-// Shared top bar for every /dashboard/* page. No sidebar by design (see
-// AGENTS.md Feature 1) -- a single-column layout, so this header is the
-// only persistent chrome. `name` is the professional's display name when
-// known (falls back to email) -- only the main /dashboard page has it on
-// hand today, every other page here still just passes email.
+// Top bar for /reseller/dashboard. The customer-facing /dashboard/* pages
+// used to share this too ("no sidebar by design"), but now use
+// DashboardShell/DashboardNav (a real sidebar + mobile drawer with the
+// account/sign-out block built in) instead -- this component is reseller-only
+// from here on. `name` is the professional's display name when known (falls
+// back to email).
 export function DashboardHeader({
   email,
   name,
