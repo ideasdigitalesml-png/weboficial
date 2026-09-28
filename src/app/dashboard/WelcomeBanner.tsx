@@ -1,18 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { markLandingSharedAction } from "./actions";
 
 // Shown once, right after ProcessingPoller confirms the subscription and
 // redirects here with ?bienvenida=1 (see ProcessingPoller.tsx). Not
 // persisted anywhere -- a refresh or revisit without that query param just
 // doesn't render it again.
-export function WelcomeBanner({ publicUrl }: { publicUrl: string }) {
+export function WelcomeBanner({ publicUrl, landingId }: { publicUrl: string; landingId: string }) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
     await navigator.clipboard.writeText(publicUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+    markLandingSharedAction(landingId);
   }
 
   return (

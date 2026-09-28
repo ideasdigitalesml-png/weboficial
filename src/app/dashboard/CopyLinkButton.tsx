@@ -1,18 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { markLandingSharedAction } from "./actions";
 
 // Small icon-only copy affordance placed next to a plain-text/link URL
 // (the hero card's public URL row). WelcomeBanner has its own larger
 // "Copiar link" pill for the one-time post-payment banner -- this is the
 // compact version for the persistent dashboard card.
-export function CopyLinkButton({ url }: { url: string }) {
+export function CopyLinkButton({ url, landingId }: { url: string; landingId: string }) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
     await navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+    markLandingSharedAction(landingId);
   }
 
   return (

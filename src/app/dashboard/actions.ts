@@ -309,3 +309,30 @@ export async function updateLandingTemplateAction(
 
   return updateLandingTemplate(supabase, user.id, landingId, templateId);
 }
+
+// Fires from the "Copiar link" buttons (WelcomeBanner + the persistent hero
+// card one) and the "Compartir por WhatsApp" button -- whichever the
+// customer taps first marks the checklist's "Compartir" step done.
+// `.is("shared_at", null)` makes repeat taps a no-op instead of bumping the
+// timestamp every time.
+export async function markLandingSharedAction(
+  landingId: string
+): Promise<{ ok: boolean }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false };
+  }
+
+  await supabase
+    .from("landings")
+    .update({ shared_at: new Date().toISOString() })
+    .eq("id", landingId)
+    .eq("user_id", user.id)
+    .is("shared_at", null);
+
+  return { ok: true };
+}

@@ -5,9 +5,36 @@ import { ROOT_DOMAIN } from "@/lib/root-domain";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { WelcomeBanner } from "./WelcomeBanner";
 import { CopyLinkButton } from "./CopyLinkButton";
+import { ShareWhatsAppButton } from "./ShareWhatsAppButton";
+import { ChecklistCard, type ChecklistStep } from "./ChecklistCard";
 import { CardPaymentBrick } from "@/components/CardPaymentBrick";
 import { reconcileLandingIfStuck } from "@/lib/landings/reconcile-payment-status";
 import { findActiveResellerForUser } from "@/lib/resellers/require-reseller";
+
+// "Completar datos" step: the description field's key differs per
+// profession form (contadores/abogados/psicologos each defined their wizard
+// independently) -- profile_image and phone are the two consistent ones.
+const DESCRIPTION_FIELD_BY_PROFESSION: Record<string, string> = {
+  contadores: "description",
+  abogados: "descripcion_corta",
+  psicologos: "descripcion",
+};
+
+function hasCompletedProfile(
+  professionSlug: string | undefined,
+  formData: Record<string, unknown>
+): boolean {
+  const descriptionKey = professionSlug
+    ? DESCRIPTION_FIELD_BY_PROFESSION[professionSlug]
+    : undefined;
+  const description = descriptionKey ? formData[descriptionKey] : undefined;
+  return (
+    Boolean(formData.profile_image) &&
+    Boolean(formData.phone) &&
+    typeof description === "string" &&
+    description.trim().length > 0
+  );
+}
 
 export default async function DashboardPage({
   searchParams,
@@ -34,7 +61,7 @@ export default async function DashboardPage({
 
   const { data: landing } = await supabase
     .from("landings")
-    .select("id, slug, status, form_data")
+    .select("id, slug, status, form_data, profession_id, shared_at")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -49,9 +76,10 @@ export default async function DashboardPage({
   // subscription and no recorded approved payment.
   landing.status = await reconcileLandingIfStuck(supabase, landing);
 
-  const [{ data: profile }, { data: activePlan }] = await Promise.all([
+  const [{ data: profile }, { data: activePlan }, { data: profession }] = await Promise.all([
     supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
     supabase.from("plans").select("amount").eq("active", true).limit(1).maybeSingle(),
+    supabase.from("professions").select("slug").eq("id", landing.profession_id).maybeSingle(),
   ]);
 
   // Only an active landing has a working public URL: landings' public SELECT
@@ -71,10 +99,23 @@ export default async function DashboardPage({
       ? professionalName
       : user.email;
 
+  const checklistSteps: ChecklistStep[] = [
+    { label: "Creá tu página", done: true, href: "/dashboard/mi-pagina" },
+    { label: "Activá tu plan", done: isPublished, href: "/dashboard/suscripcion" },
+    {
+      label: "Completá tus datos",
+      done: hasCompletedProfile(profession?.slug, landing.form_data as Record<string, unknown>),
+      href: "/dashboard/editar",
+    },
+    { label: "Compartí tu página", done: Boolean(landing.shared_at), href: "/dashboard" },
+  ];
+
   return (
     <DashboardShell>
       <div className="mx-auto flex w-full max-w-[900px] flex-1 flex-col gap-6 px-5 py-6 sm:gap-8 sm:px-6 sm:py-10">
-        {bienvenida === "1" && publicUrl && <WelcomeBanner publicUrl={publicUrl} />}
+        {bienvenida === "1" && publicUrl && (
+          <WelcomeBanner publicUrl={publicUrl} landingId={landing.id} />
+        )}
 
         {profile?.role === "admin" && (
           <div className="flex justify-end">
@@ -110,7 +151,7 @@ export default async function DashboardPage({
             </span>
           </div>
           {publicUrl ? (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <a
                 href={publicUrl}
                 target="_blank"
@@ -119,7 +160,8 @@ export default async function DashboardPage({
               >
                 {publicUrl}
               </a>
-              <CopyLinkButton url={publicUrl} />
+              <CopyLinkButton url={publicUrl} landingId={landing.id} />
+              <ShareWhatsAppButton url={publicUrl} landingId={landing.id} />
             </div>
           ) : (
             <p className="text-sm font-medium text-amber-700">
@@ -164,6 +206,25 @@ export default async function DashboardPage({
               />
             </div>
           )}
+        </section>
+
+        <ChecklistCard steps={checklistSteps} />
+
+        {/* Extra, outside the checklist/progress bar -- a custom domain is
+            an upsell, not a required setup step. */}
+        <section className="flex flex-col gap-3 rounded-xl border border-border-subtle p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-navy">Extra: conseguí tu dominio propio</p>
+            <p className="text-sm text-text-body">
+              Reemplazá tu URL de weboficial por un dominio con tu propio nombre.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/dominio"
+            className="inline-flex w-fit shrink-0 items-center justify-center rounded-full border border-border-subtle px-4 py-2 text-sm font-medium text-navy transition-colors hover:border-navy/40"
+          >
+            Ver opciones
+          </Link>
         </section>
       </div>
     </DashboardShell>
