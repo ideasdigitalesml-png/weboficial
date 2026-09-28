@@ -56,7 +56,7 @@ export default async function CancelarSuscripcionPage() {
         <div className="flex flex-wrap gap-3">
           <CancelButton />
           <Link
-            href="/dashboard"
+            href="/dashboard/suscripcion"
             className="inline-flex min-h-11 items-center justify-center rounded-full border border-border-subtle px-6 text-sm font-medium text-navy transition-colors hover:border-navy/40"
           >
             Volver sin cancelar

@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import type { FormSchema, FormFieldValue } from "@/lib/forms/validate-form-data";
 import type { StockImage } from "@/components/forms/FieldInput";
 import type { SectionConfigItem } from "@/lib/landings/update-landing";
@@ -38,15 +39,15 @@ export function EditPageClient({
       const confirmed = window.confirm("¿Salir sin guardar?");
       if (!confirmed) return;
     }
-    router.push("/dashboard");
+    router.push("/dashboard/mi-pagina");
   }
 
   return (
     <div className="flex flex-col gap-8">
       <nav className="text-sm text-text-body">
-        <a href="/dashboard" className="underline hover:text-navy">
-          Dashboard
-        </a>
+        <Link href="/dashboard/mi-pagina" className="underline hover:text-navy">
+          Mi página
+        </Link>
         {" → "}
         <span className="text-navy">Editar mi página</span>
       </nav>

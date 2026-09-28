@@ -53,7 +53,7 @@ export function TemplateGallery({
         setError("No se pudo cambiar la plantilla. Intentá de nuevo.");
         return;
       }
-      router.push("/dashboard?plantilla=1");
+      router.push("/dashboard/mi-pagina?plantilla=1");
     });
   }
 

@@ -21,10 +21,10 @@ export default async function PlanPage() {
           Próximamente vas a poder ver y cambiar tu plan desde acá.
         </p>
         <Link
-          href="/dashboard"
+          href="/dashboard/suscripcion"
           className="rounded-full border border-border-subtle px-5 py-2 text-sm font-medium text-navy transition-colors hover:border-navy/40"
         >
-          Volver al dashboard
+          Volver a mi suscripción
         </Link>
       </div>
     </DashboardShell>

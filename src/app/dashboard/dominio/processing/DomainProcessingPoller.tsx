@@ -26,7 +26,7 @@ export function DomainProcessingPoller() {
         if (res.ok) {
           const data = await res.json();
           if (data.status === "active") {
-            router.push("/dashboard");
+            router.push("/dashboard/dominio");
             return;
           }
           if (data.status === "failed") {
