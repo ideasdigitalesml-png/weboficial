@@ -51,8 +51,8 @@ export function AuthModal({
           Ya casi está lista tu página
         </h2>
         <p className="mt-2 text-sm text-text-body">
-          Iniciá sesión con Google para publicarla y pasar al pago. Tus datos
-          ya quedaron guardados, no vas a tener que completarlos de nuevo.
+          Ingresá con Google para guardar tu página. Tus datos ya quedaron
+          guardados, no vas a tener que completarlos de nuevo.
         </p>
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
         <div className="mt-5 flex flex-col gap-2">

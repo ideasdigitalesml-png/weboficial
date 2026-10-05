@@ -117,6 +117,24 @@ export default async function DashboardPage({
           <WelcomeBanner publicUrl={publicUrl} landingId={landing.id} />
         )}
 
+        {/* Shown right after onboarding creates the landing as a draft
+            (no publicUrl yet) -- WelcomeBanner above is for the other
+            ?bienvenida=1 case, once the page is already active. */}
+        {bienvenida === "1" && !publicUrl && (
+          <div className="flex flex-col gap-3 rounded-xl border border-sky/30 bg-sky/5 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-medium text-navy">
+              ¡Tu página quedó guardada! Podés recorrer el panel y editarla.
+              Cuando quieras, activala para que se vea en internet.
+            </p>
+            <Link
+              href="/dashboard/suscripcion"
+              className="inline-flex shrink-0 items-center justify-center rounded-full bg-sky px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-sky-dark"
+            >
+              Activar mi página
+            </Link>
+          </div>
+        )}
+
         {profile?.role === "admin" && (
           <div className="flex justify-end">
             <Link

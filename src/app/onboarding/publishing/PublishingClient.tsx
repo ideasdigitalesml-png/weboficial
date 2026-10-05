@@ -29,8 +29,10 @@ export function PublishingClient() {
         case "already_has_landing":
           router.replace("/dashboard");
           return;
+        case "created":
+          router.replace("/dashboard?bienvenida=1");
+          return;
         case "create_failed":
-        case "subscribe_failed":
           setView({ kind: "error", message: outcome.message });
           return;
       }

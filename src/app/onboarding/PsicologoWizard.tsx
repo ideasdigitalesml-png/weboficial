@@ -22,7 +22,6 @@ import {
   TOGGLE_ACTIVE,
   TOGGLE_INACTIVE,
 } from "./styles";
-import { createSubscriptionAction } from "@/app/dashboard/actions";
 import { saveDraftPage, loadDraftPage, clearDraftPage } from "./draft-storage";
 import { uploadPendingPhotos } from "./photo-upload";
 import { createClient } from "@/lib/supabase/client";
@@ -313,11 +312,7 @@ export function PsicologoWizard({
 
       if (result.ok) {
         clearDraftPage();
-        // Straight to Mercado Pago, no dashboard detour -- createSubscriptionAction
-        // redirects on every success path, so reaching the line after this
-        // means it failed.
-        const subscribeResult = await createSubscriptionAction();
-        setSubmitError(subscribeResult.message);
+        router.push("/dashboard?bienvenida=1");
         return;
       }
 
@@ -690,6 +685,13 @@ function RevisionStep({
   onSubmit: () => void;
   canSubmit: boolean;
 }) {
+  // Mobile-only: before registering, seeing the page at real size (not the
+  // scaled-down side/peek previews) is mandatory -- this is the full-screen
+  // "how did it come out" view the final step opens into. Desktop already
+  // shows the real-size preview inline above (no scaling trick there
+  // either), so it keeps its direct submit button untouched.
+  const [showFullPreview, setShowFullPreview] = useState(false);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
@@ -730,10 +732,66 @@ function RevisionStep({
         <button onClick={onBack} className={SECONDARY_BUTTON}>
           Volver
         </button>
-        <button onClick={onSubmit} disabled={isPending || !canSubmit} className={`${PRIMARY_BUTTON} flex-1 sm:flex-none`}>
+        <button
+          onClick={onSubmit}
+          disabled={isPending || !canSubmit}
+          className={`${PRIMARY_BUTTON} hidden flex-1 lg:inline-flex sm:flex-none`}
+        >
           {isPending ? "Publicando..." : "Publicar mi página"}
         </button>
+        <button
+          type="button"
+          onClick={() => setShowFullPreview(true)}
+          className={`${PRIMARY_BUTTON} flex-1 lg:hidden`}
+        >
+          Ver cómo quedó mi página
+        </button>
       </div>
+
+      {showFullPreview && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-white lg:hidden">
+          <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
+            <span className="text-sm font-medium text-navy">Así quedó tu página</span>
+            <button
+              onClick={() => setShowFullPreview(false)}
+              className="flex min-h-12 items-center px-2 text-sm text-text-body"
+            >
+              Cerrar ✕
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <TemplatePreview
+              layout={layout}
+              formData={previewFormData}
+              colorPrimary={colorPrimary}
+              colorAccent={colorAccent}
+              subdomain={subdomain}
+            />
+          </div>
+          {submitError && (
+            <p className="mx-4 mb-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+              {submitError}
+            </p>
+          )}
+          <div className="flex gap-3 border-t border-border-subtle bg-white px-4 py-3">
+            <button
+              type="button"
+              onClick={() => setShowFullPreview(false)}
+              className={SECONDARY_BUTTON}
+            >
+              Volver a editar
+            </button>
+            <button
+              type="button"
+              onClick={onSubmit}
+              disabled={isPending || !canSubmit}
+              className={`${PRIMARY_BUTTON} flex-1`}
+            >
+              {isPending ? "Guardando..." : "Me gusta, guardar con Gmail"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

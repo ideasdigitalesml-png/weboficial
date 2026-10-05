@@ -2,7 +2,6 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { createLandingAction } from "./actions";
-import { createSubscriptionAction } from "@/app/dashboard/actions";
 import { loadDraftPage, clearDraftPage } from "./draft-storage";
 import { uploadPendingPhotos } from "./photo-upload";
 import { getStoredReferralCode } from "@/lib/resellers/get-stored-referral-code";
@@ -11,8 +10,8 @@ import { getStoredUtmParams, clearStoredUtmParams } from "@/lib/get-stored-utm-p
 export type PublishOutcome =
   | { status: "no_draft" }
   | { status: "already_has_landing" }
-  | { status: "create_failed"; message: string }
-  | { status: "subscribe_failed"; message: string };
+  | { status: "created" }
+  | { status: "create_failed"; message: string };
 
 function describeCreateFailure(
   reason: string,
@@ -39,10 +38,12 @@ function describeCreateFailure(
   }
 }
 
-// Single place that turns a sessionStorage draft into a real landing and
-// then hands off to the existing Mercado Pago checkout -- used both by an
-// already-logged-in visitor clicking "Publicar" directly, and by
-// /onboarding/publishing right after a fresh Google sign-in.
+// Single place that turns a sessionStorage draft into a real landing --
+// used both by an already-logged-in visitor submitting the wizard's last
+// step directly, and by /onboarding/publishing right after a fresh Google
+// sign-in. The landing is created as a draft; activating it (paying) is a
+// separate, later step the owner takes from /dashboard/suscripcion, not
+// part of this flow.
 //
 // createLandingAction already refuses to run without a session (the
 // landings_insert_own RLS policy requires auth.uid() = user_id), so this
@@ -99,10 +100,5 @@ export async function publishDraftPage(): Promise<PublishOutcome> {
   // campaign.
   clearStoredUtmParams();
 
-  // createSubscriptionAction redirects (throws NEXT_REDIRECT) on every
-  // success path -- reusing an existing pending subscription's checkout
-  // link, or a freshly created one. Reaching this line means it did not
-  // redirect, i.e. it failed.
-  const subscribeResult = await createSubscriptionAction();
-  return { status: "subscribe_failed", message: subscribeResult.message };
+  return { status: "created" };
 }
