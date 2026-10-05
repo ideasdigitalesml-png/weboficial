@@ -1,9 +1,7 @@
 import { getPublicLandingMeta } from "@/components/PublicLandingView";
-import { getInitials } from "@/lib/landings/get-initials";
-import { renderCustomerIcon } from "@/lib/landings/customer-icon";
+import { getProfessionIconSvg } from "@/lib/landings/profession-icon";
 
-export const size = { width: 32, height: 32 };
-export const contentType = "image/png";
+export const contentType = "image/svg+xml";
 
 export default async function Icon({
   params,
@@ -12,5 +10,6 @@ export default async function Icon({
 }) {
   const { slug } = await params;
   const meta = await getPublicLandingMeta(slug);
-  return renderCustomerIcon(meta ? getInitials(meta.name) : "•", size.width);
+  const svg = await getProfessionIconSvg(meta?.professionSlug ?? null);
+  return new Response(new Uint8Array(svg), { headers: { "Content-Type": contentType } });
 }

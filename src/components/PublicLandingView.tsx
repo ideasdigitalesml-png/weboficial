@@ -48,11 +48,20 @@ export interface TemplateConfig {
 // non-active landing gets no dynamic meta, same as it gets notFound() below.
 export async function getPublicLandingMeta(
   slug: string
-): Promise<{ name: string; description?: string; customDomain: string | null } | null> {
+): Promise<{
+  name: string;
+  description?: string;
+  customDomain: string | null;
+  professionSlug: string | null;
+} | null> {
   const supabase = await createClient();
 
   const [{ data: landing }, { data: customDomain }] = await Promise.all([
-    supabase.from("landings").select("form_data, status").eq("internal_subdomain", slug).maybeSingle(),
+    supabase
+      .from("landings")
+      .select("form_data, status, professions(slug)")
+      .eq("internal_subdomain", slug)
+      .maybeSingle(),
     // Service-role: an anonymous visitor's RLS-scoped client can't see
     // custom_domains at all (no public SELECT policy on it -- same reason
     // proxy.ts's resolveCustomDomainSlug/resolveActiveCustomDomainForSlug
@@ -77,10 +86,15 @@ export async function getPublicLandingMeta(
     return null;
   }
 
+  const profession = oneRelation(
+    landing.professions as { slug: string } | { slug: string }[] | null
+  );
+
   return {
     name: formData.name,
     description: formData.description,
     customDomain: customDomain?.domain ?? null,
+    professionSlug: profession?.slug ?? null,
   };
 }
 
