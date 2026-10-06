@@ -47,11 +47,6 @@ export async function GET(request: Request) {
           .select("id")
           .maybeSingle();
 
-        console.log("[auth-callback] registration check-and-set", {
-          userId: data.user.id,
-          firstTime: Boolean(tracked),
-        });
-
         if (tracked && data.user.email) {
           const eventId = randomUUID();
 
@@ -74,11 +69,6 @@ export async function GET(request: Request) {
           const forwardedFor = request.headers.get("x-forwarded-for");
           const clientIp = forwardedFor ? forwardedFor.split(",")[0].trim() : null;
           const userAgent = request.headers.get("user-agent");
-
-          console.log("[auth-callback] scheduling CompleteRegistration CAPI", {
-            userId: data.user.id,
-            eventId,
-          });
 
           // Runs after the redirect response is sent, so the Conversions
           // API call never adds latency to the login itself.

@@ -49,15 +49,6 @@ export async function sendCompleteRegistrationEvent(params: {
     body.test_event_code = process.env.META_TEST_EVENT_CODE;
   }
 
-  // TEMPORARY: verbose logging to confirm this call actually reaches Meta
-  // and what it says back. Remove once CompleteRegistration is confirmed
-  // showing up in Events Manager.
-  console.log("[meta-capi] sending CompleteRegistration", {
-    eventId: params.eventId,
-    pixelId: META_PIXEL_ID,
-    testEventCode: process.env.META_TEST_EVENT_CODE ?? null,
-  });
-
   try {
     const res = await fetch(
       `https://graph.facebook.com/v21.0/${META_PIXEL_ID}/events?access_token=${accessToken}`,
@@ -68,11 +59,8 @@ export async function sendCompleteRegistrationEvent(params: {
         signal: AbortSignal.timeout(3000),
       }
     );
-    const responseBody = await res.text();
     if (!res.ok) {
-      console.error("[meta-capi] CompleteRegistration event failed", res.status, responseBody);
-    } else {
-      console.log("[meta-capi] CompleteRegistration event accepted", res.status, responseBody);
+      console.error("[meta-capi] CompleteRegistration event failed", res.status, await res.text());
     }
   } catch (err) {
     console.error("[meta-capi] CompleteRegistration event errored", err);
