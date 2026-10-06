@@ -1,6 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import { randomUUID } from "crypto";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { resolveOrigin } from "@/lib/http/resolve-origin";
+import { sendCompleteRegistrationEvent } from "@/lib/meta/capi";
 
 export async function GET(request: Request) {
   const { searchParams, origin: requestOrigin } = new URL(request.url);
@@ -17,9 +21,63 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (!error && data.user) {
+      let redirectTarget = `${origin}${next}`;
+
+      // CompleteRegistration tracking must never be able to block or break
+      // login -- any failure here (missing column, network error, RLS
+      // surprise) just means the event doesn't get reported this time, not
+      // that the user gets stuck.
+      try {
+        // Atomic check-and-set: only the one request that actually flips
+        // registration_tracked_at from null to non-null reports
+        // CompleteRegistration, so repeat logins never double-fire it. Must
+        // use the service-role client -- the profiles table has a trigger
+        // (see migration 0042) that silently reverts this column for any
+        // other role, so the user's own session could never do this update.
+        const admin = createAdminClient();
+        const { data: tracked } = await admin
+          .from("profiles")
+          .update({ registration_tracked_at: new Date().toISOString() })
+          .eq("id", data.user.id)
+          .is("registration_tracked_at", null)
+          .select("id")
+          .maybeSingle();
+
+        if (tracked && data.user.email) {
+          const eventId = randomUUID();
+          const separator = next.includes("?") ? "&" : "?";
+          redirectTarget = `${origin}${next}${separator}cr_eid=${eventId}`;
+
+          const email = data.user.email;
+          const cookieStore = await cookies();
+          const fbp = cookieStore.get("_fbp")?.value ?? null;
+          const fbc = cookieStore.get("_fbc")?.value ?? null;
+          const forwardedFor = request.headers.get("x-forwarded-for");
+          const clientIp = forwardedFor ? forwardedFor.split(",")[0].trim() : null;
+          const userAgent = request.headers.get("user-agent");
+
+          // Runs after the redirect response is sent, so the Conversions
+          // API call never adds latency to the login itself.
+          after(() =>
+            sendCompleteRegistrationEvent({
+              eventId,
+              email,
+              eventSourceUrl: redirectTarget,
+              clientIp,
+              userAgent,
+              fbp,
+              fbc,
+            })
+          );
+        }
+      } catch (trackingError) {
+        console.error("[auth-callback] CompleteRegistration tracking failed", trackingError);
+      }
+
+      return NextResponse.redirect(redirectTarget);
     }
   }
 

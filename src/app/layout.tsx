@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import { ReferralCapture } from "@/components/ReferralCapture";
+import { CompleteRegistrationPixel } from "@/components/CompleteRegistrationPixel";
+import { META_PIXEL_ID } from "@/lib/meta/pixel";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -74,13 +77,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 t.src=v;s=b.getElementsByTagName(e)[0];
                 s.parentNode.insertBefore(t,s)}(window, document,'script',
                 'https://connect.facebook.net/en_US/fbevents.js');
-                fbq('init', '2925352314465309');
+                fbq('init', '${META_PIXEL_ID}');
                 fbq('track', 'PageView');
               `}
             </Script>
             <noscript>
               <img height="1" width="1" style={{display:"none"}}
-                src="https://www.facebook.com/tr?id=2925352314465309&ev=PageView&noscript=1"
+                src={`https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1`}
               />
             </noscript>
           </>
@@ -88,6 +91,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col">
         <ReferralCapture />
+        <Suspense fallback={null}>
+          <CompleteRegistrationPixel />
+        </Suspense>
         {/* `contents` keeps this invisible to layout (every page already
             supplies its own flex/width classes on its own root element) --
             it exists purely to give the document exactly one <main>
