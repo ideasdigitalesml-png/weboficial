@@ -24,7 +24,8 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.user) {
-      let redirectTarget = `${origin}${next}`;
+      const redirectTarget = `${origin}${next}`;
+      const response = NextResponse.redirect(redirectTarget);
 
       // CompleteRegistration tracking must never be able to block or break
       // login -- any failure here (missing column, network error, RLS
@@ -46,10 +47,25 @@ export async function GET(request: Request) {
           .select("id")
           .maybeSingle();
 
+        console.log("[auth-callback] registration check-and-set", {
+          userId: data.user.id,
+          firstTime: Boolean(tracked),
+        });
+
         if (tracked && data.user.email) {
           const eventId = randomUUID();
-          const separator = next.includes("?") ? "&" : "?";
-          redirectTarget = `${origin}${next}${separator}cr_eid=${eventId}`;
+
+          // Carried via cookie, not a query param -- `next` can point
+          // through one or more server-side redirect() calls (e.g. "/" ->
+          // /dashboard) that don't forward search params, but every one of
+          // those still round-trips this Set-Cookie to the browser first.
+          // CompleteRegistrationPixel reads and clears it client-side.
+          response.cookies.set("cr_eid", eventId, {
+            maxAge: 120,
+            path: "/",
+            sameSite: "lax",
+            httpOnly: false,
+          });
 
           const email = data.user.email;
           const cookieStore = await cookies();
@@ -58,6 +74,11 @@ export async function GET(request: Request) {
           const forwardedFor = request.headers.get("x-forwarded-for");
           const clientIp = forwardedFor ? forwardedFor.split(",")[0].trim() : null;
           const userAgent = request.headers.get("user-agent");
+
+          console.log("[auth-callback] scheduling CompleteRegistration CAPI", {
+            userId: data.user.id,
+            eventId,
+          });
 
           // Runs after the redirect response is sent, so the Conversions
           // API call never adds latency to the login itself.
@@ -77,7 +98,7 @@ export async function GET(request: Request) {
         console.error("[auth-callback] CompleteRegistration tracking failed", trackingError);
       }
 
-      return NextResponse.redirect(redirectTarget);
+      return response;
     }
   }
 

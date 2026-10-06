@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import { ReferralCapture } from "@/components/ReferralCapture";
@@ -91,9 +90,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col">
         <ReferralCapture />
-        <Suspense fallback={null}>
-          <CompleteRegistrationPixel />
-        </Suspense>
+        <CompleteRegistrationPixel />
         {/* `contents` keeps this invisible to layout (every page already
             supplies its own flex/width classes on its own root element) --
             it exists purely to give the document exactly one <main>
