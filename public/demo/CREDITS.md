@@ -13,8 +13,8 @@ libre, sin atribución requerida). Se cita igual por buena práctica.
 | --- | --- | --- |
 | `contador.webp` | [man in gray suit jacket smiling](https://unsplash.com/photos/man-in-gray-suit-jacket-smiling-ehUYU820lcA) | Danny Ocean ([@d_ocean](https://unsplash.com/@d_ocean)) |
 | `abogado.webp` | [woman in black blazer smiling](https://unsplash.com/photos/woman-in-black-blazer-smiling-RIt88XBR3G0) | Annika Palmari |
-| `psicologo.webp` | [a smiling woman poses for a portrait](https://unsplash.com/photos/a-smiling-woman-poses-for-a-portrait-cdZcNIca4w0) | Brooke Balentine |
+| `psicologo.webp` | [Woman in red cardigan smiling](https://unsplash.com/photos/woman-in-red-cardigan-smiling-mpDV4xaFP8c) | Clay Elliot ([@ibidsy](https://unsplash.com/@ibidsy)) |
 
 Cada archivo acá es un recorte cuadrado (800×800, `fit=crop&crop=faces`) de la
-foto original, descargado desde la CDN de Unsplash y convertido a WebP
-localmente (`sharp`, calidad 82) — no hay edición adicional de contenido.
+foto original, servido directamente vía la CDN de Unsplash (`fm=webp`) al
+momento de la descarga — no hay edición adicional de contenido.
