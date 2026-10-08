@@ -1,5 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
+import {
+  CONTADOR_DEMO_PROFILE,
+  ABOGADO_DEMO_PROFILE,
+  PSICOLOGO_DEMO_PROFILE,
+} from "@/lib/demo-profiles";
 
 export interface HeroPreviewImage {
   src: string;
@@ -35,13 +40,58 @@ function PreviewGrid({ images }: { images: HeroPreviewImage[] }) {
   );
 }
 
+export type HeroProfession = "contadores" | "abogados" | "psicologos";
+
+// Same fictional identity as src/lib/demo-profiles.ts, so this mockup never
+// drifts from what the real previews further down the page show -- matricula,
+// name/prefix, and contact are all read from there instead of hardcoded a
+// second time. Only the two tag labels and the formatted phone (purely
+// decorative, never a real link) are mockup-specific.
+const MOCKUP_DATA: Record<
+  HeroProfession,
+  {
+    name: string;
+    title: string;
+    matricula: string;
+    phoneDisplay: string;
+    email: string;
+    badges: [string, string];
+  }
+> = {
+  contadores: {
+    name: CONTADOR_DEMO_PROFILE.name!,
+    title: "Contador Público",
+    matricula: CONTADOR_DEMO_PROFILE.matricula!,
+    phoneDisplay: "341 555-0123",
+    email: CONTADOR_DEMO_PROFILE.email!,
+    badges: ["Impuestos", "Sociedades"],
+  },
+  abogados: {
+    name: ABOGADO_DEMO_PROFILE.name!,
+    title: "Abogada",
+    matricula: ABOGADO_DEMO_PROFILE.matricula_numero!,
+    phoneDisplay: "221 555-0167",
+    email: ABOGADO_DEMO_PROFILE.email!,
+    badges: ["Familia", "Sucesiones"],
+  },
+  psicologos: {
+    name: PSICOLOGO_DEMO_PROFILE.name!,
+    title: "Psicóloga Clínica",
+    matricula: PSICOLOGO_DEMO_PROFILE.matricula_numero!,
+    phoneDisplay: "11 5555-0142",
+    email: PSICOLOGO_DEMO_PROFILE.email!,
+    badges: ["Ansiedad", "Autoestima"],
+  },
+};
+
 // A browser-chrome mockup showing a miniature of the real
 // ContadorModernoTemplate design (navy #0B2545 + green #1A6B4A accents) --
 // a visitor needs to recognize "that's what my page would look like"
 // within a couple seconds, which a generic gray wireframe can't do. Used on
 // profession pages, which show that profession's own real previews further
 // down instead.
-function BrowserMockup() {
+function BrowserMockup({ profession = "contadores" }: { profession?: HeroProfession }) {
+  const data = MOCKUP_DATA[profession];
   return (
     <div className="w-full max-w-sm scale-90 md:max-w-md md:scale-100">
       <div
@@ -64,7 +114,7 @@ function BrowserMockup() {
           {/* Fake page header */}
           <div className="flex items-center justify-between border-b border-[#1A6B4A]/40 px-4 py-2.5">
             <span className="text-[9px] font-semibold text-white">
-              Lic. Martín García
+              {data.name}
             </span>
             <div className="flex gap-2">
               <span className="h-1.5 w-6 rounded-full bg-white/40" />
@@ -82,28 +132,33 @@ function BrowserMockup() {
                   background: "linear-gradient(135deg, #3b82f6, #0f2044)",
                 }}
               >
-                MG
+                {data.name
+                  .split(" ")
+                  .slice(-2)
+                  .map((w) => w[0])
+                  .join("")
+                  .toUpperCase()}
               </div>
               <div className="flex flex-col gap-1">
                 <span className="font-serif text-[13px] leading-tight font-bold text-white">
-                  Martín García
+                  {data.name}
                 </span>
                 <span className="text-[8px] text-white/60">
-                  Contador Público · Mat. 12.847
+                  {data.title} · Mat. {data.matricula}
                 </span>
               </div>
             </div>
             <div className="flex gap-1.5">
               <span className="rounded-full border border-[#1A6B4A]/50 bg-[#1A6B4A]/30 px-2 py-0.5 text-[7px] text-emerald-300">
-                Impuestos
+                {data.badges[0]}
               </span>
               <span className="rounded-full border border-[#1A6B4A]/50 bg-[#1A6B4A]/30 px-2 py-0.5 text-[7px] text-emerald-300">
-                Sociedades
+                {data.badges[1]}
               </span>
             </div>
           </div>
 
-          {/* Fake contact section */}
+          {/* Fake contact section -- plain text, never a real link */}
           <div className="flex flex-col gap-2 bg-[#0d2240] px-4 py-4">
             <div className="flex items-center gap-2 rounded-lg bg-[#25D366]/15 px-2.5 py-1.5">
               <svg
@@ -114,7 +169,7 @@ function BrowserMockup() {
                 <path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.44 1.27 4.89L2 22l5.24-1.27A9.96 9.96 0 0 0 12.04 22c5.52 0 10-4.48 10-10s-4.48-10-10-10Zm0 18.13c-1.58 0-3.06-.44-4.32-1.22l-.31-.18-3.11.76.77-3.03-.2-.32A8.07 8.07 0 0 1 3.9 12c0-4.49 3.65-8.14 8.14-8.14S20.18 7.51 20.18 12s-3.65 8.13-8.14 8.13Zm4.46-6.09c-.24-.12-1.44-.71-1.66-.79-.22-.08-.38-.12-.55.12-.16.24-.63.79-.77.95-.14.16-.28.18-.52.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.34-1.67-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.33-.76-1.82-.2-.48-.4-.42-.55-.42-.14-.01-.3-.01-.46-.01-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.44-.59 1.64-1.16.2-.57.2-1.06.14-1.16-.06-.1-.22-.16-.46-.28Z" />
               </svg>
               <span className="text-[8px] font-medium text-white/80">
-                WhatsApp: 11 2345-6789
+                WhatsApp: {data.phoneDisplay}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -127,9 +182,7 @@ function BrowserMockup() {
                 <rect x="2" y="4" width="20" height="16" rx="2" />
                 <path d="m2 6 10 7 10-7" />
               </svg>
-              <span className="text-[8px] text-white/50">
-                contacto@estudio.com
-              </span>
+              <span className="text-[8px] text-white/50">{data.email}</span>
             </div>
           </div>
         </div>
@@ -140,10 +193,14 @@ function BrowserMockup() {
 
 export function Hero({
   title = "Tu página profesional, lista en minutos.",
+  eyebrow = "Para contadores, abogados y psicólogos",
   previewImages,
+  profession = "contadores",
 }: {
   title?: string;
+  eyebrow?: string;
   previewImages?: HeroPreviewImage[];
+  profession?: HeroProfession;
 }) {
   return (
     <section className="relative w-full overflow-hidden bg-navy">
@@ -167,7 +224,7 @@ export function Hero({
             className="text-xs font-semibold tracking-[0.2em] text-sky-400 uppercase"
             style={{ animation: "fadeInUp 0.6s ease both", animationDelay: "0.1s" }}
           >
-            Para contadores, abogados y psicólogos
+            {eyebrow}
           </span>
           <h1
             className="text-3xl leading-tight font-bold text-white sm:text-4xl md:text-5xl"
@@ -217,7 +274,7 @@ export function Hero({
             className="text-sm text-white/35"
             style={{ animation: "fadeInUp 0.6s ease both", animationDelay: "0.6s" }}
           >
-            Sin permanencia · Sin tarjeta de crédito
+            Sin permanencia · Pagás con Mercado Pago
           </p>
         </div>
 
@@ -241,7 +298,7 @@ export function Hero({
             {previewImages ? (
               <PreviewGrid images={previewImages} />
             ) : (
-              <BrowserMockup />
+              <BrowserMockup profession={profession} />
             )}
           </div>
         </div>

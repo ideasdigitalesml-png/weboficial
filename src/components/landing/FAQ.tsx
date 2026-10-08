@@ -8,10 +8,11 @@ export interface FaqItem {
 }
 
 // Canonical copy: kept in exact sync with what the product actually does
-// (see onboarding/publish-draft.ts for "publicada al instante" and
-// subscriptions/plans for "$13.400", "sin permanencia", and the
-// nombre.weboficial.com.ar subdomain shape) so this section never promises
-// behavior the code doesn't have.
+// (see create-landing.ts/publish-draft.ts for the draft-then-active flow,
+// 0005_subscriptions_payments_webhooks.sql for what happens on cancellation,
+// /dashboard/dominio for custom domains, and subscriptions/plans for
+// "$13.400", "sin permanencia", and the nombre.weboficial.com.ar subdomain
+// shape) so this section never promises behavior the code doesn't have.
 export const DEFAULT_FAQ_ITEMS: FaqItem[] = [
   {
     q: "¿Necesito saber programación?",
@@ -19,11 +20,15 @@ export const DEFAULT_FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "¿Cuánto tarda en estar publicada mi página?",
-    a: "Una vez que completás tus datos y realizás el pago, tu página queda disponible de inmediato.",
+    a: "Primero creás tu página: la vas viendo y editando desde tu panel las veces que quieras. Cuando activás la suscripción, queda publicada.",
   },
   {
     q: "¿Qué URL voy a tener?",
     a: "Tu página queda disponible en tuNombre.weboficial.com.ar.",
+  },
+  {
+    q: "¿Puedo usar mi propio dominio?",
+    a: "Sí. Podés comprar tu propio dominio directamente desde tu panel y conectarlo a tu página.",
   },
   {
     q: "¿Puedo modificar mis datos después?",
@@ -32,6 +37,14 @@ export const DEFAULT_FAQ_ITEMS: FaqItem[] = [
   {
     q: "¿Puedo cancelar?",
     a: "Sí, sin permanencia. Cancelás cuando quieras. No hay contratos ni cargos adicionales.",
+  },
+  {
+    q: "¿Qué pasa si dejo de pagar?",
+    a: "Si el pago no se acredita, la suscripción queda cancelada y tu página se desactiva (deja de estar visible públicamente) hasta que la reactives desde tu panel.",
+  },
+  {
+    q: "¿Cómo me contactan mis clientes?",
+    a: "A través del WhatsApp y el email que vos cargues en tu página.",
   },
   {
     q: "¿Cómo pago?",
