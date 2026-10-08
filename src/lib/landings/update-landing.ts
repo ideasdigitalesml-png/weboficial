@@ -6,6 +6,7 @@ import {
 } from "../forms/validate-form-data";
 import { CONTADOR_PALETAS } from "../templates/contador-paletas";
 import { ABOGADO_PALETAS } from "../templates/abogado-paletas";
+import { sanitizeTurnosConfig, type TurnosConfig } from "../turnos/types";
 
 export interface SectionConfigItem {
   id: string;
@@ -270,4 +271,37 @@ export async function updateLandingTemplate(
   }
 
   return { ok: true, templateId };
+}
+
+export type UpdateTurnosConfigResult =
+  | { ok: true; turnosConfig: TurnosConfig }
+  | { ok: false; reason: "not_found" };
+
+// Same shape of guarantee as the functions above: RLS-scoped client, only
+// ever writes `turnos_config`. Always runs the input through
+// sanitizeTurnosConfig first -- the column is just jsonb, so that's the only
+// thing stopping arbitrary/malformed client JSON from ending up there (an
+// invalid shape would otherwise silently break the public booking section
+// at render time instead of failing here with a clear contract).
+export async function updateLandingTurnosConfig(
+  supabase: SupabaseClient,
+  userId: string,
+  landingId: string,
+  turnosConfig: unknown
+): Promise<UpdateTurnosConfigResult> {
+  const sanitized = sanitizeTurnosConfig(turnosConfig);
+
+  const { data: updated } = await supabase
+    .from("landings")
+    .update({ turnos_config: sanitized })
+    .eq("id", landingId)
+    .eq("user_id", userId)
+    .select("id")
+    .maybeSingle();
+
+  if (!updated) {
+    return { ok: false, reason: "not_found" };
+  }
+
+  return { ok: true, turnosConfig: sanitized };
 }

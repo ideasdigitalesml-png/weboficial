@@ -4,6 +4,7 @@ import { slugify, isValidSlugFormat, generateSlugCandidates } from "./slug";
 import { CONTADOR_PALETAS, DEFAULT_CONTADOR_PALETA_ID } from "../templates/contador-paletas";
 import { ABOGADO_PALETAS, DEFAULT_ABOGADO_PALETA_ID } from "../templates/abogado-paletas";
 import { UTM_PARAM_KEYS, type UtmParams } from "../utm-cookie";
+import { sanitizeTurnosConfig, type TurnosConfig } from "../turnos/types";
 
 const PALETAS_BY_PROFESSION: Record<string, { ids: ReadonlySet<string>; defaultId: string }> = {
   contadores: {
@@ -45,6 +46,10 @@ export interface CreateLandingInput {
   // grant anything (commission, access), they're purely informational for
   // the admin panel.
   utmParams?: UtmParams;
+  // Optional turnos (WhatsApp appointment booking) config from the
+  // wizard's "configurá tus turnos" step -- sanitized server-side
+  // regardless of what the client sends, same as formData above.
+  turnosConfig?: TurnosConfig;
 }
 
 export type CreateLandingResult =
@@ -152,6 +157,7 @@ export async function createLandingForUser(
       domain_type: "subdomain",
       form_data: validation.data,
       sections_config: DEFAULT_SECTIONS_CONFIG,
+      turnos_config: sanitizeTurnosConfig(input.turnosConfig),
       ...(paletaId ? { paleta_id: paletaId } : {}),
       ...(resellerId
         ? { reseller_id: resellerId, referral_code: input.referralCode!.toUpperCase() }

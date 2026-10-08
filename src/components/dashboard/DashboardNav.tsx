@@ -13,12 +13,14 @@ import {
   Menu,
   X,
   ExternalLink,
+  CalendarClock,
 } from "lucide-react";
 import { Wordmark } from "@/components/landing/Wordmark";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Inicio", icon: Home },
   { href: "/dashboard/mi-pagina", label: "Mi página", icon: LayoutTemplate },
+  { href: "/dashboard/turnos", label: "Mis turnos", icon: CalendarClock },
   { href: "/dashboard/dominio", label: "Mi dominio", icon: Globe },
   { href: "/dashboard/suscripcion", label: "Mi suscripción", icon: CreditCard },
   { href: "/dashboard/cuenta", label: "Mi cuenta", icon: User },

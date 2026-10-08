@@ -27,6 +27,8 @@ import { uploadPendingPhotos } from "./photo-upload";
 import { createClient } from "@/lib/supabase/client";
 import { AuthModal } from "./AuthModal";
 import { PSICOLOGO_DEMO_PROFILE, withDemoPlaceholder } from "@/lib/demo-profiles";
+import { DEFAULT_TURNOS_CONFIG, type TurnosConfig } from "@/lib/turnos/types";
+import { TurnosConfigEditor } from "@/components/turnos/TurnosConfigEditor";
 
 const PUBLISHING_PATH = "/onboarding/publishing";
 const DRAFT_SAVE_DEBOUNCE_MS = 300;
@@ -167,6 +169,13 @@ export function PsicologoWizard({
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [turnosConfig, setTurnosConfig] = useState<TurnosConfig>(() => {
+    const draft = loadDraftPage();
+    if (draft?.professionId === profession.id && draft.templateId === template.id) {
+      return draft.turnosConfig ?? DEFAULT_TURNOS_CONFIG;
+    }
+    return DEFAULT_TURNOS_CONFIG;
+  });
 
   const fieldByKey = useMemo(() => {
     const map = new Map(profession.form_schema.fields.map((f) => [f.key, f]));
@@ -205,10 +214,11 @@ export function PsicologoWizard({
         templateId: template.id,
         formData: { ...values, descripcion },
         desiredSlug: slugInput,
+        turnosConfig,
       });
     }, DRAFT_SAVE_DEBOUNCE_MS);
     return () => clearTimeout(handle);
-  }, [profession.id, template.id, values, descripcion, slugInput]);
+  }, [profession.id, template.id, values, descripcion, slugInput, turnosConfig]);
 
   useEffect(() => {
     if (step !== "revision" || slugInput.trim().length === 0) return;
@@ -280,6 +290,7 @@ export function PsicologoWizard({
       templateId: template.id,
       formData: { ...values, descripcion },
       desiredSlug: slugInput,
+      turnosConfig,
     });
 
     if (!isAuthenticated) {
@@ -309,6 +320,7 @@ export function PsicologoWizard({
         templateId: template.id,
         formData,
         desiredSlug: slugInput,
+        turnosConfig,
       });
 
       if (result.ok) {
@@ -411,6 +423,8 @@ export function PsicologoWizard({
           onBack={goBack}
           onSubmit={handleSubmit}
           canSubmit={canContinue()}
+          turnosConfig={turnosConfig}
+          onTurnosConfigChange={setTurnosConfig}
         />
       ) : (
         <div className="grid gap-8 lg:grid-cols-[minmax(400px,1fr)_1fr]">
@@ -682,6 +696,8 @@ function RevisionStep({
   onBack,
   onSubmit,
   canSubmit,
+  turnosConfig,
+  onTurnosConfigChange,
 }: {
   slugInput: string;
   setSlugInput: (v: string) => void;
@@ -696,6 +712,8 @@ function RevisionStep({
   onBack: () => void;
   onSubmit: () => void;
   canSubmit: boolean;
+  turnosConfig: TurnosConfig;
+  onTurnosConfigChange: (next: TurnosConfig) => void;
 }) {
   // Mobile-only: before registering, seeing the page at real size (not the
   // scaled-down side/peek previews) is mandatory -- this is the full-screen
@@ -731,6 +749,15 @@ function RevisionStep({
             subdomain={subdomain}
           />
         </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <h2 className="text-xl font-semibold text-navy">Turnos por WhatsApp</h2>
+        <p className="text-sm text-text-body">
+          Opcional: dejá que tus pacientes pidan un turno eligiendo día y horario. Lo podés
+          activar o cambiar después desde tu panel.
+        </p>
+        <TurnosConfigEditor value={turnosConfig} onChange={onTurnosConfigChange} />
       </div>
 
       {submitError && (

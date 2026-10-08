@@ -1,6 +1,7 @@
 "use client";
 
 import type { FormFieldValue } from "@/lib/forms/validate-form-data";
+import type { TurnosConfig } from "@/lib/turnos/types";
 
 // The one key a draft page lives under while a visitor fills the wizard
 // without an account yet. sessionStorage (not localStorage) is deliberate:
@@ -15,6 +16,7 @@ export interface DraftPage {
   formData: Record<string, FormFieldValue>;
   desiredSlug: string;
   paletaId?: string;
+  turnosConfig?: TurnosConfig;
 }
 
 export function saveDraftPage(draft: DraftPage): void {

@@ -10,6 +10,7 @@ import {
 } from "@/lib/landings/create-landing";
 import { REFERRAL_COOKIE_NAME } from "@/lib/resellers/referral-cookie";
 import { UTM_COOKIE_NAME, type UtmParams } from "@/lib/utm-cookie";
+import type { TurnosConfig } from "@/lib/turnos/types";
 
 // No auth required: checking whether a slug is taken isn't sensitive, and
 // the wizard is reachable by anonymous visitors now (they only need a
@@ -28,6 +29,7 @@ export async function createLandingAction(input: {
   formData: Record<string, unknown>;
   desiredSlug: string;
   paletaId?: string;
+  turnosConfig?: TurnosConfig;
   // Fallback for when the weboficial_ref cookie didn't make it (blocked
   // cookies, cross-subdomain hiccups): the caller reads its own localStorage
   // copy (see getStoredReferralCode) and passes it here. The cookie, read

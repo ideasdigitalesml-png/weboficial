@@ -9,10 +9,12 @@ import {
   updateLandingSectionsConfig,
   updateLandingPaleta,
   updateLandingTemplate,
+  updateLandingTurnosConfig,
   type UpdateFormDataResult,
   type UpdateSectionsConfigResult,
   type UpdateLandingPaletaResult,
   type UpdateLandingTemplateResult,
+  type UpdateTurnosConfigResult,
 } from "@/lib/landings/update-landing";
 
 const ACTIVE_PLAN_COLUMNS = "id, amount, currency" as const;
@@ -253,6 +255,22 @@ export async function updateLandingSectionsConfigAction(
   }
 
   return updateLandingSectionsConfig(supabase, user.id, landingId, sectionsConfig);
+}
+
+export async function updateLandingTurnosConfigAction(
+  landingId: string,
+  turnosConfig: unknown
+): Promise<UpdateTurnosConfigResult | { ok: false; reason: "not_authenticated" }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false, reason: "not_authenticated" };
+  }
+
+  return updateLandingTurnosConfig(supabase, user.id, landingId, turnosConfig);
 }
 
 // TODO: integrate with Mercado Pago (cancel the preapproval, let the landing
