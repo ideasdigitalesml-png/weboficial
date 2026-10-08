@@ -25,7 +25,7 @@ export interface ProfessionLandingPageProps {
   // profession *slug*, which this component never needs.
   professionPlural: string;
   // Profession-only eyebrow for the Hero ("Para contadores", etc.) and the
-  // key that picks which demo profile the Hero/TurnosShowcase mockups show.
+  // key that picks which demo profile the Hero's browser mockup shows.
   eyebrow: string;
   profession: HeroProfession;
   title: string;
@@ -64,7 +64,7 @@ export function ProfessionLandingPage({
       <Hero title={title} eyebrow={eyebrow} subtitle={subtitle} profession={profession} />
 
       <AdvantagesStrip />
-      <TurnosShowcase profession={profession} vocab={vocab} />
+      <TurnosShowcase vocab={vocab} />
 
       <section className="bg-surface-muted px-6 py-12 sm:py-16">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
