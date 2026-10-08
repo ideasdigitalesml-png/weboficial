@@ -74,11 +74,15 @@ export function ContadorMinimalTemplate({
   sectionsConfig,
   subdomain,
   colorPrimary = DEFAULT_PRIMARY,
+  ctaHref,
 }: {
   formData: ContadorFormData;
   sectionsConfig: SectionConfigItem[];
   subdomain?: string;
   colorPrimary?: string;
+  // Overrides every WhatsApp CTA with this href (see
+  // FloatingWhatsappButton) -- only set by /ejemplo/* demo pages.
+  ctaHref?: string;
 }) {
   const visibleIds = new Set(
     sectionsConfig.filter((s) => s.visible).map((s) => s.id)
@@ -91,7 +95,7 @@ export function ContadorMinimalTemplate({
   const name = capitalizeName(formData.name || "");
   const matricula = isValidMatricula(formData.matricula) ? formData.matricula : undefined;
   const services = deriveContadorServiceEntries(formData);
-  const waLink = formData.phone ? buildWaLink(formData.phone) : null;
+  const waLink = ctaHref ?? (formData.phone ? buildWaLink(formData.phone) : null);
   const year = new Date().getFullYear();
   const tituloProfesional = formData.titulo_profesional || "Contador Público";
   const hasRedes = isRealUrl(formData.linkedin_url) || isRealUrl(formData.instagram_url);
@@ -324,7 +328,11 @@ export function ContadorMinimalTemplate({
         </div>
       </footer>
 
-      <FloatingWhatsappButton phone={formData.phone} accentColor={colorPrimary} />
+      <FloatingWhatsappButton
+        phone={formData.phone}
+        ctaHref={ctaHref}
+        accentColor={colorPrimary}
+      />
     </div>
   );
 }

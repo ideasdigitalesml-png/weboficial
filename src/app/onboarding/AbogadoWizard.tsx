@@ -26,6 +26,7 @@ import { saveDraftPage, loadDraftPage, clearDraftPage } from "./draft-storage";
 import { uploadPendingPhotos } from "./photo-upload";
 import { createClient } from "@/lib/supabase/client";
 import { AuthModal } from "./AuthModal";
+import { ABOGADO_DEMO_PROFILE, withDemoPlaceholder } from "@/lib/demo-profiles";
 
 const PUBLISHING_PATH = "/onboarding/publishing";
 const DRAFT_SAVE_DEBOUNCE_MS = 300;
@@ -328,26 +329,34 @@ export function AbogadoWizard({
     });
   }
 
-  const previewFormData: AbogadoFormData = {
-    name: asString(values.name) || undefined,
-    matricula_numero: asString(values.matricula_numero) || undefined,
-    matricula_colegio: asString(values.matricula_colegio) || undefined,
-    profile_image: asString(values.profile_image) || undefined,
-    phone: asString(values.phone) || undefined,
-    email: asString(values.email) || undefined,
-    direccion: asString(values.direccion) || undefined,
-    ciudad: asString(values.ciudad) || undefined,
-    provincia: asString(values.provincia) || undefined,
-    zona: asString(values.zona) || undefined,
-    modalidad: asString(values.modalidad) || undefined,
-    linkedin_url: asString(values.linkedin_url) || undefined,
-    instagram_url: asString(values.instagram_url) || undefined,
-    servicios,
-    descripcion_corta: descripcionCorta || undefined,
-    universidad: asString(values.universidad) || undefined,
-    año_graduacion: asString(values.año_graduacion) || undefined,
-    asociacion_profesional: asString(values.asociacion_profesional) || undefined,
-  };
+  // Placeholder-only: backfills empty fields with the demo profile so the
+  // live preview never looks half-empty. Never touches `values` or the
+  // derived locals below, so saveDraftPage/handleSubmit are unaffected --
+  // an empty field the professional never filled in stays empty on their
+  // actual published page.
+  const previewFormData: AbogadoFormData = withDemoPlaceholder(
+    {
+      name: asString(values.name) || undefined,
+      matricula_numero: asString(values.matricula_numero) || undefined,
+      matricula_colegio: asString(values.matricula_colegio) || undefined,
+      profile_image: asString(values.profile_image) || undefined,
+      phone: asString(values.phone) || undefined,
+      email: asString(values.email) || undefined,
+      direccion: asString(values.direccion) || undefined,
+      ciudad: asString(values.ciudad) || undefined,
+      provincia: asString(values.provincia) || undefined,
+      zona: asString(values.zona) || undefined,
+      modalidad: asString(values.modalidad) || undefined,
+      linkedin_url: asString(values.linkedin_url) || undefined,
+      instagram_url: asString(values.instagram_url) || undefined,
+      servicios,
+      descripcion_corta: descripcionCorta || undefined,
+      universidad: asString(values.universidad) || undefined,
+      año_graduacion: asString(values.año_graduacion) || undefined,
+      asociacion_profesional: asString(values.asociacion_profesional) || undefined,
+    },
+    ABOGADO_DEMO_PROFILE
+  );
   const layout = template.config?.layout;
   const colorPrimary = template.config?.primaryColor;
   const colorAccent = template.config?.secondaryColor;

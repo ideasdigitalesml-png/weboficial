@@ -18,6 +18,15 @@ const { chromium } = require("playwright");
 const fs = require("node:fs");
 const path = require("node:path");
 
+// page.setContent() below renders from an about:blank origin, which
+// Chromium blocks from loading file:// resources (a bare file:// src just
+// renders as a broken image) -- a data: URI has no such origin
+// restriction, so that's what every foto_url uses instead.
+function demoPhotoDataUri(filename) {
+  const bytes = fs.readFileSync(path.join(__dirname, "..", "public", "demo", filename));
+  return `data:image/webp;base64,${bytes.toString("base64")}`;
+}
+
 const TEMPLATES_DIR = path.join(__dirname, "..", "templates");
 const OUTPUT_DIR = path.join(__dirname, "..", "public", "previews");
 
@@ -29,24 +38,29 @@ const JPEG_QUALITY = 80;
 // so unlike the live product (wizard/public landing) it's fine for this
 // data to include invented testimonials/stats: that's exactly what a
 // template preview is supposed to show off.
+// Same fictional identity as src/lib/demo-profiles.ts's ABOGADO_DEMO_PROFILE
+// (name, phone, email, matrícula, city, photo) -- kept in sync by hand since
+// this legacy mustache-placeholder shape (one flat key per rendered string)
+// doesn't map 1:1 onto that file's FormData-shaped object. Update both
+// together if either changes.
 const ABOGADO_DATA = {
-  nombre_completo: "Marina Beltrán",
+  nombre_completo: "Dra. Camila Abalos",
   especialidad_principal: "Derecho de Familia",
   tagline: "Acompañamiento legal cercano en cada etapa de tu caso.",
   descripcion_corta:
     "Más de una década asesorando a familias de La Plata en procesos de divorcio, sucesiones y régimen de visitas, con un trato humano y honorarios claros desde el primer día.",
-  telefono_whatsapp: "5492215551234",
-  foto_url: "https://i.pravatar.cc/600?img=47",
-  matricula_numero: "78901",
+  telefono_whatsapp: "5492215550167",
+  foto_url: demoPhotoDataUri("abogado.webp"),
+  matricula_numero: "54219",
   matricula_colegio: "Colegio de Abogados de La Plata",
-  direccion: "Calle 7 N° 1234",
+  direccion: "Calle 12 N° 1050",
   ciudad: "La Plata",
   provincia: "Buenos Aires",
-  email: "marina.beltran@example.com",
-  linkedin_url: "https://linkedin.com/in/marina-beltran",
+  email: "camila.abalos@example.com",
+  linkedin_url: "https://linkedin.com/in/camila-abalos-demo",
   año_actual: "2026",
-  año_graduacion: "2010",
-  años_experiencia: "14",
+  año_graduacion: "2013",
+  años_experiencia: "11",
   areas_de_derecho: "6",
   casos_resueltos: "320",
   clientes_atendidos: "410",
@@ -80,14 +94,14 @@ const ABOGADO_DATA = {
   proceso_4_titulo: "Resolución y seguimiento",
   proceso_4_desc: "Avanzamos con la gestión y te mantengo al tanto en cada etapa.",
   testimonio_1_texto:
-    "Marina me acompañó en un momento muy difícil y siempre explicó cada paso con mucha paciencia.",
-  testimonio_1_nombre: "Rocío Fernández",
+    "Camila me acompañó en un momento muy difícil y siempre explicó cada paso con mucha paciencia.",
+  testimonio_1_nombre: "Natalia Quiroga",
   testimonio_1_cargo: "Clienta",
   testimonio_2_texto: "Excelente profesional, resolvió la sucesión de mi familia en tiempo récord.",
-  testimonio_2_nombre: "Julián Torres",
+  testimonio_2_nombre: "Hernán Boccardo",
   testimonio_2_cargo: "Cliente",
   testimonio_3_texto: "Recomiendo su trabajo por la claridad y el trato cercano en todo momento.",
-  testimonio_3_nombre: "Estela Gómez",
+  testimonio_3_nombre: "Marcela Isern",
   testimonio_3_cargo: "Clienta",
   faq_1_pregunta: "¿Cuánto cuesta una consulta inicial?",
   faq_1_respuesta: "La primera consulta es sin costo. Escribime por WhatsApp para coordinar un horario.",
@@ -101,25 +115,28 @@ const ABOGADO_DATA = {
   faq_5_respuesta: "Sí, ofrezco consultas presenciales y también por videollamada.",
 };
 
+// Same fictional identity as src/lib/demo-profiles.ts's CONTADOR_DEMO_PROFILE
+// (name, phone, email, matrícula, city, photo) -- kept in sync by hand, see
+// the comment on ABOGADO_DATA above for why this can't just import it.
 const CONTADOR_DATA = {
-  nombre_completo: "Laura Sosa",
-  titulo_profesional: "Contadora Pública",
+  nombre_completo: "Cr. Diego Lertora",
+  titulo_profesional: "Contador Público",
   ciudad: "Rosario",
   bio: "Asesoro a pymes y monotributistas de Rosario con balances claros y acompañamiento impositivo todo el año.",
-  whatsapp: "5493415551234",
-  email: "laura.sosa@example.com",
-  foto_url: "https://i.pravatar.cc/600?img=32",
-  matricula: "445566",
+  whatsapp: "5493415550123",
+  email: "diego.lertora@example.com",
+  foto_url: demoPhotoDataUri("contador.webp"),
+  matricula: "118432",
   especialidades: "Monotributo, Balances, Asesoramiento impositivo",
   color_primary: "#0B2545",
   color_accent: "#1A6B4A",
-  subdomain: "laurasosa",
+  subdomain: "diegolertora",
   stat_clientes: "180",
-  stat_anos: "10",
+  stat_anos: "9",
   stat_respuesta: "24hs",
-  credencial_1: "Matriculada en CPCE Santa Fe",
-  credencial_2: "Contadora Pública (UNR)",
-  credencial_3: "+10 años de experiencia",
+  credencial_1: "Matriculado en CPCE Santa Fe",
+  credencial_2: "Contador Público (UNR)",
+  credencial_3: "+9 años de experiencia",
   credencial_4: "Especialista en Monotributo",
   servicio_1_icono: "📊",
   servicio_1_titulo: "Monotributo",
@@ -139,13 +156,13 @@ const CONTADOR_DATA = {
   servicio_6_icono: "✅",
   servicio_6_titulo: "Auditoría",
   servicio_6_desc: "Revisión y control de estados contables.",
-  testimonio_1_nombre: "Martín Díaz",
-  testimonio_1_rubro: "Comercio",
-  testimonio_1_texto: "Laura simplificó toda mi contabilidad, muy recomendable.",
-  testimonio_2_nombre: "Sofía Ruiz",
-  testimonio_2_rubro: "Diseñadora freelance",
+  testimonio_1_nombre: "Soledad Ibarra",
+  testimonio_1_rubro: "Dueña de pyme textil",
+  testimonio_1_texto: "Diego simplificó toda mi contabilidad, muy recomendable.",
+  testimonio_2_nombre: "Ezequiel Monzón",
+  testimonio_2_rubro: "Monotributista",
   testimonio_2_texto: "Excelente atención y siempre responde rápido.",
-  testimonio_3_nombre: "Pablo Ramos",
+  testimonio_3_nombre: "Nadia Chaparro",
   testimonio_3_rubro: "Kiosco",
   testimonio_3_texto: "Me ayudó a ordenar el monotributo desde cero.",
 };

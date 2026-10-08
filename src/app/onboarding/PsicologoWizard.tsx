@@ -26,6 +26,7 @@ import { saveDraftPage, loadDraftPage, clearDraftPage } from "./draft-storage";
 import { uploadPendingPhotos } from "./photo-upload";
 import { createClient } from "@/lib/supabase/client";
 import { AuthModal } from "./AuthModal";
+import { PSICOLOGO_DEMO_PROFILE, withDemoPlaceholder } from "@/lib/demo-profiles";
 
 const PUBLISHING_PATH = "/onboarding/publishing";
 const DRAFT_SAVE_DEBOUNCE_MS = 300;
@@ -343,27 +344,38 @@ export function PsicologoWizard({
     });
   }
 
-  const previewFormData: PsicologoFormData = {
-    name: asString(values.name) || undefined,
-    titulo_profesional: asString(values.titulo_profesional) || undefined,
-    matricula_numero: asString(values.matricula_numero) || undefined,
-    profile_image: asString(values.profile_image) || undefined,
-    phone: asString(values.phone) || undefined,
-    email: asString(values.email) || undefined,
-    direccion: asString(values.direccion) || undefined,
-    horario_atencion: asString(values.horario_atencion) || undefined,
-    modalidad: asString(values.modalidad) || undefined,
-    linkedin_url: asString(values.linkedin_url) || undefined,
-    instagram_url: asString(values.instagram_url) || undefined,
-    especialidades: especialidades.length > 0 ? especialidades : undefined,
-    poblacion_atendida: asStringArray(values.poblacion_atendida),
-    descripcion: descripcion || undefined,
-    enfoque_terapeutico: enfoqueTerapeutico || undefined,
-    enfoque_terapeutico_custom: enfoqueTerapeuticoCustom || undefined,
-    precio_consulta: asString(values.precio_consulta) || undefined,
-    acepta_obras_sociales: asString(values.acepta_obras_sociales) || undefined,
-    obras_sociales_detalle: asString(values.obras_sociales_detalle) || undefined,
-  };
+  // Placeholder-only: backfills empty fields with the demo profile so the
+  // live preview never looks half-empty. Never touches `values` or the
+  // derived locals below, so saveDraftPage/handleSubmit are unaffected --
+  // an empty field the professional never filled in stays empty on their
+  // actual published page. `especialidades` deliberately excluded from the
+  // fallback: it's a repeater of specific service descriptions, not a
+  // single field, and the demo's entries read oddly half-adopted into an
+  // otherwise-empty real profile.
+  const previewFormData: PsicologoFormData = withDemoPlaceholder(
+    {
+      name: asString(values.name) || undefined,
+      titulo_profesional: asString(values.titulo_profesional) || undefined,
+      matricula_numero: asString(values.matricula_numero) || undefined,
+      profile_image: asString(values.profile_image) || undefined,
+      phone: asString(values.phone) || undefined,
+      email: asString(values.email) || undefined,
+      direccion: asString(values.direccion) || undefined,
+      horario_atencion: asString(values.horario_atencion) || undefined,
+      modalidad: asString(values.modalidad) || undefined,
+      linkedin_url: asString(values.linkedin_url) || undefined,
+      instagram_url: asString(values.instagram_url) || undefined,
+      especialidades: especialidades.length > 0 ? especialidades : undefined,
+      poblacion_atendida: asStringArray(values.poblacion_atendida),
+      descripcion: descripcion || undefined,
+      enfoque_terapeutico: enfoqueTerapeutico || undefined,
+      enfoque_terapeutico_custom: enfoqueTerapeuticoCustom || undefined,
+      precio_consulta: asString(values.precio_consulta) || undefined,
+      acepta_obras_sociales: asString(values.acepta_obras_sociales) || undefined,
+      obras_sociales_detalle: asString(values.obras_sociales_detalle) || undefined,
+    },
+    { ...PSICOLOGO_DEMO_PROFILE, especialidades: undefined }
+  );
   const layout = template.config?.layout;
   const colorPrimary = template.config?.primaryColor;
   const colorAccent = template.config?.secondaryColor;

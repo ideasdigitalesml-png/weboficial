@@ -122,7 +122,11 @@ export interface LandingRenderData {
 export function renderLandingByTemplate(
   landing: LandingRenderData,
   professionSlug: string | undefined,
-  templateConfig: TemplateConfig | undefined
+  templateConfig: TemplateConfig | undefined,
+  // Only set by /ejemplo/* demo pages, to send every WhatsApp CTA to
+  // "Crear mi página" instead of the demo profile's fake number. undefined
+  // (the default) for every real landing -- see FloatingWhatsappButton.
+  ctaHref?: string
 ) {
   if (professionSlug === "abogados") {
     const formData = landing.formData as AbogadoFormData;
@@ -134,6 +138,7 @@ export function renderLandingByTemplate(
           subdomain={landing.slug}
           colorPrimary={templateConfig.primaryColor}
           colorAccent={templateConfig.secondaryColor}
+          ctaHref={ctaHref}
         />
       );
     }
@@ -146,6 +151,7 @@ export function renderLandingByTemplate(
           colorPrimary={templateConfig.primaryColor}
           colorAccent={templateConfig.secondaryColor}
           paletteVariables={findAbogadoPaleta(landing.paletaId).variables}
+          ctaHref={ctaHref}
         />
       );
     }
@@ -155,6 +161,7 @@ export function renderLandingByTemplate(
         sectionsConfig={landing.sectionsConfig}
         subdomain={landing.slug}
         colorPrimary={templateConfig?.primaryColor}
+        ctaHref={ctaHref}
       />
     );
   }
@@ -169,6 +176,7 @@ export function renderLandingByTemplate(
           subdomain={landing.slug}
           colorPrimary={templateConfig.primaryColor}
           colorAccent={templateConfig.secondaryColor}
+          ctaHref={ctaHref}
         />
       );
     }
@@ -179,6 +187,7 @@ export function renderLandingByTemplate(
           sectionsConfig={landing.sectionsConfig}
           subdomain={landing.slug}
           colorPrimary={templateConfig?.primaryColor}
+          ctaHref={ctaHref}
         />
       );
     }
@@ -189,6 +198,7 @@ export function renderLandingByTemplate(
         subdomain={landing.slug}
         colorPrimary={templateConfig?.primaryColor}
         colorAccent={templateConfig?.secondaryColor}
+        ctaHref={ctaHref}
       />
     );
   }
@@ -206,6 +216,7 @@ export function renderLandingByTemplate(
         colorPrimary={templateConfig.primaryColor}
         colorAccent={templateConfig.secondaryColor}
         paletteVariables={findContadorPaleta(landing.paletaId).variables}
+        ctaHref={ctaHref}
       />
     );
   }
@@ -218,6 +229,7 @@ export function renderLandingByTemplate(
         subdomain={landing.slug}
         colorPrimary={templateConfig.primaryColor}
         colorAccent={templateConfig.secondaryColor}
+        ctaHref={ctaHref}
       />
     );
   }
@@ -229,6 +241,7 @@ export function renderLandingByTemplate(
         sectionsConfig={landing.sectionsConfig}
         subdomain={landing.slug}
         colorPrimary={templateConfig.primaryColor}
+        ctaHref={ctaHref}
       />
     );
   }
@@ -239,6 +252,7 @@ export function renderLandingByTemplate(
         formData={landing.formData as ContadorFormData}
         sectionsConfig={landing.sectionsConfig}
         accentColor={templateConfig?.primaryColor}
+        ctaHref={ctaHref}
       />
     </div>
   );

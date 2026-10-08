@@ -7,16 +7,21 @@ import { buildWaLink } from "@/lib/whatsapp";
 // don't need a second one competing for attention.
 export function FloatingWhatsappButton({
   phone,
+  ctaHref,
   accentColor,
   iconColor = "#FFFFFF",
   desktopVisible = true,
 }: {
   phone?: string;
+  // Overrides the wa.me link entirely -- used by the /ejemplo/* demo
+  // pages so this button sends visitors to "Crear mi página" instead of
+  // a fake WhatsApp number. Untouched (undefined) on every real landing.
+  ctaHref?: string;
   accentColor: string;
   iconColor?: string;
   desktopVisible?: boolean;
 }) {
-  const waLink = phone ? buildWaLink(phone) : null;
+  const waLink = ctaHref ?? (phone ? buildWaLink(phone) : null);
   if (!waLink) return null;
 
   return (

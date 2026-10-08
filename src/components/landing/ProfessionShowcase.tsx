@@ -1,25 +1,24 @@
 import Image from "next/image";
 import Link from "next/link";
 
-// "Ejemplo de diseño" (not "Ver ejemplo") on every card below because no
-// landing has been published yet (checked directly in the DB -- zero rows
-// with status = 'published'). Swap a card's label/href to a real published
-// slug once that profession has one; never fabricate a client name or URL
-// here in the meantime.
+// Each card opens the full, navigable demo page for that profession
+// (/ejemplo/*, rendering the real template with a fictional profile --
+// see src/lib/demo-profiles.ts) instead of the /contadores-style
+// marketing page, so a visitor sees an actual page, not just a screenshot.
 const PROFESSIONS = [
   {
     name: "Contadores",
-    href: "/contadores",
+    href: "/ejemplo/contador",
     image: "/previews/contador-moderno.jpg",
   },
   {
     name: "Abogados",
-    href: "/abogados",
+    href: "/ejemplo/abogado",
     image: "/previews/abogado-moderno.jpg",
   },
   {
     name: "Psicólogos",
-    href: "/psicologos",
+    href: "/ejemplo/psicologo",
     image: "/previews/psicologo-moderno.jpg",
   },
 ] as const;

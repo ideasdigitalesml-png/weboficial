@@ -90,10 +90,14 @@ export function ContadorLandingTemplate({
   formData,
   sectionsConfig,
   accentColor = DEFAULT_ACCENT,
+  ctaHref,
 }: {
   formData: ContadorFormData;
   sectionsConfig: SectionConfigItem[];
   accentColor?: string;
+  // Overrides every WhatsApp CTA with this href (see
+  // FloatingWhatsappButton) -- only set by /ejemplo/* demo pages.
+  ctaHref?: string;
 }) {
   const sections = [...sectionsConfig]
     .filter((s) => s.visible && SECTIONS[s.id])
@@ -124,7 +128,7 @@ export function ContadorLandingTemplate({
       className={`${interFont.className} flex min-h-full flex-col bg-[var(--cf-surface)] text-[var(--cf-ink)]`}
     >
       {sections.map((section) => (
-        <div key={section.id}>{SECTIONS[section.id](formData)}</div>
+        <div key={section.id}>{SECTIONS[section.id](formData, ctaHref)}</div>
       ))}
 
       <FadeInSection
@@ -191,18 +195,23 @@ export function ContadorLandingTemplate({
         </div>
       )}
 
-      <FloatingWhatsappButton phone={formData.phone} accentColor={accentColor} />
+      <FloatingWhatsappButton
+        phone={formData.phone}
+        ctaHref={ctaHref}
+        accentColor={accentColor}
+      />
     </div>
   );
 }
 
 const SECTIONS: Record<
   string,
-  (data: ContadorFormData) => React.ReactNode
+  (data: ContadorFormData, ctaHref?: string) => React.ReactNode
 > = {
-  hero: (data) => {
+  hero: (data, ctaHref) => {
     const name = capitalizeName(data.name ?? "");
     const matricula = isValidMatricula(data.matricula) ? data.matricula : undefined;
+    const waLink = ctaHref ?? (data.phone ? buildWaLink(data.phone) : null);
     return (
     <FadeInSection
       as="section"
@@ -242,9 +251,9 @@ const SECTIONS: Record<
           {data.slogan || data.description}
         </p>
       )}
-      {data.phone && (
+      {waLink && (
         <a
-          href={buildWaLink(data.phone)}
+          href={waLink}
           target="_blank"
           rel="noreferrer"
           className="mt-2 inline-flex min-h-12 items-center justify-center rounded-full bg-[var(--cf-accent)] px-8 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(27,79,114,.26)] transition-transform hover:-translate-y-0.5"
@@ -350,36 +359,39 @@ const SECTIONS: Record<
       </FadeInSection>
     );
   },
-  contact: (data) => (
-    <FadeInSection
-      as="section"
-      className="flex flex-col items-center gap-5 border-t border-[var(--cf-border)] bg-[var(--cf-surface-muted)] px-6 py-14 text-center"
-    >
-      <h2
-        className={`${playfairDisplay.className} text-2xl font-semibold text-[var(--cf-ink)]`}
+  contact: (data, ctaHref) => {
+    const waLink = ctaHref ?? (data.phone ? buildWaLink(data.phone) : null);
+    return (
+      <FadeInSection
+        as="section"
+        className="flex flex-col items-center gap-5 border-t border-[var(--cf-border)] bg-[var(--cf-surface-muted)] px-6 py-14 text-center"
       >
-        Contacto
-      </h2>
-      <div className="flex flex-col gap-1 text-sm text-[var(--cf-body)]">
-        {data.zona && <p>Zona: {data.zona}</p>}
-        {data.direccion && <p>{data.direccion}</p>}
-        {data.modalidad && (
-          <p>{MODALIDAD_LABELS[data.modalidad] ?? data.modalidad}</p>
-        )}
-        {data.horario_atencion && <p>{data.horario_atencion}</p>}
-        {data.email && <p>Email: {data.email}</p>}
-        {data.phone && <p>Tel: {data.phone}</p>}
-      </div>
-      {data.phone && (
-        <a
-          href={buildWaLink(data.phone)}
-          target="_blank"
-          rel="noreferrer"
-          className="flex min-h-12 w-full max-w-xs items-center justify-center rounded-full bg-[var(--cf-accent)] px-6 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(27,79,114,.24)] transition-colors hover:bg-[var(--cf-accent-dark)]"
+        <h2
+          className={`${playfairDisplay.className} text-2xl font-semibold text-[var(--cf-ink)]`}
         >
-          Contactar por WhatsApp
-        </a>
-      )}
-    </FadeInSection>
-  ),
+          Contacto
+        </h2>
+        <div className="flex flex-col gap-1 text-sm text-[var(--cf-body)]">
+          {data.zona && <p>Zona: {data.zona}</p>}
+          {data.direccion && <p>{data.direccion}</p>}
+          {data.modalidad && (
+            <p>{MODALIDAD_LABELS[data.modalidad] ?? data.modalidad}</p>
+          )}
+          {data.horario_atencion && <p>{data.horario_atencion}</p>}
+          {data.email && <p>Email: {data.email}</p>}
+          {data.phone && <p>Tel: {data.phone}</p>}
+        </div>
+        {waLink && (
+          <a
+            href={waLink}
+            target="_blank"
+            rel="noreferrer"
+            className="flex min-h-12 w-full max-w-xs items-center justify-center rounded-full bg-[var(--cf-accent)] px-6 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(27,79,114,.24)] transition-colors hover:bg-[var(--cf-accent-dark)]"
+          >
+            Contactar por WhatsApp
+          </a>
+        )}
+      </FadeInSection>
+    );
+  },
 };

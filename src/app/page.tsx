@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { Wordmark } from "@/components/landing/Wordmark";
 import { Hero } from "@/components/landing/Hero";
 import { ProfessionShowcase } from "@/components/landing/ProfessionShowcase";
-import { TemplatesShowcase } from "@/components/landing/TemplatesShowcase";
 import { SocialProof } from "@/components/landing/SocialProof";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { PricingSection } from "@/components/landing/PricingSection";
@@ -56,7 +55,6 @@ export default async function Home() {
         ]}
       />
       <ProfessionShowcase />
-      <TemplatesShowcase />
       <SocialProof />
       <HowItWorks />
       <PricingSection />

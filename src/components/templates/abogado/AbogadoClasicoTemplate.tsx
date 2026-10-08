@@ -74,12 +74,16 @@ export function AbogadoClasicoTemplate({
   subdomain,
   colorPrimary = DEFAULT_PRIMARY,
   colorAccent = DEFAULT_ACCENT,
+  ctaHref,
 }: {
   formData: AbogadoFormData;
   sectionsConfig: SectionConfigItem[];
   subdomain?: string;
   colorPrimary?: string;
   colorAccent?: string;
+  // Overrides every WhatsApp CTA with this href (see
+  // FloatingWhatsappButton) -- only set by /ejemplo/* demo pages.
+  ctaHref?: string;
 }) {
   const visibleIds = new Set(
     sectionsConfig.filter((s) => s.visible).map((s) => s.id)
@@ -93,7 +97,7 @@ export function AbogadoClasicoTemplate({
   const matriculaNumero = isValidMatricula(formData.matricula_numero) ? formData.matricula_numero : undefined;
   const services = deriveAbogadoServiceEntries(formData);
   const especialidadPrincipal = services[0]?.titulo ?? "";
-  const waLink = formData.phone ? buildWaLink(formData.phone) : null;
+  const waLink = ctaHref ?? (formData.phone ? buildWaLink(formData.phone) : null);
   const year = new Date().getFullYear();
   const heroTagline = formData.slogan || formData.descripcion_corta || "";
   const ctaText = "Contactame";
@@ -408,6 +412,7 @@ export function AbogadoClasicoTemplate({
 
       <FloatingWhatsappButton
         phone={formData.phone}
+        ctaHref={ctaHref}
         accentColor="var(--c-accent)"
         iconColor="var(--c-primary)"
         desktopVisible={false}

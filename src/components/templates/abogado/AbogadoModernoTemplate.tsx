@@ -111,6 +111,7 @@ export function AbogadoModernoTemplate({
   colorPrimary = DEFAULT_PRIMARY,
   colorAccent = DEFAULT_ACCENT,
   paletteVariables,
+  ctaHref,
 }: {
   formData: AbogadoFormData;
   sectionsConfig: SectionConfigItem[];
@@ -121,6 +122,9 @@ export function AbogadoModernoTemplate({
   // src/lib/templates/abogado-paletas.ts). Same convention as
   // ContadorModernoTemplate.
   paletteVariables?: Record<string, string>;
+  // Overrides every WhatsApp CTA with this href (see
+  // FloatingWhatsappButton) -- only set by /ejemplo/* demo pages.
+  ctaHref?: string;
 }) {
   const visibleIds = new Set(
     sectionsConfig.filter((s) => s.visible).map((s) => s.id)
@@ -134,7 +138,7 @@ export function AbogadoModernoTemplate({
   const matriculaNumero = isValidMatricula(formData.matricula_numero) ? formData.matricula_numero : undefined;
   const services = deriveAbogadoServiceEntries(formData);
   const especialidadPrincipal = services[0]?.titulo ?? "";
-  const waLink = formData.phone ? buildWaLink(formData.phone) : null;
+  const waLink = ctaHref ?? (formData.phone ? buildWaLink(formData.phone) : null);
   const year = new Date().getFullYear();
   const heroTagline = formData.slogan || formData.descripcion_corta || "";
   const ctaText = "Contactame";
@@ -434,6 +438,7 @@ export function AbogadoModernoTemplate({
 
       <FloatingWhatsappButton
         phone={formData.phone}
+        ctaHref={ctaHref}
         accentColor="var(--c-accent)"
         iconColor="var(--c-primary)"
         desktopVisible={false}

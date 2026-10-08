@@ -80,12 +80,16 @@ export function ContadorClasicoTemplate({
   subdomain,
   colorPrimary = DEFAULT_PRIMARY,
   colorAccent = DEFAULT_ACCENT,
+  ctaHref,
 }: {
   formData: ContadorFormData;
   sectionsConfig: SectionConfigItem[];
   subdomain?: string;
   colorPrimary?: string;
   colorAccent?: string;
+  // Overrides every WhatsApp CTA with this href (see
+  // FloatingWhatsappButton) -- only set by /ejemplo/* demo pages.
+  ctaHref?: string;
 }) {
   const visibleIds = new Set(
     sectionsConfig.filter((s) => s.visible).map((s) => s.id)
@@ -98,7 +102,7 @@ export function ContadorClasicoTemplate({
   const name = capitalizeName(formData.name || "");
   const matricula = isValidMatricula(formData.matricula) ? formData.matricula : undefined;
   const services = deriveContadorServiceEntries(formData);
-  const waLink = formData.phone ? buildWaLink(formData.phone) : null;
+  const waLink = ctaHref ?? (formData.phone ? buildWaLink(formData.phone) : null);
   const year = new Date().getFullYear();
   const tituloProfesional = formData.titulo_profesional || "Contador Público";
   const hasStats = Boolean(formData.anos_experiencia || formData.cantidad_clientes);
@@ -373,6 +377,7 @@ export function ContadorClasicoTemplate({
 
       <FloatingWhatsappButton
         phone={formData.phone}
+        ctaHref={ctaHref}
         accentColor={colorAccent}
         desktopVisible={false}
       />

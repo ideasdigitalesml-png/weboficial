@@ -78,6 +78,7 @@ export function ContadorModernoTemplate({
   colorPrimary = DEFAULT_PRIMARY,
   colorAccent = DEFAULT_ACCENT,
   paletteVariables,
+  ctaHref,
 }: {
   formData: ContadorFormData;
   sectionsConfig: SectionConfigItem[];
@@ -90,6 +91,9 @@ export function ContadorModernoTemplate({
   // picks the lighter/neutral tones (bg2, muted, border, etc.), which a
   // single accent color can't derive on its own.
   paletteVariables?: Record<string, string>;
+  // Overrides every WhatsApp CTA with this href (see
+  // FloatingWhatsappButton) -- only set by /ejemplo/* demo pages.
+  ctaHref?: string;
 }) {
   const visibleIds = new Set(
     sectionsConfig.filter((s) => s.visible).map((s) => s.id)
@@ -103,7 +107,7 @@ export function ContadorModernoTemplate({
   const matricula = isValidMatricula(formData.matricula) ? formData.matricula : undefined;
   const services = deriveContadorServiceEntries(formData);
   const specialties = services.map((s) => s.titulo).filter(Boolean);
-  const waLink = formData.phone ? buildWaLink(formData.phone) : null;
+  const waLink = ctaHref ?? (formData.phone ? buildWaLink(formData.phone) : null);
   const year = new Date().getFullYear();
   const tituloProfesional = formData.titulo_profesional || "Contador Público";
   const whyUs =
@@ -467,6 +471,7 @@ export function ContadorModernoTemplate({
 
       <FloatingWhatsappButton
         phone={formData.phone}
+        ctaHref={ctaHref}
         accentColor={colorAccent}
         desktopVisible={false}
       />

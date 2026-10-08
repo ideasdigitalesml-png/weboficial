@@ -116,12 +116,16 @@ export function PsicologoModernoTemplate({
   subdomain,
   colorPrimary = DEFAULT_PRIMARY,
   colorAccent = DEFAULT_ACCENT,
+  ctaHref,
 }: {
   formData: PsicologoFormData;
   sectionsConfig: SectionConfigItem[];
   subdomain?: string;
   colorPrimary?: string;
   colorAccent?: string;
+  // Overrides every WhatsApp CTA with this href (see
+  // FloatingWhatsappButton) -- only set by /ejemplo/* demo pages.
+  ctaHref?: string;
 }) {
   const visibleIds = new Set(
     sectionsConfig.filter((s) => s.visible).map((s) => s.id)
@@ -133,7 +137,7 @@ export function PsicologoModernoTemplate({
 
   const name = capitalizeName(formData.name || "");
   const matriculaNumero = isValidMatricula(formData.matricula_numero) ? formData.matricula_numero : undefined;
-  const waLink = formData.phone ? buildWaLink(formData.phone) : null;
+  const waLink = ctaHref ?? (formData.phone ? buildWaLink(formData.phone) : null);
   const year = new Date().getFullYear();
   const ctaText = "Contactame";
   const especialidades = formData.especialidades ?? [];
@@ -426,6 +430,7 @@ export function PsicologoModernoTemplate({
 
       <FloatingWhatsappButton
         phone={formData.phone}
+        ctaHref={ctaHref}
         accentColor="var(--c-primary-dark)"
         iconColor="#FFFFFF"
         desktopVisible={false}
