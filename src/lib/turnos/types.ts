@@ -51,22 +51,69 @@ function emptyDay(enabled: boolean, ranges: TimeRange[] = []): DaySchedule {
   return { enabled, ranges };
 }
 
+// Mon-Fri 9-13 and 15-19 (lunch gap), Sat-Sun closed -- both the initial
+// state for a brand-new config and the target of the "Lun a vie, 9 a 13 y
+// 15 a 19" preset button in TurnosConfigEditor.
+export const DEFAULT_WEEKLY_SCHEDULE: WeeklySchedule = {
+  "0": emptyDay(false),
+  "1": emptyDay(true, [
+    { start: "09:00", end: "13:00" },
+    { start: "15:00", end: "19:00" },
+  ]),
+  "2": emptyDay(true, [
+    { start: "09:00", end: "13:00" },
+    { start: "15:00", end: "19:00" },
+  ]),
+  "3": emptyDay(true, [
+    { start: "09:00", end: "13:00" },
+    { start: "15:00", end: "19:00" },
+  ]),
+  "4": emptyDay(true, [
+    { start: "09:00", end: "13:00" },
+    { start: "15:00", end: "19:00" },
+  ]),
+  "5": emptyDay(true, [
+    { start: "09:00", end: "13:00" },
+    { start: "15:00", end: "19:00" },
+  ]),
+  "6": emptyDay(false),
+};
+
 export const DEFAULT_TURNOS_CONFIG: TurnosConfig = {
   enabled: false,
   slotDurationMinutes: 30,
   daysAhead: 30,
   worksHolidays: false,
-  weeklySchedule: {
-    "0": emptyDay(false),
-    "1": emptyDay(true, [{ start: "09:00", end: "13:00" }]),
-    "2": emptyDay(true, [{ start: "09:00", end: "13:00" }]),
-    "3": emptyDay(true, [{ start: "09:00", end: "13:00" }]),
-    "4": emptyDay(true, [{ start: "09:00", end: "13:00" }]),
-    "5": emptyDay(true, [{ start: "09:00", end: "13:00" }]),
-    "6": emptyDay(false),
-  },
+  weeklySchedule: DEFAULT_WEEKLY_SCHEDULE,
   blockedDates: [],
 };
+
+function timeToMinutesPublic(value: string): number {
+  const [h, m] = value.split(":").map(Number);
+  return h * 60 + m;
+}
+
+// Pure validation for a single day's ranges -- end strictly after start,
+// and no two ranges overlapping (touching, e.g. 09:00-13:00 + 13:00-17:00,
+// is allowed). Returns a user-facing message, or null when the ranges are
+// fine. Used by TurnosConfigEditor to show an inline error instead of
+// silently letting a professional save an impossible schedule.
+export function validateDayRanges(ranges: TimeRange[]): string | null {
+  for (const r of ranges) {
+    if (timeToMinutesPublic(r.end) <= timeToMinutesPublic(r.start)) {
+      return "El horario de fin debe ser posterior al de inicio.";
+    }
+  }
+  const sorted = [...ranges].sort(
+    (a, b) => timeToMinutesPublic(a.start) - timeToMinutesPublic(b.start)
+  );
+  for (let i = 0; i < sorted.length - 1; i++) {
+    if (timeToMinutesPublic(sorted[i].end) > timeToMinutesPublic(sorted[i + 1].start)) {
+      return "Los horarios no pueden superponerse.";
+    }
+  }
+  return null;
+}
 
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;

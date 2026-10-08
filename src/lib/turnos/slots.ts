@@ -123,6 +123,24 @@ export function buildAvailability(
   return availability;
 }
 
+// "YYYY-MM" for the month a "YYYY-MM-DD" date falls in -- used by
+// TurnosBooking's monthly calendar grid (view state, navigation bounds).
+export function monthKeyOf(dateStr: string): string {
+  return dateStr.slice(0, 7);
+}
+
+export function daysInMonth(monthKey: string): number {
+  const [y, m] = monthKey.split("-").map(Number);
+  // Day 0 of the next month == the last day of this one.
+  return new Date(Date.UTC(y, m, 0)).getUTCDate();
+}
+
+export function addMonths(monthKey: string, delta: number): string {
+  const [y, m] = monthKey.split("-").map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + delta, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
 // Which calendar years a `daysAhead`-long window starting today can touch
 // -- at most two, since daysAhead is capped at 365 (sanitizeTurnosConfig).
 export function yearsInWindow(daysAhead: number, now: NowInBA = nowInBuenosAires()): number[] {

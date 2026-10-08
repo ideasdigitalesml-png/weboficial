@@ -15,7 +15,11 @@ import {
 } from "@/components/templates/abogado/AbogadoModernoTemplate";
 import { AbogadoClasicoTemplate } from "@/components/templates/abogado/AbogadoClasicoTemplate";
 import { AbogadoMinimalTemplate } from "@/components/templates/abogado/AbogadoMinimalTemplate";
-import { checkSlugAvailabilityAction, createLandingAction } from "./actions";
+import {
+  checkSlugAvailabilityAction,
+  createLandingAction,
+  buildTurnosBookingPreviewAction,
+} from "./actions";
 import {
   PRIMARY_BUTTON,
   SECONDARY_BUTTON,
@@ -29,17 +33,20 @@ import { AuthModal } from "./AuthModal";
 import { ABOGADO_DEMO_PROFILE, withDemoPlaceholder } from "@/lib/demo-profiles";
 import { DEFAULT_TURNOS_CONFIG, type TurnosConfig } from "@/lib/turnos/types";
 import { TurnosConfigEditor } from "@/components/turnos/TurnosConfigEditor";
+import type { TurnosBookingData } from "@/lib/turnos/booking-data";
+import { TurnosBooking } from "@/components/turnos/TurnosBooking";
 
 const PUBLISHING_PATH = "/onboarding/publishing";
 const DRAFT_SAVE_DEBOUNCE_MS = 300;
 
-type AbogadoStep = "datos" | "contacto" | "servicios" | "sobre-mi" | "revision";
+type AbogadoStep = "datos" | "contacto" | "servicios" | "sobre-mi" | "turnos" | "revision";
 
 const STEP_ORDER: AbogadoStep[] = [
   "datos",
   "contacto",
   "servicios",
   "sobre-mi",
+  "turnos",
   "revision",
 ];
 
@@ -48,6 +55,7 @@ const STEP_LABELS: Record<AbogadoStep, string> = {
   contacto: "Contacto",
   servicios: "Áreas de práctica",
   "sobre-mi": "Sobre mí",
+  turnos: "Turnos por WhatsApp",
   revision: "Revisión y publicación",
 };
 
@@ -248,6 +256,8 @@ export function AbogadoWizard({
         return asStringArray(values.servicios).length > 0;
       case "sobre-mi":
         return true;
+      case "turnos":
+        return true;
       case "revision":
         return slugStatus?.state === "available";
       default:
@@ -373,6 +383,28 @@ export function AbogadoWizard({
   const colorPrimary = template.config?.primaryColor;
   const colorAccent = template.config?.secondaryColor;
 
+  // See the identical comment in ContadorWizard.tsx -- drives the "Reservá
+  // tu turno" preview in every preview spot below.
+  const [turnosPreviewData, setTurnosPreviewData] = useState<TurnosBookingData | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    buildTurnosBookingPreviewAction(turnosConfig, previewFormData, "abogados", {
+      layout,
+      primaryColor: colorPrimary,
+      secondaryColor: colorAccent,
+    }).then((data) => {
+      if (!cancelled) setTurnosPreviewData(data);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // previewFormData itself is a new object every render (withDemoPlaceholder
+    // builds it fresh each time) -- depending on it would refetch holidays on
+    // every keystroke anywhere in the form. Only phone/name actually affect
+    // buildTurnosBookingData's output.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [turnosConfig, previewFormData.phone, previewFormData.name, colorPrimary, colorAccent, layout]);
+
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-5 py-6 sm:px-6 sm:py-12">
       <div className="sticky top-0 z-30 -mx-5 bg-white/95 px-5 pt-2 pb-3 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
@@ -404,8 +436,7 @@ export function AbogadoWizard({
           onBack={goBack}
           onSubmit={handleSubmit}
           canSubmit={canContinue()}
-          turnosConfig={turnosConfig}
-          onTurnosConfigChange={setTurnosConfig}
+          turnosData={turnosPreviewData}
         />
       ) : (
         <div className="grid gap-8 lg:grid-cols-[minmax(400px,1fr)_1fr]">
@@ -579,6 +610,17 @@ export function AbogadoWizard({
               </div>
             )}
 
+            {step === "turnos" && (
+              <div className="flex flex-col gap-3">
+                <h2 className="text-xl font-semibold text-navy">Turnos por WhatsApp</h2>
+                <p className="text-sm text-text-body">
+                  Opcional: dejá que tus clientes pidan un turno eligiendo día y horario. Lo
+                  podés activar o cambiar después desde tu panel.
+                </p>
+                <TurnosConfigEditor value={turnosConfig} onChange={setTurnosConfig} />
+              </div>
+            )}
+
             <div className="h-20 sm:hidden" aria-hidden />
             <div className="fixed inset-x-0 bottom-0 z-30 flex gap-3 border-t border-border-subtle bg-white/95 px-5 py-3 backdrop-blur sm:static sm:z-auto sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
               <button onClick={goBack} className={SECONDARY_BUTTON}>
@@ -601,6 +643,7 @@ export function AbogadoWizard({
                     colorPrimary={colorPrimary}
                     colorAccent={colorAccent}
                     subdomain={slugInput}
+                    turnosData={turnosPreviewData}
                   />
                 </div>
               </div>
@@ -636,6 +679,7 @@ export function AbogadoWizard({
               colorPrimary={colorPrimary}
               colorAccent={colorAccent}
               subdomain={slugInput}
+              turnosData={turnosPreviewData}
             />
           </div>
         </div>
@@ -662,8 +706,7 @@ function RevisionStep({
   onBack,
   onSubmit,
   canSubmit,
-  turnosConfig,
-  onTurnosConfigChange,
+  turnosData,
 }: {
   slugInput: string;
   setSlugInput: (v: string) => void;
@@ -678,8 +721,7 @@ function RevisionStep({
   onBack: () => void;
   onSubmit: () => void;
   canSubmit: boolean;
-  turnosConfig: TurnosConfig;
-  onTurnosConfigChange: (next: TurnosConfig) => void;
+  turnosData: TurnosBookingData | null;
 }) {
   // Mobile-only: before registering, seeing the page at real size (not the
   // scaled-down side/peek previews) is mandatory -- this is the full-screen
@@ -713,17 +755,9 @@ function RevisionStep({
             colorPrimary={colorPrimary}
             colorAccent={colorAccent}
             subdomain={subdomain}
+            turnosData={turnosData}
           />
         </div>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <h2 className="text-xl font-semibold text-navy">Turnos por WhatsApp</h2>
-        <p className="text-sm text-text-body">
-          Opcional: dejá que tus clientes pidan un turno eligiendo día y horario. Lo podés activar
-          o cambiar después desde tu panel.
-        </p>
-        <TurnosConfigEditor value={turnosConfig} onChange={onTurnosConfigChange} />
       </div>
 
       {submitError && (
@@ -771,6 +805,7 @@ function RevisionStep({
               colorPrimary={colorPrimary}
               colorAccent={colorAccent}
               subdomain={subdomain}
+              turnosData={turnosData}
             />
           </div>
           {submitError && (
@@ -810,42 +845,55 @@ function TemplatePreview({
   colorPrimary,
   colorAccent,
   subdomain,
+  turnosData,
 }: {
   layout?: string;
   formData: AbogadoFormData;
   colorPrimary?: string;
   colorAccent?: string;
   subdomain: string;
+  turnosData?: TurnosBookingData | null;
 }) {
+  const turnosSection = turnosData ? <TurnosBooking data={turnosData} /> : null;
+
   if (layout === "modern") {
     return (
-      <AbogadoModernoTemplate
-        formData={formData}
-        sectionsConfig={DEFAULT_SECTIONS_CONFIG}
-        subdomain={subdomain || undefined}
-        colorPrimary={colorPrimary}
-        colorAccent={colorAccent}
-      />
+      <>
+        <AbogadoModernoTemplate
+          formData={formData}
+          sectionsConfig={DEFAULT_SECTIONS_CONFIG}
+          subdomain={subdomain || undefined}
+          colorPrimary={colorPrimary}
+          colorAccent={colorAccent}
+        />
+        {turnosSection}
+      </>
     );
   }
   if (layout === "clasico") {
     return (
-      <AbogadoClasicoTemplate
+      <>
+        <AbogadoClasicoTemplate
+          formData={formData}
+          sectionsConfig={DEFAULT_SECTIONS_CONFIG}
+          subdomain={subdomain || undefined}
+          colorPrimary={colorPrimary}
+          colorAccent={colorAccent}
+        />
+        {turnosSection}
+      </>
+    );
+  }
+  return (
+    <>
+      <AbogadoMinimalTemplate
         formData={formData}
         sectionsConfig={DEFAULT_SECTIONS_CONFIG}
         subdomain={subdomain || undefined}
         colorPrimary={colorPrimary}
-        colorAccent={colorAccent}
       />
-    );
-  }
-  return (
-    <AbogadoMinimalTemplate
-      formData={formData}
-      sectionsConfig={DEFAULT_SECTIONS_CONFIG}
-      subdomain={subdomain || undefined}
-      colorPrimary={colorPrimary}
-    />
+      {turnosSection}
+    </>
   );
 }
 

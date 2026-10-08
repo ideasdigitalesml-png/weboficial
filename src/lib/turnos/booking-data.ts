@@ -1,6 +1,6 @@
 import { sanitizeTurnosConfig, type TurnosConfig } from "./types";
 import { getArgentinaHolidaysForYears } from "./holidays";
-import { buildAvailability, yearsInWindow } from "./slots";
+import { buildAvailability, yearsInWindow, nowInBuenosAires } from "./slots";
 
 // Every template's `config.layout` collapses to one of these three visual
 // families (see normalizeVisualStyle) -- TurnosBooking uses it to vary
@@ -27,6 +27,11 @@ export interface TurnosBookingData {
   primaryColor: string;
   accentColor: string;
   visualStyle: TurnosVisualStyle;
+  // "YYYY-MM-DD" for today in Buenos Aires, computed server-side -- the
+  // calendar uses this (not the client's own `new Date()`) to mark "today"
+  // and to bound month navigation, so it can never disagree with the
+  // availability map above, which was computed against this same "now".
+  todayDateStr: string;
   // Only set by /ejemplo/* demo pages -- overrides the "Agendar turno por
   // WhatsApp" button's destination with this href instead of a wa.me link,
   // same reasoning as ctaHref on the templates themselves (see
@@ -48,6 +53,7 @@ export async function buildTurnosBookingData(
   ctaHref?: string
 ): Promise<TurnosBookingData> {
   const config = sanitizeTurnosConfig(rawTurnosConfig);
+  const now = nowInBuenosAires();
   const data = (typeof formData === "object" && formData !== null ? formData : {}) as Record<
     string,
     unknown
@@ -62,7 +68,7 @@ export async function buildTurnosBookingData(
     const holidays = config.worksHolidays
       ? new Set<string>()
       : await getArgentinaHolidaysForYears(yearsInWindow(config.daysAhead));
-    availability = buildAvailability(config, holidays);
+    availability = buildAvailability(config, holidays, now);
   }
 
   return {
@@ -74,6 +80,7 @@ export async function buildTurnosBookingData(
     primaryColor,
     accentColor,
     visualStyle: normalizeVisualStyle(templateConfig?.layout),
+    todayDateStr: now.dateStr,
     ctaHref,
   };
 }

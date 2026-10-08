@@ -11,6 +11,7 @@ import {
 import { REFERRAL_COOKIE_NAME } from "@/lib/resellers/referral-cookie";
 import { UTM_COOKIE_NAME, type UtmParams } from "@/lib/utm-cookie";
 import type { TurnosConfig } from "@/lib/turnos/types";
+import { buildTurnosBookingData, type TurnosBookingData } from "@/lib/turnos/booking-data";
 
 // No auth required: checking whether a slug is taken isn't sensitive, and
 // the wizard is reachable by anonymous visitors now (they only need a
@@ -68,4 +69,21 @@ export async function createLandingAction(input: {
     referralCode,
     utmParams,
   });
+}
+
+// buildTurnosBookingData fetches the holiday calendar (see
+// getArgentinaHolidays), a cross-origin call to a third-party API -- fine
+// server-side, but calling it directly from the wizard's client-side
+// preview effect hits that API straight from the browser, which the API
+// doesn't send CORS headers for ("Failed to fetch", surfaced as a Next.js
+// dev-overlay error even though the function's own try/catch falls back
+// gracefully). Routing it through a server action keeps the fetch
+// server-side, same as every other page that computes a turnos preview.
+export async function buildTurnosBookingPreviewAction(
+  turnosConfig: TurnosConfig,
+  formData: unknown,
+  professionSlug: string,
+  templateConfig: { layout?: string; primaryColor?: string; secondaryColor?: string }
+): Promise<TurnosBookingData> {
+  return buildTurnosBookingData(turnosConfig, formData, professionSlug, templateConfig);
 }
