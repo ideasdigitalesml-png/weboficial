@@ -23,9 +23,13 @@ const PROFESSIONS = [
   },
 ] as const;
 
+// `bg-sky-50` (not bg-surface-muted) -- this section now sits right after
+// AdvantagesStrip (bg-white) in the page order, so it takes over
+// TurnosShowcase's old "fondo destacado" slot in the white/celeste rhythm
+// to keep sections alternating instead of two light backgrounds in a row.
 export function ProfessionShowcase() {
   return (
-    <section className="bg-surface-muted px-6 py-12 sm:py-16">
+    <section className="bg-sky-50 px-6 py-12 sm:py-16">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
         <div className="flex flex-col items-center gap-3 text-center">
           <h2 className="text-3xl font-bold text-navy sm:text-4xl">

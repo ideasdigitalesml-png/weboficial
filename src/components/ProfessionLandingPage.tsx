@@ -64,9 +64,13 @@ export function ProfessionLandingPage({
       <Hero title={title} eyebrow={eyebrow} subtitle={subtitle} profession={profession} />
 
       <AdvantagesStrip />
-      <TurnosShowcase vocab={vocab} />
 
-      <section className="bg-surface-muted px-6 py-12 sm:py-16">
+      {/* bg-sky-50 (not bg-surface-muted) -- this section now sits right
+          after AdvantagesStrip (bg-white), taking over TurnosShowcase's old
+          "fondo destacado" slot in the white/celeste rhythm now that they've
+          swapped order, so sections keep alternating instead of two light
+          backgrounds in a row. */}
+      <section className="bg-sky-50 px-6 py-12 sm:py-16">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
           <h2 className="text-center text-3xl font-bold text-navy sm:text-4xl">
             Diseños disponibles para {professionPlural}
@@ -103,6 +107,8 @@ export function ProfessionLandingPage({
           </div>
         </div>
       </section>
+
+      <TurnosShowcase vocab={vocab} />
 
       <ComparisonSection />
       <HowItWorks />

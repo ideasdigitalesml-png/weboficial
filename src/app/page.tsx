@@ -38,8 +38,8 @@ export default async function Home() {
         ]}
       />
       <AdvantagesStrip />
-      <TurnosShowcase />
       <ProfessionShowcase />
+      <TurnosShowcase />
       <ComparisonSection />
       <HowItWorks />
       <DomainSection />
