@@ -5,6 +5,9 @@ import {
 } from "@/components/PublicLandingView";
 import { DEFAULT_SECTIONS_CONFIG } from "@/lib/landings/create-landing";
 import { PSICOLOGO_DEMO_PROFILE } from "@/lib/demo-profiles";
+import { buildTurnosBookingData } from "@/lib/turnos/booking-data";
+import { DEFAULT_TURNOS_CONFIG } from "@/lib/turnos/types";
+import { TurnosBooking } from "@/components/turnos/TurnosBooking";
 
 export const metadata: Metadata = {
   title: "Ejemplo de página para psicólogos — weboficial.com.ar",
@@ -18,11 +21,22 @@ const LANDING: LandingRenderData = {
   paletaId: null,
 };
 
-export default function EjemploPsicologoPage() {
-  return renderLandingByTemplate(
-    LANDING,
+// Matches PsicologoModernoTemplate's own DEFAULT_PRIMARY/DEFAULT_ACCENT.
+const TEMPLATE_CONFIG = { primaryColor: "#6b7f6b", secondaryColor: "#6b7f6b" };
+
+export default async function EjemploPsicologoPage() {
+  const turnosData = await buildTurnosBookingData(
+    { ...DEFAULT_TURNOS_CONFIG, enabled: true },
+    PSICOLOGO_DEMO_PROFILE,
     "psicologos",
-    undefined,
+    TEMPLATE_CONFIG,
     "/onboarding"
+  );
+
+  return (
+    <>
+      {renderLandingByTemplate(LANDING, "psicologos", undefined, "/onboarding")}
+      <TurnosBooking data={turnosData} />
+    </>
   );
 }

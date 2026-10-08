@@ -76,6 +76,7 @@ export function TurnosBooking({ data }: { data: TurnosBookingData }) {
 
   const waHref = (() => {
     if (!canSubmit || !selectedDate || !selectedTime) return undefined;
+    if (data.ctaHref) return data.ctaHref;
     const base = `Hola ${professionalName || "profesional"}, soy ${name.trim()}. Quiero pedir un turno el ${formatDayMonth(
       selectedDate
     )} a las ${selectedTime}.`;
@@ -195,10 +196,12 @@ export function TurnosBooking({ data }: { data: TurnosBookingData }) {
                   } ${canSubmit ? "" : "pointer-events-none opacity-40"}`}
                   style={{ backgroundColor: accentColor }}
                 >
-                  Agendar turno por WhatsApp
+                  {data.ctaHref ? "Crear mi página" : "Agendar turno por WhatsApp"}
                 </a>
                 <p className="text-center text-xs text-slate-400">
-                  El profesional te va a confirmar el turno por WhatsApp.
+                  {data.ctaHref
+                    ? "Así lo pediría tu cliente -- en tu página real, esto abre WhatsApp."
+                    : "El profesional te va a confirmar el turno por WhatsApp."}
                 </p>
               </div>
             )}

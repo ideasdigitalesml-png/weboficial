@@ -27,6 +27,12 @@ export interface TurnosBookingData {
   primaryColor: string;
   accentColor: string;
   visualStyle: TurnosVisualStyle;
+  // Only set by /ejemplo/* demo pages -- overrides the "Agendar turno por
+  // WhatsApp" button's destination with this href instead of a wa.me link,
+  // same reasoning as ctaHref on the templates themselves (see
+  // renderLandingByTemplate): a demo profile's phone is fake, so the button
+  // sends visitors to "Crear mi página" instead.
+  ctaHref?: string;
 }
 
 // Single place that turns a landing's raw turnos_config + form_data into
@@ -38,7 +44,8 @@ export async function buildTurnosBookingData(
   rawTurnosConfig: unknown,
   formData: unknown,
   professionSlug: string | undefined,
-  templateConfig: { primaryColor?: string; secondaryColor?: string; layout?: string } | undefined
+  templateConfig: { primaryColor?: string; secondaryColor?: string; layout?: string } | undefined,
+  ctaHref?: string
 ): Promise<TurnosBookingData> {
   const config = sanitizeTurnosConfig(rawTurnosConfig);
   const data = (typeof formData === "object" && formData !== null ? formData : {}) as Record<
@@ -67,5 +74,6 @@ export async function buildTurnosBookingData(
     primaryColor,
     accentColor,
     visualStyle: normalizeVisualStyle(templateConfig?.layout),
+    ctaHref,
   };
 }
