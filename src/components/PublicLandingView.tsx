@@ -24,6 +24,8 @@ import {
 } from "@/components/templates/psicologo/PsicologoModernoTemplate";
 import { PsicologoClasicoTemplate } from "@/components/templates/psicologo/PsicologoClasicoTemplate";
 import { PsicologoMinimalTemplate } from "@/components/templates/psicologo/PsicologoMinimalTemplate";
+import { buildTurnosBookingData } from "@/lib/turnos/booking-data";
+import { TurnosBooking } from "@/components/turnos/TurnosBooking";
 
 // Only 'active' -- this used to also include 'draft' (a pre-payment
 // preview, no login required), but 0007_remove_temporary_draft_public_read.sql
@@ -272,7 +274,7 @@ export async function PublicLandingView({ slug }: { slug: string }) {
   const { data: landing } = await supabase
     .from("landings")
     .select(
-      "slug, form_data, sections_config, status, paleta_id, professions(slug), templates(config)"
+      "slug, form_data, sections_config, status, paleta_id, turnos_config, professions(slug), templates(config)"
     )
     .eq("internal_subdomain", slug)
     .maybeSingle();
@@ -306,5 +308,17 @@ export async function PublicLandingView({ slug }: { slug: string }) {
     notFound();
   }
 
-  return rendered;
+  const turnosData = await buildTurnosBookingData(
+    landing.turnos_config,
+    landing.form_data,
+    professionSlug,
+    templateConfig
+  );
+
+  return (
+    <>
+      {rendered}
+      <TurnosBooking data={turnosData} />
+    </>
+  );
 }

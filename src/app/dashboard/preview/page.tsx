@@ -7,6 +7,8 @@ import {
   renderLandingByTemplate,
   type TemplateConfig,
 } from "@/components/PublicLandingView";
+import { buildTurnosBookingData } from "@/lib/turnos/booking-data";
+import { TurnosBooking } from "@/components/turnos/TurnosBooking";
 
 // Authenticated preview of the caller's own landing, at any status (draft,
 // pending payment, active) -- unlike PublicLandingView (site/[slug],
@@ -29,7 +31,9 @@ export default async function DashboardPreviewPage() {
 
   const { data: landing } = await supabase
     .from("landings")
-    .select("slug, form_data, sections_config, paleta_id, professions(slug), templates(config)")
+    .select(
+      "slug, form_data, sections_config, paleta_id, turnos_config, professions(slug), templates(config)"
+    )
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -78,5 +82,17 @@ export default async function DashboardPreviewPage() {
     );
   }
 
-  return rendered;
+  const turnosData = await buildTurnosBookingData(
+    landing.turnos_config,
+    landing.form_data,
+    professionSlug,
+    templateConfig
+  );
+
+  return (
+    <>
+      {rendered}
+      <TurnosBooking data={turnosData} />
+    </>
+  );
 }
