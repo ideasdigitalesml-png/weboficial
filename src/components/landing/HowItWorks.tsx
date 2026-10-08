@@ -1,13 +1,10 @@
-import { Briefcase, Palette, FileEdit, Globe } from "lucide-react";
+import { Palette, FileEdit, Globe } from "lucide-react";
 import { CtaButton } from "./CtaButton";
 
-const CHOOSE_PROFESSION_STEP = {
-  icon: Briefcase,
-  title: "Elegí tu profesión",
-  description: "Contadores, abogados, psicólogos y más rubros disponibles.",
-};
-
-const BASE_STEPS = [
+// Always 3 steps now, on every page (home included) -- "Elegí tu profesión"
+// was dropped from the home page too, since every page already states its
+// own profession context above this section.
+const STEPS = [
   {
     icon: Palette,
     title: "Elegí un diseño",
@@ -16,35 +13,24 @@ const BASE_STEPS = [
   {
     icon: FileEdit,
     title: "Completá tus datos",
-    description: "Tu nombre, tus servicios, tus fotos. Todo en un formulario simple.",
+    description: "Nombre, servicios, fotos y horarios de atención.",
   },
   {
     icon: Globe,
-    title: "Activá tu página",
-    description: "Pagás con Mercado Pago y tu página queda online al instante.",
+    title: "Publicala",
+    description:
+      "Activás la suscripción con Mercado Pago y queda online al instante.",
   },
 ];
 
-// `showChooseProfession` is false on /contadores, /abogados and /psicologos
-// -- a visitor already arrived via a profession-specific page, so "elegí tu
-// profesión" is redundant there (and confusing on top of it, since it
-// implies a choice they already made). The home page keeps all 4 steps.
-export function HowItWorks({
-  showChooseProfession = true,
-}: {
-  showChooseProfession?: boolean;
-}) {
-  const STEPS = showChooseProfession
-    ? [CHOOSE_PROFESSION_STEP, ...BASE_STEPS]
-    : BASE_STEPS;
-
+export function HowItWorks() {
   return (
     <section className="bg-surface-muted px-6 py-12 sm:py-16">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 sm:gap-10">
         <h2 className="text-center text-3xl font-bold text-navy sm:text-4xl">
           Tu página en {STEPS.length} pasos
         </h2>
-        <ol className="grid gap-3 sm:grid-cols-2 sm:gap-6 md:grid-cols-4">
+        <ol className="grid gap-3 sm:grid-cols-3 sm:gap-6">
           {STEPS.map((step, index) => (
             <li
               key={step.title}
@@ -69,7 +55,7 @@ export function HowItWorks({
         </ol>
         <div className="flex flex-col items-center gap-4">
           <p className="text-sm text-text-body sm:text-base">
-            No necesitás conocimientos técnicos.
+            Armarla y verla es gratis. Pagás solo cuando la querés publicar.
           </p>
           <CtaButton />
         </div>

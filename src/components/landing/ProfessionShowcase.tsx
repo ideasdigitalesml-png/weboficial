@@ -27,9 +27,15 @@ export function ProfessionShowcase() {
   return (
     <section className="bg-surface-muted px-6 py-12 sm:py-16">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-        <h2 className="text-center text-3xl font-bold text-navy sm:text-4xl">
-          Así puede quedar tu página profesional
-        </h2>
+        <div className="flex flex-col items-center gap-3 text-center">
+          <h2 className="text-3xl font-bold text-navy sm:text-4xl">
+            Diseños que te hacen ver como un profesional serio
+          </h2>
+          <p className="max-w-xl text-base text-text-body sm:text-lg">
+            Plantillas pensadas para tu profesión. Elegís una y la completás
+            con tus datos.
+          </p>
+        </div>
         <div className="grid gap-6 sm:grid-cols-3">
           {PROFESSIONS.map((profession, index) => (
             <Link
@@ -50,21 +56,12 @@ export function ProfessionShowcase() {
                 <span className="text-sm font-semibold text-navy">
                   {profession.name}
                 </span>
-                <span className="text-sm text-text-body transition-colors group-hover:text-sky">
-                  Ejemplo de diseño
+                <span className="text-sm font-semibold text-sky transition-colors group-hover:text-sky-dark">
+                  Ver ejemplo
                 </span>
               </div>
             </Link>
           ))}
-        </div>
-        <div className="flex justify-center">
-          <Link
-            href="/onboarding"
-            className="inline-flex items-center gap-1.5 text-base font-semibold text-sky transition-colors hover:text-sky-dark"
-          >
-            Crear mi página
-            <span aria-hidden>→</span>
-          </Link>
         </div>
       </div>
     </section>

@@ -3,7 +3,9 @@ import { Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { CompleteRegistrationPixel } from "@/components/CompleteRegistrationPixel";
+import { SupportWhatsAppButton } from "@/components/landing/SupportWhatsAppButton";
 import { META_PIXEL_ID } from "@/lib/meta/pixel";
+import { getSupportWhatsappNumber } from "@/lib/support-whatsapp";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -97,6 +99,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             landmark, which Lighthouse's accessibility audit flagged as
             missing. */}
         <main className="contents">{children}</main>
+        <SupportWhatsAppButton number={getSupportWhatsappNumber()} />
       </body>
     </html>
   );

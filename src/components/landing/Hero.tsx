@@ -192,13 +192,15 @@ function BrowserMockup({ profession = "contadores" }: { profession?: HeroProfess
 }
 
 export function Hero({
-  title = "Tu página profesional, lista en minutos.",
+  title = "Tu página profesional en 10 minutos. Sin programadores.",
   eyebrow = "Para contadores, abogados y psicólogos",
+  subtitle = "Elegís un diseño, cargás tus datos y tus clientes te piden turno directo a tu WhatsApp. Todo por $13.400 por mes.",
   previewImages,
   profession = "contadores",
 }: {
   title?: string;
   eyebrow?: string;
+  subtitle?: string;
   previewImages?: HeroPreviewImage[];
   profession?: HeroProfession;
 }) {
@@ -236,24 +238,8 @@ export function Hero({
             className="max-w-md text-base text-white/65 md:text-lg"
             style={{ animation: "fadeInUp 0.6s ease both", animationDelay: "0.3s" }}
           >
-            Sin programar, sin complicaciones. Elegís tu diseño, completás tus
-            datos y listo.
+            {subtitle}
           </p>
-
-          <div
-            className="flex flex-col items-center gap-2 md:items-start"
-            style={{ animation: "fadeInUp 0.6s ease both", animationDelay: "0.4s" }}
-          >
-            <div className="inline-flex flex-wrap items-center justify-center gap-3 rounded-full border border-white/25 bg-white/[.06] px-4 py-2 text-sm md:justify-start">
-              <span className="font-semibold text-white">$13.400/mes</span>
-              <span className="text-white/30">·</span>
-              <span className="font-semibold text-[#00b1ea]">Mercado Pago</span>
-            </div>
-            <span className="text-sm text-white/70">
-              <span className="text-emerald-400">✓</span> Cancelá cuando
-              quieras
-            </span>
-          </div>
 
           <Link
             href="/onboarding"
@@ -262,19 +248,20 @@ export function Hero({
             // color-contrast audit flagged it. sky-dark (#0369a1) clears
             // 5.93:1.
             className="group inline-flex items-center gap-2 rounded-xl bg-sky-dark px-8 py-4 text-base font-semibold text-white shadow-lg shadow-sky-500/25 transition-all hover:-translate-y-0.5 hover:bg-sky-800"
-            style={{ animation: "fadeInUp 0.6s ease both", animationDelay: "0.5s" }}
+            style={{ animation: "fadeInUp 0.6s ease both", animationDelay: "0.4s" }}
           >
-            Crear mi página
+            Armar mi página gratis
             <span className="transition-transform group-hover:translate-x-0.5">
               →
             </span>
           </Link>
 
           <p
-            className="text-sm text-white/35"
-            style={{ animation: "fadeInUp 0.6s ease both", animationDelay: "0.6s" }}
+            className="text-sm text-white/50"
+            style={{ animation: "fadeInUp 0.6s ease both", animationDelay: "0.5s" }}
           >
-            Sin permanencia · Pagás con Mercado Pago
+            Pagás con Mercado Pago · Solo cuando la publicás · Cancelás cuando
+            quieras
           </p>
         </div>
 

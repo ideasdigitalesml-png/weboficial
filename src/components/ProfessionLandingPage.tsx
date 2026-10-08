@@ -73,7 +73,7 @@ export function ProfessionLandingPage({
         </div>
       </section>
 
-      <HowItWorks showChooseProfession={false} />
+      <HowItWorks />
       <FAQ />
       <PricingSection />
       <FinalCta />
