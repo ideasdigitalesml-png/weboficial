@@ -29,10 +29,13 @@ export default function ContadoresPage() {
   return (
     <ProfessionLandingPage
       professionPlural="contadores"
-      eyebrow="PARA CONTADORES"
+      eyebrow="Para contadores"
       profession="contadores"
-      title="Tu página web profesional como contador, lista en minutos"
+      title="Tu página de contador en 10 minutos. Sin programadores."
+      subtitle="Elegís un diseño, cargás tus datos y tus clientes te piden turno directo a tu WhatsApp. Todo por $13.400 por mes."
       previewImages={PREVIEW_IMAGES}
+      exampleDomain="estudiocontablelopez.com"
+      exampleHref="/ejemplo/contador"
     />
   );
 }

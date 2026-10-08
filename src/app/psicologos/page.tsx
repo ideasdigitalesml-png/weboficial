@@ -3,6 +3,7 @@ import {
   ProfessionLandingPage,
   type ProfessionPreviewImage,
 } from "@/components/ProfessionLandingPage";
+import { PSICOLOGO_LANDING_VOCAB } from "@/lib/landing-vocab";
 
 export const metadata: Metadata = {
   title: "Weboficial para psicólogos — Tu página profesional lista en minutos",
@@ -29,10 +30,14 @@ export default function PsicologosPage() {
   return (
     <ProfessionLandingPage
       professionPlural="psicólogos"
-      eyebrow="PARA PSICÓLOGOS"
+      eyebrow="Para psicólogos"
       profession="psicologos"
-      title="Tu página web profesional como psicólogo, lista en minutos"
+      title="Tu página de psicólogo en 10 minutos. Sin programadores."
+      subtitle="Elegís un diseño, cargás tus datos y tus pacientes te piden sesión directo a tu WhatsApp. Todo por $13.400 por mes."
       previewImages={PREVIEW_IMAGES}
+      exampleDomain="licmartinez.com"
+      exampleHref="/ejemplo/psicologo"
+      vocab={PSICOLOGO_LANDING_VOCAB}
     />
   );
 }

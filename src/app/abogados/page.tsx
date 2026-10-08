@@ -29,10 +29,13 @@ export default function AbogadosPage() {
   return (
     <ProfessionLandingPage
       professionPlural="abogados"
-      eyebrow="PARA ABOGADOS"
+      eyebrow="Para abogados"
       profession="abogados"
-      title="Tu página web profesional como abogado, lista en minutos"
+      title="Tu página de abogado en 10 minutos. Sin programadores."
+      subtitle="Elegís un diseño, cargás tus datos y tus clientes te piden turno directo a tu WhatsApp. Todo por $13.400 por mes."
       previewImages={PREVIEW_IMAGES}
+      exampleDomain="dragarcia.com"
+      exampleHref="/ejemplo/abogado"
     />
   );
 }
