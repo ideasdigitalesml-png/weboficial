@@ -9,7 +9,10 @@ import {
   daysInMonth,
   addMonths,
   addDays,
+  classifyRange,
+  type Franja,
 } from "@/lib/turnos/slots";
+import type { TimeRange, WeekdayKey } from "@/lib/turnos/types";
 import type { TurnosBookingData, TurnosVisualStyle } from "@/lib/turnos/booking-data";
 
 const WEEKDAY_LETTERS = ["L", "M", "M", "J", "V", "S", "D"];
@@ -45,6 +48,29 @@ const MOTIVO_MAX_LENGTH = 120;
 function formatSummaryDate(dateStr: string): string {
   const [, m, d] = dateStr.split("-").map(Number);
   return `${d}/${m}`;
+}
+
+// "9" for "09:00", "13:30" for "13:30" -- whole hours drop the ":00" to
+// match the spec's own "Mañana (9 a 13)" example.
+function formatHourShort(time: string): string {
+  const [h, m] = time.split(":").map(Number);
+  return m === 0 ? `${h}` : `${h}:${String(m).padStart(2, "0")}`;
+}
+
+// "Mañana (9 a 13)" / "Tarde (15 a 19)" -- built from whichever of the
+// day's own configured ranges classify into this franja (see classifyRange),
+// spanning from the earliest start to the latest end among them. A day
+// with only one range only ever produces a label for its own franja, which
+// is exactly "si el día tiene un solo rango, mostrá solo esa franja" --
+// TurnosBooking only renders a franja button when `franja` is present in
+// that date's availability array to begin with.
+function franjaLabel(ranges: TimeRange[], franja: Franja): string {
+  const name = franja === "morning" ? "Mañana" : "Tarde";
+  const matching = ranges.filter((r) => classifyRange(r) === franja);
+  if (matching.length === 0) return name;
+  const start = matching.reduce((min, r) => (r.start < min ? r.start : min), matching[0].start);
+  const end = matching.reduce((max, r) => (r.end > max ? r.end : max), matching[0].end);
+  return `${name} (${formatHourShort(start)} a ${formatHourShort(end)})`;
 }
 
 function buildMonthGrid(monthKey: string): (string | null)[] {
@@ -116,6 +142,7 @@ export function TurnosBooking({ data }: { data: TurnosBookingData }) {
     todayDateStr,
   } = data;
   const style = STYLE_MAP[visualStyle];
+  const isRangeMode = config.bookingMode === "range";
 
   const dates = useMemo(() => Object.keys(availability).sort(), [availability]);
   const minMonth = monthKeyOf(todayDateStr);
@@ -141,9 +168,15 @@ export function TurnosBooking({ data }: { data: TurnosBookingData }) {
   const waHref = (() => {
     if (!canSubmit || !selectedDate || !selectedTime) return undefined;
     if (data.ctaHref) return data.ctaHref;
-    const base = `Hola ${professionalName || "profesional"}, soy ${name.trim()}. Quiero pedir un turno el ${formatDayMonth(
-      selectedDate
-    )} a las ${selectedTime}.`;
+    // Range mode: "el jueves 8/10 por la mañana" (weekday name + unpadded
+    // day/month, same as the on-screen summary). Exact mode: unchanged --
+    // "el 08/10 a las 09:00".
+    const whenText = isRangeMode
+      ? `el ${WEEKDAY_FULL[weekdayOf(selectedDate)].toLowerCase()} ${formatSummaryDate(selectedDate)} por la ${
+          selectedTime === "morning" ? "mañana" : "tarde"
+        }`
+      : `el ${formatDayMonth(selectedDate)} a las ${selectedTime}`;
+    const base = `Hola ${professionalName || "profesional"}, soy ${name.trim()}. Quiero pedir un turno ${whenText}.`;
     const motivoPart = requireMotivo ? ` Motivo: ${motivo.trim()}.` : "";
     const message = `${base}${motivoPart} Lo pedí desde tu página web.`;
     return `${buildWaLink(phone)}?text=${encodeURIComponent(message)}`;
@@ -241,28 +274,33 @@ export function TurnosBooking({ data }: { data: TurnosBookingData }) {
               </div>
             </div>
 
-            {selectedDate && (
-              <div className="flex flex-wrap justify-center gap-2">
-                {availability[selectedDate].map((time) => {
-                  const isSelected = time === selectedTime;
-                  return (
-                    <button
-                      key={time}
-                      type="button"
-                      onClick={() => setSelectedTime(time)}
-                      className={`min-w-[72px] border px-3 py-2 text-sm font-medium transition-colors ${style.chipRadius}`}
-                      style={
-                        isSelected
-                          ? { backgroundColor: accentColor, borderColor: accentColor, color: "#fff" }
-                          : { backgroundColor: "#fff", borderColor: "#e2e8f0", color: "#334155" }
-                      }
-                    >
-                      {time}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            {selectedDate && (() => {
+              const dayRanges =
+                config.weeklySchedule[String(weekdayOf(selectedDate)) as WeekdayKey]?.ranges ?? [];
+              return (
+                <div className="flex flex-wrap justify-center gap-2">
+                  {availability[selectedDate].map((option) => {
+                    const isSelected = option === selectedTime;
+                    const label = isRangeMode ? franjaLabel(dayRanges, option as Franja) : option;
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => setSelectedTime(option)}
+                        className={`min-w-[72px] border px-3 py-2 text-sm font-medium transition-colors ${style.chipRadius}`}
+                        style={
+                          isSelected
+                            ? { backgroundColor: accentColor, borderColor: accentColor, color: "#fff" }
+                            : { backgroundColor: "#fff", borderColor: "#e2e8f0", color: "#334155" }
+                        }
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
 
             {selectedDate && selectedTime && (
               <div className={`flex flex-col gap-3 border border-slate-200 bg-white p-4 ${style.cardRadius}`}>
@@ -294,8 +332,10 @@ export function TurnosBooking({ data }: { data: TurnosBookingData }) {
                 )}
 
                 <p className="text-center text-sm font-medium text-slate-600">
-                  {WEEKDAY_FULL[weekdayOf(selectedDate)]} {formatSummaryDate(selectedDate)} a las{" "}
-                  {selectedTime}
+                  {WEEKDAY_FULL[weekdayOf(selectedDate)]} {formatSummaryDate(selectedDate)}{" "}
+                  {isRangeMode
+                    ? `por la ${selectedTime === "morning" ? "mañana" : "tarde"}`
+                    : `a las ${selectedTime}`}
                 </p>
 
                 <a

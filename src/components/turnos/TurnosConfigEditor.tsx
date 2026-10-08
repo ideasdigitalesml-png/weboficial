@@ -274,26 +274,53 @@ export function TurnosConfigEditor({
             })}
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="flex flex-col gap-1.5 text-sm">
-              <span className="font-medium text-navy">Duración del turno</span>
-              <select
-                value={value.slotDurationMinutes}
-                onChange={(e) =>
-                  onChange({
-                    ...value,
-                    slotDurationMinutes: Number(e.target.value) as TurnosConfig["slotDurationMinutes"],
-                  })
-                }
-                className={SELECT_CLASS}
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-navy">Tipo de turno</span>
+            <div className="flex gap-4 text-sm">
+              <button
+                type="button"
+                onClick={() => onChange({ ...value, bookingMode: "exact" })}
+                className={value.bookingMode !== "range" ? TOGGLE_ACTIVE : TOGGLE_INACTIVE}
               >
-                {SLOT_DURATIONS.map((d) => (
-                  <option key={d} value={d}>
-                    {d} minutos
-                  </option>
-                ))}
-              </select>
-            </label>
+                Horario exacto
+              </button>
+              <button
+                type="button"
+                onClick={() => onChange({ ...value, bookingMode: "range" })}
+                className={value.bookingMode === "range" ? TOGGLE_ACTIVE : TOGGLE_INACTIVE}
+              >
+                Por franja
+              </button>
+            </div>
+            <p className="text-xs text-text-body">
+              {value.bookingMode === "range"
+                ? "Tu cliente elige el día y si prefiere mañana o tarde, sin horario exacto."
+                : "Tu cliente elige el día y un horario puntual dentro de tus rangos."}
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {value.bookingMode !== "range" && (
+              <label className="flex flex-col gap-1.5 text-sm">
+                <span className="font-medium text-navy">Duración del turno</span>
+                <select
+                  value={value.slotDurationMinutes}
+                  onChange={(e) =>
+                    onChange({
+                      ...value,
+                      slotDurationMinutes: Number(e.target.value) as TurnosConfig["slotDurationMinutes"],
+                    })
+                  }
+                  className={SELECT_CLASS}
+                >
+                  {SLOT_DURATIONS.map((d) => (
+                    <option key={d} value={d}>
+                      {d} minutos
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
 
             <label className="flex flex-col gap-1.5 text-sm">
               <span className="font-medium text-navy">Días hacia adelante a mostrar</span>

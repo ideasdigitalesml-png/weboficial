@@ -62,6 +62,58 @@ export function formatDayMonth(dateStr: string): string {
   return `${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}`;
 }
 
+// "range" booking mode: the client only picks "Mañana"/"Tarde" for a day,
+// not an exact time. A range counts as morning if it ends by 13:00, and
+// afternoon if it starts at/after 13:00 (the spec's own two literal rules,
+// e.g. 09:00-13:00 -> morning, 15:00-19:00 -> afternoon). A range spanning
+// across 13:00 -- not explicitly covered by either rule -- is bucketed by
+// its midpoint instead of throwing, since a professional could configure
+// one plausibly enough.
+export type Franja = "morning" | "afternoon";
+
+const FRANJA_BOUNDARY_MIN = 13 * 60;
+
+function timeToMinutes(value: string): number {
+  const [h, m] = value.split(":").map(Number);
+  return h * 60 + m;
+}
+
+export function classifyRange(range: { start: string; end: string }): Franja {
+  const startMin = timeToMinutes(range.start);
+  const endMin = timeToMinutes(range.end);
+  if (endMin <= FRANJA_BOUNDARY_MIN) return "morning";
+  if (startMin >= FRANJA_BOUNDARY_MIN) return "afternoon";
+  const midpoint = (startMin + endMin) / 2;
+  return midpoint < FRANJA_BOUNDARY_MIN ? "morning" : "afternoon";
+}
+
+// Which franjas have at least one still-bookable range on this date (same
+// past/blocked/holiday/weekday-off exclusions as slotsForDate below, just
+// coarser-grained: today only offers a franja if its range hasn't fully
+// elapsed yet). "If the day has a single range, show only that franja" is
+// automatic here -- a day with one 09:00-13:00 range only ever classifies
+// into "morning", so "afternoon" is never added.
+export function franjasForDate(
+  config: TurnosConfig,
+  dateStr: string,
+  holidays: ReadonlySet<string>,
+  now: NowInBA
+): Franja[] {
+  if (dateStr < now.dateStr) return [];
+  if (config.blockedDates.includes(dateStr)) return [];
+  if (!config.worksHolidays && holidays.has(dateStr)) return [];
+
+  const schedule = config.weeklySchedule[String(weekdayOf(dateStr)) as WeekdayKey];
+  if (!schedule?.enabled) return [];
+
+  const franjas = new Set<Franja>();
+  for (const range of schedule.ranges) {
+    if (dateStr === now.dateStr && timeToMinutes(range.end) <= now.minutes) continue;
+    franjas.add(classifyRange(range));
+  }
+  return (["morning", "afternoon"] as const).filter((f) => franjas.has(f));
+}
+
 function slotsForRange(range: { start: string; end: string }, durationMin: number): string[] {
   const [sh, sm] = range.start.split(":").map(Number);
   const [eh, em] = range.end.split(":").map(Number);
@@ -104,11 +156,14 @@ export function slotsForDate(
 }
 
 // Full availability map for the whole `daysAhead` window, keyed by
-// "YYYY-MM-DD" -- only dates with at least one free slot are included, so
+// "YYYY-MM-DD" -- only dates with at least one free option are included, so
 // the public calendar can just check `Object.keys(availability)` for which
 // days to offer. Computed once per page render (server-side), not
 // recomputed client-side, so the client component never needs its own copy
-// of this date/timezone logic.
+// of this date/timezone logic. In "exact" mode each date's array holds
+// "HH:MM" slot times; in "range" mode it holds Franja keys ("morning"/
+// "afternoon") instead -- TurnosBooking branches on config.bookingMode to
+// know which it's looking at.
 export function buildAvailability(
   config: TurnosConfig,
   holidays: ReadonlySet<string>,
@@ -117,8 +172,11 @@ export function buildAvailability(
   const availability: Record<string, string[]> = {};
   for (let i = 0; i < config.daysAhead; i++) {
     const dateStr = addDays(now.dateStr, i);
-    const slots = slotsForDate(config, dateStr, holidays, now);
-    if (slots.length > 0) availability[dateStr] = slots;
+    const options =
+      config.bookingMode === "range"
+        ? franjasForDate(config, dateStr, holidays, now)
+        : slotsForDate(config, dateStr, holidays, now);
+    if (options.length > 0) availability[dateStr] = options;
   }
   return availability;
 }

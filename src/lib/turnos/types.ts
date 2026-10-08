@@ -7,6 +7,15 @@
 export const SLOT_DURATIONS = [30, 45, 60] as const;
 export type SlotDuration = (typeof SLOT_DURATIONS)[number];
 
+// "exact": the client picks a specific HH:MM slot (the original/default
+// behavior). "range": the client only picks "Mañana"/"Tarde" for the day --
+// see src/lib/turnos/slots.ts's classifyRange for how a day's configured
+// ranges map to those two franjas. slotDurationMinutes is unused in "range"
+// mode (no exact slots are ever generated), not removed from the config --
+// just not shown/asked in TurnosConfigEditor for that mode.
+export const BOOKING_MODES = ["exact", "range"] as const;
+export type TurnosBookingMode = (typeof BOOKING_MODES)[number];
+
 // Keyed by JS Date.getDay() (0 = Sunday ... 6 = Saturday), as strings
 // because that's what JSON object keys are -- see WEEKDAY_KEYS below for
 // the canonical iteration order.
@@ -37,6 +46,7 @@ export type WeeklySchedule = Record<WeekdayKey, DaySchedule>;
 
 export interface TurnosConfig {
   enabled: boolean;
+  bookingMode: TurnosBookingMode;
   slotDurationMinutes: SlotDuration;
   // How many days forward the public calendar shows (e.g. 30).
   daysAhead: number;
@@ -81,6 +91,7 @@ export const DEFAULT_WEEKLY_SCHEDULE: WeeklySchedule = {
 
 export const DEFAULT_TURNOS_CONFIG: TurnosConfig = {
   enabled: false,
+  bookingMode: "exact",
   slotDurationMinutes: 30,
   daysAhead: 30,
   worksHolidays: false,
@@ -190,8 +201,13 @@ export function sanitizeTurnosConfig(value: unknown): TurnosConfig {
       ? daysAheadRaw
       : DEFAULT_TURNOS_CONFIG.daysAhead;
 
+  const bookingMode = BOOKING_MODES.includes(input.bookingMode as TurnosBookingMode)
+    ? (input.bookingMode as TurnosBookingMode)
+    : DEFAULT_TURNOS_CONFIG.bookingMode;
+
   return {
     enabled: input.enabled === true,
+    bookingMode,
     slotDurationMinutes,
     daysAhead,
     worksHolidays: input.worksHolidays === true,
