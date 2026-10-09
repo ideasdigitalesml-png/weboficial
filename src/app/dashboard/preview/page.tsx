@@ -8,7 +8,6 @@ import {
   type TemplateConfig,
 } from "@/components/PublicLandingView";
 import { buildTurnosBookingData } from "@/lib/turnos/booking-data";
-import { TurnosBooking } from "@/components/turnos/TurnosBooking";
 
 // Authenticated preview of the caller's own landing, at any status (draft,
 // pending payment, active) -- unlike PublicLandingView (site/[slug],
@@ -61,6 +60,13 @@ export default async function DashboardPreviewPage() {
       | null
   )?.config;
 
+  const turnosData = await buildTurnosBookingData(
+    landing.turnos_config,
+    landing.form_data,
+    professionSlug,
+    templateConfig
+  );
+
   const rendered = renderLandingByTemplate(
     {
       slug: landing.slug,
@@ -69,7 +75,9 @@ export default async function DashboardPreviewPage() {
       paletaId: landing.paleta_id,
     },
     professionSlug,
-    templateConfig
+    templateConfig,
+    undefined,
+    turnosData
   );
 
   if (!rendered) {
@@ -82,17 +90,5 @@ export default async function DashboardPreviewPage() {
     );
   }
 
-  const turnosData = await buildTurnosBookingData(
-    landing.turnos_config,
-    landing.form_data,
-    professionSlug,
-    templateConfig
-  );
-
-  return (
-    <>
-      {rendered}
-      <TurnosBooking data={turnosData} />
-    </>
-  );
+  return rendered;
 }

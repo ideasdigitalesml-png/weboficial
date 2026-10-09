@@ -7,6 +7,8 @@ import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 import { SocialLinks } from "@/components/templates/shared/SocialLinks";
+import { TurnosBooking } from "@/components/turnos/TurnosBooking";
+import type { TurnosBookingData } from "@/lib/turnos/booking-data";
 import {
   POBLACION_ATENDIDA_LABELS,
   type PsicologoFormData,
@@ -80,6 +82,7 @@ export function PsicologoMinimalTemplate({
   colorPrimary = DEFAULT_PRIMARY,
   colorAccent = DEFAULT_ACCENT,
   ctaHref,
+  turnosData,
 }: {
   formData: PsicologoFormData;
   sectionsConfig: SectionConfigItem[];
@@ -89,6 +92,9 @@ export function PsicologoMinimalTemplate({
   // Overrides every WhatsApp CTA with this href (see
   // FloatingWhatsappButton) -- only set by /ejemplo/* demo pages.
   ctaHref?: string;
+  // Rendered just before the contact section (or just before the footer,
+  // if contact is hidden) -- never after the footer.
+  turnosData?: TurnosBookingData;
 }) {
   const visibleIds = new Set(
     sectionsConfig.filter((s) => s.visible).map((s) => s.id)
@@ -315,6 +321,8 @@ export function PsicologoMinimalTemplate({
           </div>
         </section>
       )}
+
+      {turnosData && <TurnosBooking data={turnosData} />}
 
       {showContact && waLink && (
         <section className="pm-cta" id="contacto">

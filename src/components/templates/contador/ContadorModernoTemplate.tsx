@@ -11,6 +11,8 @@ import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 import { SocialLinks } from "@/components/templates/shared/SocialLinks";
+import { TurnosBooking } from "@/components/turnos/TurnosBooking";
+import type { TurnosBookingData } from "@/lib/turnos/booking-data";
 import type { ContadorFormData } from "./ContadorLandingTemplate";
 
 // Ported from templates/contador.html (design approved separately) into a
@@ -79,6 +81,7 @@ export function ContadorModernoTemplate({
   colorAccent = DEFAULT_ACCENT,
   paletteVariables,
   ctaHref,
+  turnosData,
 }: {
   formData: ContadorFormData;
   sectionsConfig: SectionConfigItem[];
@@ -94,6 +97,12 @@ export function ContadorModernoTemplate({
   // Overrides every WhatsApp CTA with this href (see
   // FloatingWhatsappButton) -- only set by /ejemplo/* demo pages.
   ctaHref?: string;
+  // Rendered just before the contact section (or just before the footer,
+  // if contact is hidden) -- never after the footer. See the conversation
+  // this fixed: every caller used to render <TurnosBooking> as a sibling
+  // after this whole component, which put it below the footer since the
+  // footer lives inside here.
+  turnosData?: TurnosBookingData;
 }) {
   const visibleIds = new Set(
     sectionsConfig.filter((s) => s.visible).map((s) => s.id)
@@ -397,6 +406,8 @@ export function ContadorModernoTemplate({
           </div>
         </section>
       )}
+
+      {turnosData && <TurnosBooking data={turnosData} />}
 
       {showContact && (
         <section className="cf-section" id="contacto" style={{ paddingBlock: "0 88px" }}>

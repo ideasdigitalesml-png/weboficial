@@ -34,7 +34,6 @@ import { PSICOLOGO_DEMO_PROFILE, withDemoPlaceholder } from "@/lib/demo-profiles
 import { DEFAULT_TURNOS_CONFIG, type TurnosConfig } from "@/lib/turnos/types";
 import { TurnosConfigEditor } from "@/components/turnos/TurnosConfigEditor";
 import type { TurnosBookingData } from "@/lib/turnos/booking-data";
-import { TurnosBooking } from "@/components/turnos/TurnosBooking";
 
 const PUBLISHING_PATH = "/onboarding/publishing";
 const DRAFT_SAVE_DEBOUNCE_MS = 300;
@@ -894,46 +893,38 @@ function TemplatePreview({
   subdomain: string;
   turnosData?: TurnosBookingData | null;
 }) {
-  const turnosSection = turnosData ? <TurnosBooking data={turnosData} /> : null;
-
   if (layout === "clasico") {
     return (
-      <>
-        <PsicologoClasicoTemplate
-          formData={formData}
-          sectionsConfig={DEFAULT_SECTIONS_CONFIG}
-          subdomain={subdomain || undefined}
-          colorPrimary={colorPrimary}
-          colorAccent={colorAccent}
-        />
-        {turnosSection}
-      </>
-    );
-  }
-  if (layout === "minimal") {
-    return (
-      <>
-        <PsicologoMinimalTemplate
-          formData={formData}
-          sectionsConfig={DEFAULT_SECTIONS_CONFIG}
-          subdomain={subdomain || undefined}
-          colorPrimary={colorPrimary}
-        />
-        {turnosSection}
-      </>
-    );
-  }
-  return (
-    <>
-      <PsicologoModernoTemplate
+      <PsicologoClasicoTemplate
         formData={formData}
         sectionsConfig={DEFAULT_SECTIONS_CONFIG}
         subdomain={subdomain || undefined}
         colorPrimary={colorPrimary}
         colorAccent={colorAccent}
+        turnosData={turnosData ?? undefined}
       />
-      {turnosSection}
-    </>
+    );
+  }
+  if (layout === "minimal") {
+    return (
+      <PsicologoMinimalTemplate
+        formData={formData}
+        sectionsConfig={DEFAULT_SECTIONS_CONFIG}
+        subdomain={subdomain || undefined}
+        colorPrimary={colorPrimary}
+        turnosData={turnosData ?? undefined}
+      />
+    );
+  }
+  return (
+    <PsicologoModernoTemplate
+      formData={formData}
+      sectionsConfig={DEFAULT_SECTIONS_CONFIG}
+      subdomain={subdomain || undefined}
+      colorPrimary={colorPrimary}
+      colorAccent={colorAccent}
+      turnosData={turnosData ?? undefined}
+    />
   );
 }
 

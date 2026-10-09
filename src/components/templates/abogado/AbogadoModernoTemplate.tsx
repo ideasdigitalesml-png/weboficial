@@ -11,6 +11,8 @@ import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 import { SocialLinks } from "@/components/templates/shared/SocialLinks";
+import { TurnosBooking } from "@/components/turnos/TurnosBooking";
+import type { TurnosBookingData } from "@/lib/turnos/booking-data";
 
 // Ported from templates/abogado.html into a server component with real
 // data instead of {{mustache}} placeholders. Proceso and FAQ stay as fixed
@@ -112,6 +114,7 @@ export function AbogadoModernoTemplate({
   colorAccent = DEFAULT_ACCENT,
   paletteVariables,
   ctaHref,
+  turnosData,
 }: {
   formData: AbogadoFormData;
   sectionsConfig: SectionConfigItem[];
@@ -125,6 +128,9 @@ export function AbogadoModernoTemplate({
   // Overrides every WhatsApp CTA with this href (see
   // FloatingWhatsappButton) -- only set by /ejemplo/* demo pages.
   ctaHref?: string;
+  // Rendered just before the contact section (or just before the footer,
+  // if contact is hidden) -- never after the footer.
+  turnosData?: TurnosBookingData;
 }) {
   const visibleIds = new Set(
     sectionsConfig.filter((s) => s.visible).map((s) => s.id)
@@ -375,6 +381,8 @@ export function AbogadoModernoTemplate({
           </div>
         </div>
       </section>
+
+      {turnosData && <TurnosBooking data={turnosData} />}
 
       {showContact && (
         <section className="aw-cta-banner" id="contacto">

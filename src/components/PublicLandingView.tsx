@@ -24,7 +24,10 @@ import {
 } from "@/components/templates/psicologo/PsicologoModernoTemplate";
 import { PsicologoClasicoTemplate } from "@/components/templates/psicologo/PsicologoClasicoTemplate";
 import { PsicologoMinimalTemplate } from "@/components/templates/psicologo/PsicologoMinimalTemplate";
-import { buildTurnosBookingData } from "@/lib/turnos/booking-data";
+import {
+  buildTurnosBookingData,
+  type TurnosBookingData,
+} from "@/lib/turnos/booking-data";
 import { TurnosBooking } from "@/components/turnos/TurnosBooking";
 
 // Only 'active' -- this used to also include 'draft' (a pre-payment
@@ -128,7 +131,14 @@ export function renderLandingByTemplate(
   // Only set by /ejemplo/* demo pages, to send every WhatsApp CTA to
   // "Crear mi página" instead of the demo profile's fake number. undefined
   // (the default) for every real landing -- see FloatingWhatsappButton.
-  ctaHref?: string
+  ctaHref?: string,
+  // Threaded into whichever of the 9 Moderno/Clasico/Minimal templates gets
+  // picked below, which render it just before their own contact section (or
+  // just before their footer, if contact is hidden) -- never as a sibling
+  // after the whole template, which is what used to put it below the
+  // footer. The legacy ContadorLandingTemplate fallback at the bottom has
+  // no footer of its own, so it keeps the old sibling rendering instead.
+  turnosData?: TurnosBookingData
 ) {
   if (professionSlug === "abogados") {
     const formData = landing.formData as AbogadoFormData;
@@ -141,6 +151,7 @@ export function renderLandingByTemplate(
           colorPrimary={templateConfig.primaryColor}
           colorAccent={templateConfig.secondaryColor}
           ctaHref={ctaHref}
+          turnosData={turnosData}
         />
       );
     }
@@ -154,6 +165,7 @@ export function renderLandingByTemplate(
           colorAccent={templateConfig.secondaryColor}
           paletteVariables={findAbogadoPaleta(landing.paletaId).variables}
           ctaHref={ctaHref}
+          turnosData={turnosData}
         />
       );
     }
@@ -164,6 +176,7 @@ export function renderLandingByTemplate(
         subdomain={landing.slug}
         colorPrimary={templateConfig?.primaryColor}
         ctaHref={ctaHref}
+        turnosData={turnosData}
       />
     );
   }
@@ -179,6 +192,7 @@ export function renderLandingByTemplate(
           colorPrimary={templateConfig.primaryColor}
           colorAccent={templateConfig.secondaryColor}
           ctaHref={ctaHref}
+          turnosData={turnosData}
         />
       );
     }
@@ -190,6 +204,7 @@ export function renderLandingByTemplate(
           subdomain={landing.slug}
           colorPrimary={templateConfig?.primaryColor}
           ctaHref={ctaHref}
+          turnosData={turnosData}
         />
       );
     }
@@ -201,6 +216,7 @@ export function renderLandingByTemplate(
         colorPrimary={templateConfig?.primaryColor}
         colorAccent={templateConfig?.secondaryColor}
         ctaHref={ctaHref}
+        turnosData={turnosData}
       />
     );
   }
@@ -219,6 +235,7 @@ export function renderLandingByTemplate(
         colorAccent={templateConfig.secondaryColor}
         paletteVariables={findContadorPaleta(landing.paletaId).variables}
         ctaHref={ctaHref}
+        turnosData={turnosData}
       />
     );
   }
@@ -232,6 +249,7 @@ export function renderLandingByTemplate(
         colorPrimary={templateConfig.primaryColor}
         colorAccent={templateConfig.secondaryColor}
         ctaHref={ctaHref}
+        turnosData={turnosData}
       />
     );
   }
@@ -244,6 +262,7 @@ export function renderLandingByTemplate(
         subdomain={landing.slug}
         colorPrimary={templateConfig.primaryColor}
         ctaHref={ctaHref}
+        turnosData={turnosData}
       />
     );
   }
@@ -256,6 +275,7 @@ export function renderLandingByTemplate(
         accentColor={templateConfig?.primaryColor}
         ctaHref={ctaHref}
       />
+      {turnosData && <TurnosBooking data={turnosData} />}
     </div>
   );
 }
@@ -293,6 +313,13 @@ export async function PublicLandingView({ slug }: { slug: string }) {
       | null
   )?.config;
 
+  const turnosData = await buildTurnosBookingData(
+    landing.turnos_config,
+    landing.form_data,
+    professionSlug,
+    templateConfig
+  );
+
   const rendered = renderLandingByTemplate(
     {
       slug: landing.slug,
@@ -301,24 +328,14 @@ export async function PublicLandingView({ slug }: { slug: string }) {
       paletaId: landing.paleta_id,
     },
     professionSlug,
-    templateConfig
+    templateConfig,
+    undefined,
+    turnosData
   );
 
   if (!rendered) {
     notFound();
   }
 
-  const turnosData = await buildTurnosBookingData(
-    landing.turnos_config,
-    landing.form_data,
-    professionSlug,
-    templateConfig
-  );
-
-  return (
-    <>
-      {rendered}
-      <TurnosBooking data={turnosData} />
-    </>
-  );
+  return rendered;
 }

@@ -11,6 +11,8 @@ import { isValidMatricula } from "@/lib/is-valid-matricula";
 import { FadeInSection } from "@/components/templates/shared/FadeInSection";
 import { FloatingWhatsappButton } from "@/components/templates/shared/FloatingWhatsappButton";
 import { SocialLinks } from "@/components/templates/shared/SocialLinks";
+import { TurnosBooking } from "@/components/turnos/TurnosBooking";
+import type { TurnosBookingData } from "@/lib/turnos/booking-data";
 import type { AbogadoFormData } from "./AbogadoModernoTemplate";
 
 // Ported from templates/abogado-minimal.html. Same content rules as the
@@ -79,6 +81,7 @@ export function AbogadoMinimalTemplate({
   colorPrimary = DEFAULT_PRIMARY,
   colorAccent = DEFAULT_ACCENT,
   ctaHref,
+  turnosData,
 }: {
   formData: AbogadoFormData;
   sectionsConfig: SectionConfigItem[];
@@ -88,6 +91,9 @@ export function AbogadoMinimalTemplate({
   // Overrides every WhatsApp CTA with this href (see
   // FloatingWhatsappButton) -- only set by /ejemplo/* demo pages.
   ctaHref?: string;
+  // Rendered just before the contact section (or just before the footer,
+  // if contact is hidden) -- never after the footer.
+  turnosData?: TurnosBookingData;
 }) {
   const visibleIds = new Set(
     sectionsConfig.filter((s) => s.visible).map((s) => s.id)
@@ -309,6 +315,8 @@ export function AbogadoMinimalTemplate({
           </div>
         </div>
       </section>
+
+      {turnosData && <TurnosBooking data={turnosData} />}
 
       {showContact && waLink && (
         <section className="am-cta" id="contacto">

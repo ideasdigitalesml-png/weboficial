@@ -7,7 +7,6 @@ import { DEFAULT_SECTIONS_CONFIG } from "@/lib/landings/create-landing";
 import { ABOGADO_DEMO_PROFILE } from "@/lib/demo-profiles";
 import { buildTurnosBookingData } from "@/lib/turnos/booking-data";
 import { DEFAULT_TURNOS_CONFIG } from "@/lib/turnos/types";
-import { TurnosBooking } from "@/components/turnos/TurnosBooking";
 
 export const metadata: Metadata = {
   title: "Ejemplo de página para abogados — weboficial.com.ar",
@@ -34,10 +33,11 @@ export default async function EjemploAbogadoPage() {
     "/onboarding"
   );
 
-  return (
-    <>
-      {renderLandingByTemplate(LANDING, "abogados", TEMPLATE_CONFIG, "/onboarding")}
-      <TurnosBooking data={turnosData} />
-    </>
+  return renderLandingByTemplate(
+    LANDING,
+    "abogados",
+    TEMPLATE_CONFIG,
+    "/onboarding",
+    turnosData
   );
 }

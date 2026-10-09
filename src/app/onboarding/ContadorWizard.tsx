@@ -905,48 +905,40 @@ function TemplatePreview({
   subdomain: string;
   turnosData?: TurnosBookingData | null;
 }) {
-  const turnosSection = turnosData ? <TurnosBooking data={turnosData} /> : null;
-
   if (layout === "modern") {
     return (
-      <>
-        <ContadorModernoTemplate
-          formData={formData}
-          sectionsConfig={DEFAULT_SECTIONS_CONFIG}
-          subdomain={subdomain || undefined}
-          colorPrimary={colorPrimary}
-          colorAccent={colorAccent}
-          paletteVariables={paletteVariables}
-        />
-        {turnosSection}
-      </>
+      <ContadorModernoTemplate
+        formData={formData}
+        sectionsConfig={DEFAULT_SECTIONS_CONFIG}
+        subdomain={subdomain || undefined}
+        colorPrimary={colorPrimary}
+        colorAccent={colorAccent}
+        paletteVariables={paletteVariables}
+        turnosData={turnosData ?? undefined}
+      />
     );
   }
   if (layout === "classic") {
     return (
-      <>
-        <ContadorClasicoTemplate
-          formData={formData}
-          sectionsConfig={DEFAULT_SECTIONS_CONFIG}
-          subdomain={subdomain || undefined}
-          colorPrimary={colorPrimary}
-          colorAccent={colorAccent}
-        />
-        {turnosSection}
-      </>
+      <ContadorClasicoTemplate
+        formData={formData}
+        sectionsConfig={DEFAULT_SECTIONS_CONFIG}
+        subdomain={subdomain || undefined}
+        colorPrimary={colorPrimary}
+        colorAccent={colorAccent}
+        turnosData={turnosData ?? undefined}
+      />
     );
   }
   if (layout === "minimal") {
     return (
-      <>
-        <ContadorMinimalTemplate
-          formData={formData}
-          sectionsConfig={DEFAULT_SECTIONS_CONFIG}
-          subdomain={subdomain || undefined}
-          colorPrimary={colorPrimary}
-        />
-        {turnosSection}
-      </>
+      <ContadorMinimalTemplate
+        formData={formData}
+        sectionsConfig={DEFAULT_SECTIONS_CONFIG}
+        subdomain={subdomain || undefined}
+        colorPrimary={colorPrimary}
+        turnosData={turnosData ?? undefined}
+      />
     );
   }
   return (
@@ -956,7 +948,7 @@ function TemplatePreview({
         sectionsConfig={DEFAULT_SECTIONS_CONFIG}
         accentColor={colorPrimary}
       />
-      {turnosSection}
+      {turnosData && <TurnosBooking data={turnosData} />}
     </>
   );
 }

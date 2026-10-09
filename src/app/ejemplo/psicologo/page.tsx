@@ -7,7 +7,6 @@ import { DEFAULT_SECTIONS_CONFIG } from "@/lib/landings/create-landing";
 import { PSICOLOGO_DEMO_PROFILE } from "@/lib/demo-profiles";
 import { buildTurnosBookingData } from "@/lib/turnos/booking-data";
 import { DEFAULT_TURNOS_CONFIG } from "@/lib/turnos/types";
-import { TurnosBooking } from "@/components/turnos/TurnosBooking";
 
 export const metadata: Metadata = {
   title: "Ejemplo de página para psicólogos — weboficial.com.ar",
@@ -33,10 +32,11 @@ export default async function EjemploPsicologoPage() {
     "/onboarding"
   );
 
-  return (
-    <>
-      {renderLandingByTemplate(LANDING, "psicologos", undefined, "/onboarding")}
-      <TurnosBooking data={turnosData} />
-    </>
+  return renderLandingByTemplate(
+    LANDING,
+    "psicologos",
+    undefined,
+    "/onboarding",
+    turnosData
   );
 }

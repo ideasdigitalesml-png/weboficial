@@ -34,7 +34,6 @@ import { ABOGADO_DEMO_PROFILE, withDemoPlaceholder } from "@/lib/demo-profiles";
 import { DEFAULT_TURNOS_CONFIG, type TurnosConfig } from "@/lib/turnos/types";
 import { TurnosConfigEditor } from "@/components/turnos/TurnosConfigEditor";
 import type { TurnosBookingData } from "@/lib/turnos/booking-data";
-import { TurnosBooking } from "@/components/turnos/TurnosBooking";
 
 const PUBLISHING_PATH = "/onboarding/publishing";
 const DRAFT_SAVE_DEBOUNCE_MS = 300;
@@ -854,46 +853,38 @@ function TemplatePreview({
   subdomain: string;
   turnosData?: TurnosBookingData | null;
 }) {
-  const turnosSection = turnosData ? <TurnosBooking data={turnosData} /> : null;
-
   if (layout === "modern") {
     return (
-      <>
-        <AbogadoModernoTemplate
-          formData={formData}
-          sectionsConfig={DEFAULT_SECTIONS_CONFIG}
-          subdomain={subdomain || undefined}
-          colorPrimary={colorPrimary}
-          colorAccent={colorAccent}
-        />
-        {turnosSection}
-      </>
-    );
-  }
-  if (layout === "clasico") {
-    return (
-      <>
-        <AbogadoClasicoTemplate
-          formData={formData}
-          sectionsConfig={DEFAULT_SECTIONS_CONFIG}
-          subdomain={subdomain || undefined}
-          colorPrimary={colorPrimary}
-          colorAccent={colorAccent}
-        />
-        {turnosSection}
-      </>
-    );
-  }
-  return (
-    <>
-      <AbogadoMinimalTemplate
+      <AbogadoModernoTemplate
         formData={formData}
         sectionsConfig={DEFAULT_SECTIONS_CONFIG}
         subdomain={subdomain || undefined}
         colorPrimary={colorPrimary}
+        colorAccent={colorAccent}
+        turnosData={turnosData ?? undefined}
       />
-      {turnosSection}
-    </>
+    );
+  }
+  if (layout === "clasico") {
+    return (
+      <AbogadoClasicoTemplate
+        formData={formData}
+        sectionsConfig={DEFAULT_SECTIONS_CONFIG}
+        subdomain={subdomain || undefined}
+        colorPrimary={colorPrimary}
+        colorAccent={colorAccent}
+        turnosData={turnosData ?? undefined}
+      />
+    );
+  }
+  return (
+    <AbogadoMinimalTemplate
+      formData={formData}
+      sectionsConfig={DEFAULT_SECTIONS_CONFIG}
+      subdomain={subdomain || undefined}
+      colorPrimary={colorPrimary}
+      turnosData={turnosData ?? undefined}
+    />
   );
 }
 
