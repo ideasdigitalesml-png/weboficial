@@ -45,3 +45,14 @@ body {
   0%, 100% { transform: translateY(0px); }
   50%       { transform: translateY(-8px); }
 }
+
+/* Lifts the floating WhatsApp support button above MobileStickyCta's bar
+   so they never overlap. Plain CSS (not a Tailwind utility) because the
+   two live in separate subtrees -- MobileStickyCta.tsx toggles this class
+   on <body>, the one signal both can observe. Mobile-only: the bar itself
+   is sm:hidden, so this never applies at sm: and up. */
+@media (max-width: 639px) {
+  body.has-sticky-cta .support-whatsapp-button {
+    bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}

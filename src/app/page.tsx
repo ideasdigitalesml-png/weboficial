@@ -12,6 +12,7 @@ import { PricingSection } from "@/components/landing/PricingSection";
 import { FAQ } from "@/components/landing/FAQ";
 import { FinalCta } from "@/components/landing/FinalCta";
 import { Footer } from "@/components/landing/Footer";
+import { MobileStickyCta } from "@/components/landing/MobileStickyCta";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -47,6 +48,7 @@ export default async function Home() {
       <FAQ />
       <FinalCta />
       <Footer />
+      <MobileStickyCta />
     </div>
   );
 }

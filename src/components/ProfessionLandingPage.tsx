@@ -12,6 +12,7 @@ import { FinalCta } from "@/components/landing/FinalCta";
 import { FAQ } from "@/components/landing/FAQ";
 import { buildFaqItems } from "@/lib/faq-items";
 import { Footer } from "@/components/landing/Footer";
+import { MobileStickyCta } from "@/components/landing/MobileStickyCta";
 import { DEFAULT_LANDING_VOCAB, type LandingVocab } from "@/lib/landing-vocab";
 
 export interface ProfessionPreviewImage {
@@ -117,6 +118,7 @@ export function ProfessionLandingPage({
       <FAQ items={buildFaqItems(vocab)} />
       <FinalCta />
       <Footer />
+      <MobileStickyCta />
     </div>
   );
 }

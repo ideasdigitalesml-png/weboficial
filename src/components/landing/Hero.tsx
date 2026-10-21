@@ -243,6 +243,7 @@ export function Hero({
 
           <Link
             href="/onboarding"
+            id="hero-cta"
             // bg-sky-dark (not bg-sky): white-on-#0284c7 only hits 4.09:1,
             // just under WCAG AA's 4.5:1 for this text size -- Lighthouse's
             // color-contrast audit flagged it. sky-dark (#0369a1) clears
