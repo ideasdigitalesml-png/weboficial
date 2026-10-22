@@ -40,7 +40,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es" className={`${spaceGrotesk.variable} h-full antialiased`} data-theme="light">
+    <html lang="es" className={`${spaceGrotesk.variable} h-full scroll-smooth antialiased`} data-theme="light">
       <head>
         {/* Warms up the connection to the 3rd-party origins GA4/Meta Pixel
             actually send tracking requests to (not the script-host origins,

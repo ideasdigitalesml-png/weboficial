@@ -126,12 +126,12 @@ export default async function DashboardPage({
               ¡Tu página quedó guardada! Podés recorrer el panel y editarla.
               Cuando quieras, activala para que se vea en internet.
             </p>
-            <Link
-              href="/dashboard/suscripcion"
+            <a
+              href="#pagar-y-activar"
               className="inline-flex shrink-0 items-center justify-center rounded-full bg-sky px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-sky-dark"
             >
               Activar mi página
-            </Link>
+            </a>
           </div>
         )}
 
@@ -189,19 +189,24 @@ export default async function DashboardPage({
             </p>
           )}
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <a
-              href={publicUrl ?? undefined}
-              target="_blank"
-              rel="noreferrer"
-              aria-disabled={!publicUrl}
-              className={`inline-flex min-h-[52px] items-center justify-center rounded-full px-5 text-base font-semibold text-white transition-colors sm:flex-none ${
-                publicUrl
-                  ? "bg-sky hover:bg-sky-dark"
-                  : "pointer-events-none bg-sky/40"
-              }`}
-            >
-              Ver mi página
-            </a>
+            {publicUrl ? (
+              <a
+                href={publicUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-sky px-5 text-base font-semibold text-white transition-colors hover:bg-sky-dark sm:flex-none"
+              >
+                Ver mi página
+              </a>
+            ) : (
+              <Link
+                href="/dashboard/preview"
+                target="_blank"
+                className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-border-subtle px-5 text-base font-medium text-navy transition-colors hover:border-navy/40 sm:flex-none"
+              >
+                Ver vista previa
+              </Link>
+            )}
             <Link
               href="/dashboard/editar"
               className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-border-subtle px-5 text-base font-medium text-navy transition-colors hover:border-navy/40 sm:flex-none"
@@ -213,16 +218,11 @@ export default async function DashboardPage({
               (not tucked away in another section) whenever the landing is
               still a draft. */}
           {landing.status === "draft" && activePlan && (
-            <div className="flex flex-col gap-3 rounded-xl border border-border-subtle p-4">
-              <p className="text-sm font-medium text-navy">
-                Pagar y activar mi landing — ${Number(activePlan.amount).toLocaleString("es-AR")}/mes
-              </p>
-              <PaySubscriptionSection
-                landingId={landing.id}
-                amount={Number(activePlan.amount)}
-                payerEmail={user.email ?? ""}
-              />
-            </div>
+            <PaySubscriptionSection
+              landingId={landing.id}
+              amount={Number(activePlan.amount)}
+              payerEmail={user.email ?? ""}
+            />
           )}
         </section>
 

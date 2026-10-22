@@ -1,32 +1,9 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { DashboardShell } from "@/components/dashboard/DashboardShell";
 
-export default async function PlanPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  return (
-    <DashboardShell>
-      <div className="mx-auto flex w-full max-w-[900px] flex-1 flex-col items-center justify-center gap-4 px-6 py-20 text-center">
-        <h1 className="text-2xl font-semibold text-navy">Actualizar plan</h1>
-        <p className="text-text-body">
-          Próximamente vas a poder ver y cambiar tu plan desde acá.
-        </p>
-        <Link
-          href="/dashboard/suscripcion"
-          className="rounded-full border border-border-subtle px-5 py-2 text-sm font-medium text-navy transition-colors hover:border-navy/40"
-        >
-          Volver a mi suscripción
-        </Link>
-      </div>
-    </DashboardShell>
-  );
+// There's only ever one plan -- "Actualizar plan" (the button that used to
+// link here) was removed from /dashboard/suscripcion since there's nothing
+// to switch between. Kept as a redirect, not deleted, in case anything
+// external still links to this path.
+export default function PlanPage() {
+  redirect("/dashboard/suscripcion");
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import Image from "next/image";
 import { createSubscriptionAction } from "./actions";
 import { CardPaymentBrick } from "@/components/CardPaymentBrick";
 
@@ -22,6 +21,14 @@ const initialState: SubscribeState = { ok: true };
 // onClick) is what makes that redirect work for an *external* (non-
 // weboficial) URL -- it's the same mechanism the pre-Brick SubscribeButton
 // used.
+//
+// Carries its own id ("pagar-y-activar") so other pages/banners can link
+// here with a plain `#pagar-y-activar` anchor (smooth scroll, no extra JS)
+// instead of navigating to a whole other route. No official Mercado Pago
+// SVG wordmark/icon exists in this repo -- the previous version faked one
+// with two <text> elements, which is exactly what made the button's text
+// wrap to 2 lines. Text-only per product decision, not recreated as a
+// pseudo-logo.
 export function PaySubscriptionSection({
   landingId,
   amount,
@@ -40,25 +47,28 @@ export function PaySubscriptionSection({
   const showCardForm = cardFormOpen || !state.ok;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div
+      id="pagar-y-activar"
+      className="flex scroll-mt-20 flex-col gap-3 rounded-xl border border-border-subtle p-4"
+    >
+      <p className="text-sm font-medium text-navy">
+        Activá tu página — ${amount.toLocaleString("es-AR")}/mes
+      </p>
+
       <div className="flex flex-col gap-3 sm:hidden">
         <form action={formAction}>
           <button
             type="submit"
             disabled={isPending}
-            className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-border-subtle bg-white px-5 text-base font-semibold text-navy transition-colors hover:border-navy/40 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-14 w-full items-center justify-center rounded-full bg-[#009EE3] px-5 text-base font-bold whitespace-nowrap text-white transition-colors hover:bg-[#0089C7] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <Image
-              src="/icons/mercadopago.svg"
-              alt=""
-              aria-hidden
-              width={110}
-              height={24}
-              className="h-5 w-auto"
-            />
             {isPending ? "Redirigiendo..." : "Pagar con Mercado Pago"}
           </button>
         </form>
+
+        <p className="text-center text-xs text-text-body/60">
+          Pago seguro con Mercado Pago · Cancelás cuando quieras
+        </p>
 
         {!state.ok && <p className="text-sm text-red-600">{state.message}</p>}
 
@@ -66,7 +76,7 @@ export function PaySubscriptionSection({
           <button
             type="button"
             onClick={() => setCardFormOpen(true)}
-            className="self-start text-sm text-sky-dark underline"
+            className="inline-flex min-h-11 items-center justify-center self-center px-2 text-sm text-text-body/70 underline"
           >
             Prefiero cargar mi tarjeta acá
           </button>
