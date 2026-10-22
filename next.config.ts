@@ -50,14 +50,23 @@ const DEV_SCRIPT_SRC =
     ? " 'unsafe-eval'"
     : "";
 
+// Google Identity Services (GoogleSignInButton.tsx -- the "Sign in with
+// Google" button + One Tap, replacing the old signInWithOAuth redirect as
+// the primary login path) needs all four of these: script-src to load
+// gsi/client itself, style-src for the stylesheet it injects, connect-src
+// for the credential/token exchange it makes directly from the browser,
+// and frame-src because both the button and the One Tap prompt render as
+// a cross-origin iframe from accounts.google.com.
+const GOOGLE_GSI_ORIGIN = "https://accounts.google.com";
+
 const CSP = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline'${DEV_SCRIPT_SRC} https://www.googletagmanager.com https://connect.facebook.net ${MP_ORIGINS};
-  style-src 'self' 'unsafe-inline' ${MP_ORIGINS};
+  script-src 'self' 'unsafe-inline'${DEV_SCRIPT_SRC} https://www.googletagmanager.com https://connect.facebook.net ${GOOGLE_GSI_ORIGIN} ${MP_ORIGINS};
+  style-src 'self' 'unsafe-inline' ${GOOGLE_GSI_ORIGIN} ${MP_ORIGINS};
   img-src 'self' data: blob: ${SUPABASE_ORIGIN} https://www.facebook.com https://www.google-analytics.com ${MP_ORIGINS};
   font-src 'self' data: ${MP_ORIGINS};
-  connect-src 'self' data: ${SUPABASE_ORIGIN} ${SUPABASE_WS_ORIGIN} https://www.google-analytics.com https://connect.facebook.net ${MP_ORIGINS};
-  frame-src ${MP_ORIGINS};
+  connect-src 'self' data: ${SUPABASE_ORIGIN} ${SUPABASE_WS_ORIGIN} https://www.google-analytics.com https://connect.facebook.net ${GOOGLE_GSI_ORIGIN} ${MP_ORIGINS};
+  frame-src ${GOOGLE_GSI_ORIGIN} ${MP_ORIGINS};
   object-src 'none';
   base-uri 'self';
   form-action 'self';
@@ -106,15 +115,21 @@ const nextConfig: NextConfig = {
             value:
               "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()",
           },
-          // Both flagged by a ZAP baseline scan. Safe to set unconditionally:
-          // the Google OAuth login (login/page.tsx, AuthModal.tsx) is a
-          // full-page redirect, not a window.open() popup, so COOP's
-          // same-origin isolation has no opener relationship to break; the
-          // Mercado Pago Card Payment Brick embeds an iframe (governed by
-          // frame-src in the CSP above), which COOP/CORP don't touch --
+          // Both flagged by a ZAP baseline scan.
+          // COOP is "same-origin-allow-popups", not the stricter
+          // "same-origin" this started as: Google Identity Services
+          // (GoogleSignInButton.tsx) opens a popup/FedCM flow to
+          // accounts.google.com and needs the window.opener relationship
+          // back to this page to complete sign-in -- plain "same-origin"
+          // severs that and silently breaks the button. The fallback
+          // signInWithOAuth redirect (still used when GIS fails to load)
+          // doesn't need popups at all, so this is strictly a relaxation
+          // for the new flow, not a regression for the old one.
+          // The Mercado Pago Card Payment Brick embeds an iframe (governed
+          // by frame-src in the CSP above), which COOP/CORP don't touch --
           // only Cross-Origin-Embedder-Policy would, which is deliberately
           // NOT set here (see below).
-          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
           { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
           // Cross-Origin-Embedder-Policy: require-corp was also flagged, but
           // deliberately left unset -- it would make the browser block any
