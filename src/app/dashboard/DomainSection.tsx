@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { DomainCheckResult } from "@/app/api/domains/check/route";
 
 export interface ExistingCustomDomain {
@@ -197,32 +198,30 @@ export function DomainSection({
     );
   }
 
+  // Not a feature flag -- domain purchase is gated on having an active
+  // (paid) subscription, same rule the API routes enforce server-side (see
+  // isDomainAccessAllowed/checkDomainAccess in lib/domains/domain-access.ts).
+  // A landing still in draft (or admins exempted) is the only way this
+  // branch renders, so pointing straight at the pay block is always the
+  // right next step here, never a "feature coming later" message.
   if (!purchaseEnabled) {
     return (
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-navy">Mi dominio</h2>
-        <div className="flex flex-col gap-4 rounded-xl border border-border-subtle p-4">
-          <div className="rounded-lg border border-sky/30 bg-sky/5 px-3 py-2 text-sm text-navy">
-            <span className="font-semibold">Próximamente:</span> pronto vas a poder conectar tu
-            dominio propio (.com).
+        <div className="flex flex-col items-start gap-4 rounded-xl border border-sky/30 bg-sky/5 p-4">
+          <p className="text-sm text-navy">
+            Activá tu página y conseguí tu propio .com — se conecta solo, sin
+            configurar nada.
             {currentUrl && (
               <>
                 {" "}Por ahora tu sitio está disponible en{" "}
                 <span className="font-medium">{currentUrl.replace(/^https?:\/\//, "")}</span>.
               </>
             )}
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row" aria-disabled>
-            <input
-              disabled
-              placeholder="tuempresa"
-              className={`${INPUT_CLASS} flex-1 disabled:bg-surface-muted disabled:text-text-body/50`}
-            />
-            <button disabled className={SECONDARY_BUTTON}>
-              Verificar disponibilidad
-            </button>
-          </div>
+          </p>
+          <Link href="/dashboard#pagar-y-activar" className={PRIMARY_BUTTON}>
+            Activar mi página
+          </Link>
         </div>
       </section>
     );

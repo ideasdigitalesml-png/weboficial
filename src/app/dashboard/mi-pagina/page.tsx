@@ -124,22 +124,17 @@ export default async function MiPaginaPage({
           </div>
         </section>
 
-        {/* Personalización — Paleta de colores */}
-        {isModerno && paletas ? (
+        {/* Personalización — Paleta de colores. Only "moderno" templates
+            have a palette editor at all -- clásico/minimal have no
+            equivalent yet, so this section just doesn't render for them
+            instead of showing a dead-end placeholder. */}
+        {isModerno && paletas && (
           <section>
             <PaletteEditor
               landingId={landing.id}
               paletas={paletas}
               initialPaletaId={landing.paleta_id ?? "bosque"}
             />
-          </section>
-        ) : (
-          <section className="flex flex-col gap-2">
-            <h2 className="text-lg font-semibold text-navy">Personalización</h2>
-            <p className="text-sm text-text-body">
-              La personalización de colores está disponible próximamente para
-              tu plantilla.
-            </p>
           </section>
         )}
       </div>
