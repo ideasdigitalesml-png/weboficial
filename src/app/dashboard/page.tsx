@@ -7,7 +7,7 @@ import { WelcomeBanner } from "./WelcomeBanner";
 import { CopyLinkButton } from "./CopyLinkButton";
 import { ShareWhatsAppButton } from "./ShareWhatsAppButton";
 import { ChecklistCard, type ChecklistStep } from "./ChecklistCard";
-import { CardPaymentBrick } from "@/components/CardPaymentBrick";
+import { PaySubscriptionSection } from "./PaySubscriptionSection";
 import { reconcileLandingIfStuck } from "@/lib/landings/reconcile-payment-status";
 import { findActiveResellerForUser } from "@/lib/resellers/require-reseller";
 
@@ -217,7 +217,7 @@ export default async function DashboardPage({
               <p className="text-sm font-medium text-navy">
                 Pagar y activar mi landing — ${Number(activePlan.amount).toLocaleString("es-AR")}/mes
               </p>
-              <CardPaymentBrick
+              <PaySubscriptionSection
                 landingId={landing.id}
                 amount={Number(activePlan.amount)}
                 payerEmail={user.email ?? ""}
